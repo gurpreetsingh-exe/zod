@@ -4,7 +4,6 @@
 
 #include "backend.hh"
 #include "base/math.hh"
-#include "slice.hh"
 #include "window.hh"
 
 #include "widget.hh"
@@ -26,6 +25,8 @@ struct GMesh {
 
 struct UIUbo {
   glm::mat4 view_projection_mat;
+  f32 width;
+  f32 height;
 };
 
 class ZodCtxt {
@@ -34,8 +35,7 @@ public:
       : m_window(Window::create(1280, 720, "Zod")),
         m_renderer(GPUBackend::get().create_renderer()),
         m_shader_library(unique<ShaderLibrary>()), m_layout(unique<Layout>()),
-        m_framebuffer(GPUBackend::get().create_framebuffer(1280, 720)),
-        m_slice_generator(SliceGenerator(g_round_cube)) {
+        m_framebuffer(GPUBackend::get().create_framebuffer(1280, 720)) {
 #ifndef NDEBUG
     m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
 #endif
@@ -49,6 +49,13 @@ public:
     quad->init_vertex_shader(g_fullscreen);
     quad->init_fragment_shader(g_uv);
     quad->compile();
+    m_shader_library->add(quad->name, quad);
+
+    auto rect = GPUBackend::get().create_shader("rect");
+    rect->init_vertex_shader(g_fullscreen);
+    rect->init_fragment_shader(g_rect);
+    rect->compile();
+    m_shader_library->add(rect->name, rect);
 
     auto round_panel = GPUBackend::get().create_shader("round_panel");
     round_panel->init_vertex_shader(g_vertex_2d);
@@ -79,6 +86,7 @@ public:
   }
 
   auto run() -> void {
+    int border = 10;
     auto ubo = GPUBackend::get().create_uniform_buffer(sizeof(UIUbo));
     // std::vector<f32> position = { -1, 1, 1, 1, -1, -1, 1, -1 };
     std::vector<f32> position = { 0, 1, 1, 1, 0, 0, 1, 0 };
@@ -100,6 +108,8 @@ public:
     panel_fb->check();
 
     auto round_panel = m_shader_library->get("round_panel");
+    auto quad = m_shader_library->get("quad");
+    auto rect = m_shader_library->get("rect");
     auto mesh = GMesh();
     // m_layout->generate(mesh);
 
@@ -111,23 +121,16 @@ public:
       m_imgui_layer->begin_frame();
       m_imgui_layer->update([&] {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-        ImGui::Begin("Debug");
-        auto dim = ImGui::GetContentRegionAvail();
-        auto x = int(dim.x);
-        auto y = int(dim.y);
-        // if (x != m_framebuffer->get_width() or
-        //     y != m_framebuffer->get_height()) {
-        //   m_framebuffer->resize(x, y);
-        // }
-        ImGui::Image(m_slice_generator.get_texture()->get_id(), dim,
-                     ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
+        ImGui::Begin("DebugEditor");
+        ImGui::DragInt("border", &border);
         ImGui::End();
 
         ImGui::Begin("Panel");
-        dim = ImGui::GetContentRegionAvail();
+        auto dim = ImGui::GetContentRegionAvail();
         if (dim.x != old_x or dim.y != old_y) {
           auto uiubo =
-              UIUbo { glm::ortho(0.0f, dim.x, 0.0f, dim.y, -1.0f, 1.0f) };
+              UIUbo { glm::ortho(0.0f, dim.x, 0.0f, dim.y, -1.0f, 1.0f), dim.x,
+                      dim.y };
           ubo->upload_data(&uiubo, sizeof(UIUbo));
           panel_fb->resize(dim.x, dim.y);
           f32 new_pos[] = { 0, 0, dim.x, 0, 0, dim.y, dim.x, dim.y };
@@ -149,16 +152,13 @@ public:
       ubo->bind();
       panel_fb->bind();
       m_renderer->clear_color(mantle);
+      rect->bind();
+      rect->uniform_int("u_border", border);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
       round_panel->bind();
-      m_slice_generator.get_texture()->bind();
-      round_panel->uniform_int("u_round_cube", 0);
+      round_panel->uniform_int("u_border", border);
       square->draw_instanced(round_panel, 4);
       panel_fb->unbind();
-      // quad->bind();
-      // m_framebuffer->bind();
-      // glDrawArrays(GL_TRIANGLES, 0, 3);
-      // m_framebuffer->unbind();
-
 #ifndef NDEBUG
       m_imgui_layer->end_frame();
 #endif
@@ -171,7 +171,6 @@ private:
   Unique<ShaderLibrary> m_shader_library;
   Unique<Layout> m_layout;
   Shared<GPUFrameBuffer> m_framebuffer;
-  SliceGenerator m_slice_generator;
 
 #if !defined(NDEBUG)
   Unique<ImGuiLayer> m_imgui_layer;
