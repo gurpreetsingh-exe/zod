@@ -56,18 +56,12 @@ public:
 
     m_window->set_event_callback(std::bind(&ZodCtxt::on_event, this, ph::_1));
 
-    // Unique<Split> s1 = unique<Split>(SplitKind::Vertical);
-    // s1->add_node(unique<Panel>(), 0.25);
-    // s1->add_node(unique<Panel>(), 0.5);
-    // s1->add_node(unique<Panel>(), 0.25);
-    // m_layout->add_area(std::move(s1));
-
     Unique<Split> s1 = unique<Split>(SplitKind::Vertical);
     s1->add_node(unique<Panel>(), 0.25);
 
     Unique<Split> s2 = unique<Split>(SplitKind::Horizontal);
-    s2->add_node(unique<Panel>(), 0.25);
     s2->add_node(unique<Panel>(), 0.75);
+    s2->add_node(unique<Panel>(), 0.25);
     s1->add_node(std::move(s2), 0.5);
 
     Unique<Split> s3 = unique<Split>(SplitKind::Horizontal);
@@ -85,6 +79,12 @@ public:
       case Event::MouseDown: {
       } break;
       case Event::MouseMove: {
+        auto x = event.mouse[0];
+        auto y = event.mouse[1];
+        if (auto widget = m_layout->get_widget(x, y)) {
+          widget->on_event(event);
+          m_current_panel = widget->id;
+        }
       } break;
       case Event::MouseUp: {
       } break;
@@ -130,21 +130,22 @@ public:
         if (ImGui::Checkbox("V-Sync", &vsync)) {
           glfwSwapInterval(vsync);
         }
+        ImGui::Text("PanelID: %zu", m_current_panel);
         ImGui::DragInt("border", &border);
         ImGui::DragFloat("Border Factor", &factor, 0.1);
         ImGui::ColorEdit4("Color", &surface0[0]);
         ImGui::End();
         // ImGui::PopStyleVar();
       });
-      // m_framebuffer->bind();
+      m_framebuffer->bind();
       m_renderer->clear_color(mantle);
       m_layout->draw(rect, round_panel, border, surface0);
-      // m_framebuffer->unbind();
+      m_framebuffer->unbind();
 
-      // quad->bind();
-      // m_framebuffer->get_slot(0).texture->bind();
-      // quad->uniform("u_texture", 0);
-      // glDrawArrays(GL_TRIANGLES, 0, 3);
+      quad->bind();
+      m_framebuffer->get_slot(0).texture->bind();
+      quad->uniform("u_texture", 0);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
       m_imgui_layer->end_frame();
     });
   }
@@ -156,8 +157,8 @@ private:
   Unique<Layout> m_layout;
   Shared<GPUFrameBuffer> m_framebuffer;
   Shared<GPUUniformBuffer> m_uniform_buffer;
-
   Unique<ImGuiLayer> m_imgui_layer;
+  usize m_current_panel;
 };
 
 } // namespace zod

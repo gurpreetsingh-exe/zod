@@ -33,6 +33,10 @@ public:
 
   auto calculate(f32 x, f32 y, f32 w, f32 h) -> void override {
     ZASSERT(m_nodes.size() == m_size_coefficients.size());
+    this->x = x;
+    this->y = y;
+    this->w = w;
+    this->h = h;
     for (const auto& [node, size] :
          rng::views::zip(m_nodes, m_size_coefficients)) {
       switch (m_kind) {
@@ -46,6 +50,18 @@ public:
         } break;
       }
     }
+  }
+
+  auto on_event(Event& event) -> void override {}
+
+  auto get_widget(f32 x, f32 y) -> Widget* override {
+    for (const auto& node : m_nodes) {
+      if (node->x <= x and node->y <= y and node->x + node->w > x and
+          node->y + node->h > y) {
+        return node->get_widget(x, y);
+      }
+    }
+    return this;
   }
 
   auto generate(std::vector<vec2>& offsets) -> void override {

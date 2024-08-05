@@ -22,12 +22,7 @@ public:
     offsets.push_back({ x + w, y + h });
   }
 
-private:
-  f32 x = 0;
-  f32 y = 0;
-  f32 w = 0;
-  f32 h = 0;
-  f32 m_padding = 0.005;
+  auto on_event(Event& event) -> void override {}
 };
 
 } // namespace zod

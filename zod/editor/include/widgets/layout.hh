@@ -73,6 +73,17 @@ public:
     m_corners_batch->draw_instanced(s2, m_corners.size());
   }
 
+  auto get_widget(f32 x, f32 y) -> Widget* {
+    for (const auto& node : m_areas) {
+      if (node->x <= x and node->y <= y and node->x + node->w > x and
+          node->y + node->h > y) {
+        return node->get_widget(x, y);
+      }
+    }
+
+    return nullptr;
+  }
+
 private:
   std::vector<Unique<Widget>> m_areas;
   std::vector<vec2> m_corners;
