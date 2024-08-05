@@ -14,7 +14,8 @@ public:
   auto compile() -> void override;
   auto bind() -> void override;
   auto unbind() -> void override;
-  auto uniform_int(const std::string&, i32) -> void override;
+  auto uniform(const std::string&, i32) -> void override;
+  auto uniform(const std::string&, glm::vec3) -> void override;
 
 private:
   auto create_shader(GLuint /* type */, const char* /* source */) -> GLuint;

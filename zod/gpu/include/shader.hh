@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #define X(name) extern const char* g_##name;
 #include "shaders.def"
 #undef X
@@ -18,7 +20,8 @@ public:
   virtual auto compile() -> void = 0;
   virtual auto bind() -> void = 0;
   virtual auto unbind() -> void = 0;
-  virtual auto uniform_int(const std::string&, i32) -> void = 0;
+  virtual auto uniform(const std::string&, i32) -> void = 0;
+  virtual auto uniform(const std::string&, glm::vec3) -> void = 0;
 };
 
 class ShaderLibrary {

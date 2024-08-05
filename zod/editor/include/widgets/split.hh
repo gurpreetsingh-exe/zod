@@ -31,26 +31,26 @@ public:
     m_size_coefficients.push_back(size);
   }
 
-  auto calculate(f32& x, f32& y, f32& w, f32& h) -> void override {
+  auto calculate(f32 x, f32 y, f32 w, f32 h) -> void override {
     ZASSERT(m_nodes.size() == m_size_coefficients.size());
     for (const auto& [node, size] :
          rng::views::zip(m_nodes, m_size_coefficients)) {
       switch (m_kind) {
         case SplitKind::Horizontal: {
-          node->calculate(x, y, w, size);
-          y += size;
+          node->calculate(x, y, w, h * size);
+          y += h * size;
         } break;
         case SplitKind::Vertical: {
-          node->calculate(x, y, size, h);
-          x += size;
+          node->calculate(x, y, w * size, h);
+          x += w * size;
         } break;
       }
     }
   }
 
-  // auto generate(GMesh& mesh) -> void override {
-  //   for (const auto& node : m_nodes) { node->generate(mesh); }
-  // }
+  auto generate(std::vector<vec2>& offsets) -> void override {
+    for (const auto& node : m_nodes) { node->generate(offsets); }
+  }
 
 private:
   SplitKind m_kind;

@@ -17,9 +17,9 @@ public:
     for (const auto& node : m_areas) { node->calculate(x, y, w, h); }
   }
 
-  // auto generate(GMesh& mesh) -> void {
-  //   for (const auto& node : m_areas) { node->generate(mesh); }
-  // }
+  auto generate(std::vector<vec2>& offsets) -> void {
+    for (const auto& node : m_areas) { node->generate(offsets); }
+  }
 
 private:
   std::vector<Unique<Widget>> m_areas;

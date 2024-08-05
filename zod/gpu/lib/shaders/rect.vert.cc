@@ -1,0 +1,33 @@
+const char* g_rect_vert = R"(
+#version 450
+
+layout (packed) uniform UIUbo {
+    mat4 view_projection_mat;
+    float width;
+    float height;
+};
+
+layout (location = 0) in vec2 position;
+out vec2 uv;
+
+uniform int u_border;
+
+void main() {
+  vec2 p = position;
+  float padding = 0.2 * u_border;
+  if (gl_VertexID % 4 == 0) {
+    uv = vec2(0);
+    p += vec2(padding);
+  } else if (gl_VertexID % 4 == 1) {
+    uv = vec2(1, 0);
+    p += vec2(-padding, padding);
+  } else if (gl_VertexID % 4 == 2) {
+    uv = vec2(0, 1);
+    p += vec2(padding, -padding);
+  } else if (gl_VertexID % 4 == 3) {
+    uv = vec2(1, 1);
+    p += vec2(-padding);
+  }
+  gl_Position = view_projection_mat * vec4(p, 0.f, 1.f);
+}
+)";
