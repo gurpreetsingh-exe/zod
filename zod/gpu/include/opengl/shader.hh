@@ -19,11 +19,13 @@ public:
 
 private:
   auto create_shader(GLuint /* type */, const char* /* source */) -> GLuint;
+  auto get_uniform_location(const std::string&) -> GLuint;
 
 private:
   GLuint m_id;
   GLuint m_vert;
   GLuint m_frag;
+  std::unordered_map<std::string, GLuint> m_uniforms;
 };
 
 } // namespace zod

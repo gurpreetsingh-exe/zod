@@ -11,9 +11,7 @@
 #include "widgets/panel.hh"
 #include "widgets/split.hh"
 
-#ifndef NDEBUG
 #include "imgui_layer.hh"
-#endif
 
 namespace zod {
 
@@ -35,9 +33,7 @@ public:
         m_framebuffer(GPUBackend::get().create_framebuffer(1280, 720)),
         m_uniform_buffer(
             GPUBackend::get().create_uniform_buffer(sizeof(UIUbo))) {
-#ifndef NDEBUG
     m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
-#endif
     auto [w, h] = m_window->get_size();
     m_framebuffer->bind();
     GPUAttachment attach = { GPUBackend::get().create_texture(
@@ -122,32 +118,34 @@ public:
     constexpr vec4 mantle = { 24. / 255., 24. / 255., 37. / 255., 1.0f };
     glm::vec3 surface0 = { 49. / 255, 50. / 255, 68. / 255 };
 
+    m_uniform_buffer->bind();
     m_window->is_running([&] {
-#ifndef NDEBUG
       m_imgui_layer->begin_frame();
       m_imgui_layer->update([&] {
         // ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
         ImGui::Begin("DebugEditor");
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("Delta Time: %.3f ms", 1000.0f / io.Framerate);
+        static bool vsync = true;
+        if (ImGui::Checkbox("V-Sync", &vsync)) {
+          glfwSwapInterval(vsync);
+        }
         ImGui::DragInt("border", &border);
         ImGui::DragFloat("Border Factor", &factor, 0.1);
         ImGui::ColorEdit4("Color", &surface0[0]);
         ImGui::End();
         // ImGui::PopStyleVar();
       });
-#endif
-      m_framebuffer->bind();
-      m_uniform_buffer->bind();
+      // m_framebuffer->bind();
       m_renderer->clear_color(mantle);
       m_layout->draw(rect, round_panel, border, surface0);
-      m_framebuffer->unbind();
+      // m_framebuffer->unbind();
 
-      quad->bind();
-      m_framebuffer->get_slot(0).texture->bind();
-      quad->uniform("u_texture", 0);
-      glDrawArrays(GL_TRIANGLES, 0, 3);
-#ifndef NDEBUG
+      // quad->bind();
+      // m_framebuffer->get_slot(0).texture->bind();
+      // quad->uniform("u_texture", 0);
+      // glDrawArrays(GL_TRIANGLES, 0, 3);
       m_imgui_layer->end_frame();
-#endif
     });
   }
 
@@ -159,9 +157,7 @@ private:
   Shared<GPUFrameBuffer> m_framebuffer;
   Shared<GPUUniformBuffer> m_uniform_buffer;
 
-#if !defined(NDEBUG)
   Unique<ImGuiLayer> m_imgui_layer;
-#endif
 };
 
 } // namespace zod

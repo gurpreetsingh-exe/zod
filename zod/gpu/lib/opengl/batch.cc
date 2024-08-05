@@ -44,21 +44,17 @@ GLBatch::GLBatch(const std::vector<GPUBufferLayout>& layouts,
 GLBatch::~GLBatch() { glDeleteVertexArrays(1, &m_id); }
 
 auto GLBatch::draw(Shared<GPUShader> shader) -> void {
-  shader->bind();
   glBindVertexArray(m_id);
   glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
   glBindVertexArray(0);
-  shader->unbind();
 }
 
 auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
     -> void {
-  shader->bind();
   glBindVertexArray(m_id);
   glDrawElementsInstanced(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr,
                           instance_count);
   glBindVertexArray(0);
-  shader->unbind();
 }
 
 } // namespace zod

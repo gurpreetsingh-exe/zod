@@ -62,14 +62,19 @@ auto GLShader::bind() -> void { glUseProgram(m_id); }
 
 auto GLShader::unbind() -> void { glUseProgram(0); }
 
+auto GLShader::get_uniform_location(const std::string& name) -> GLuint {
+  if (not m_uniforms.contains(name)) {
+    m_uniforms[name] = glGetUniformLocation(m_id, name.c_str());
+  }
+  return m_uniforms[name];
+}
+
 auto GLShader::uniform(const std::string& name, i32 n) -> void {
-  GLuint location = glGetUniformLocation(m_id, name.c_str());
-  glUniform1i(location, n);
+  glUniform1i(get_uniform_location(name), n);
 }
 
 auto GLShader::uniform(const std::string& name, glm::vec3 vec) -> void {
-  GLuint location = glGetUniformLocation(m_id, name.c_str());
-  glUniform3f(location, vec.x, vec.y, vec.z);
+  glUniform3f(get_uniform_location(name), vec.x, vec.y, vec.z);
 }
 
 } // namespace zod

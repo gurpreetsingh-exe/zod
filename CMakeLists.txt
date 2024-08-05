@@ -83,7 +83,7 @@ add_executable(zod ${ZOD_EDITOR_SRC})
 target_compile_definitions(zod PUBLIC GLFW_INCLUDE_NONE=1)
 target_include_directories(zod PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)
-target_link_libraries(zod zodpch zodcore gpu glm::glm glfw $<$<CONFIG:DEBUG>:imgui> pthread ${CMAKE_DL_LIBS})
+target_link_libraries(zod zodpch zodcore gpu glm::glm glfw imgui pthread ${CMAKE_DL_LIBS})
 
 ##########################################################################
 # libzc
