@@ -45,6 +45,12 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
         Event event = { .kind = kind, .button = (Event::ButtonKind)button };
         window->m_event_callback(event);
       });
+  glfwSetWindowSizeCallback(win, [](GLFWwindow* win, int width, int height) {
+    auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
+    Event event = { .kind = Event::WindowResize,
+                    .size = { f32(width), f32(height) } };
+    window->m_event_callback(event);
+  });
   glfwSetWindowUserPointer(win, window.get());
   return window;
 }

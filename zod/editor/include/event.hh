@@ -11,6 +11,8 @@ struct Event {
     MouseDown,
     MouseUp,
     MouseMove,
+
+    WindowResize,
   } kind = None;
 
   enum ButtonKind {
@@ -28,6 +30,7 @@ struct Event {
   union {
     bool pressed[GLFW_KEY_LAST + 1];
     f32 mouse[2];
+    f32 size[2];
   };
 
   const char* name() {

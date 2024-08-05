@@ -6,9 +6,39 @@ namespace zod {
 
 class Layout {
 public:
-  Layout() = default;
+  Layout()
+      : m_areas(std::vector<Unique<Widget>>()), m_corners(std::vector<vec2>()) {
+  }
 
 public:
+  auto init() -> void {
+    generate();
+
+    f32 position[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
+    f32 uv[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
+    auto format = std::vector<GPUBufferLayout> {
+      { GPUDataType::Float, position, 2, 8 },
+      { GPUDataType::Float, uv, 2, 8 },
+      { GPUDataType::Float, m_corners.data(), 2, m_corners.size() * 2, true },
+    };
+    m_corners_batch =
+        GPUBackend::get().create_batch(format, { 0, 1, 2, 2, 1, 3 });
+
+    auto indices = std::vector<u32>();
+    for (usize i = 0; i < m_corners.size(); i += 4) {
+      indices.push_back(i);
+      indices.push_back(i + 1);
+      indices.push_back(i + 2);
+      indices.push_back(i + 2);
+      indices.push_back(i + 1);
+      indices.push_back(i + 3);
+    }
+
+    m_rects_batch = GPUBackend::get().create_batch(
+        { { GPUDataType::Float, m_corners.data(), 2, m_corners.size() * 2 } },
+        indices);
+  }
+
   auto add_area(Unique<Widget> widget) -> void {
     m_areas.push_back(std::move(widget));
   }
@@ -17,12 +47,37 @@ public:
     for (const auto& node : m_areas) { node->calculate(x, y, w, h); }
   }
 
-  auto generate(std::vector<vec2>& offsets) -> void {
-    for (const auto& node : m_areas) { node->generate(offsets); }
+  auto generate() -> void {
+    for (const auto& node : m_areas) { node->generate(m_corners); }
+  }
+
+  auto update(f32 x, f32 y, f32 w, f32 h) -> void {
+    m_corners.clear();
+    calculate(x, y, w, h);
+    generate();
+    m_corners_batch->update_binding(2, m_corners.data(),
+                                    m_corners.size() * sizeof(vec2));
+    m_rects_batch->update_binding(0, m_corners.data(),
+                                  m_corners.size() * sizeof(vec2));
+  }
+
+  auto draw(Shared<GPUShader> s1, Shared<GPUShader> s2, int border,
+            glm::vec3 surface0) -> void {
+    s1->bind();
+    s1->uniform("u_border", border);
+    s1->uniform("u_color", surface0);
+    m_rects_batch->draw(s1);
+    s2->bind();
+    s2->uniform("u_border", border);
+    s2->uniform("u_color", surface0);
+    m_corners_batch->draw_instanced(s2, m_corners.size());
   }
 
 private:
   std::vector<Unique<Widget>> m_areas;
+  std::vector<vec2> m_corners;
+  Shared<GPUBatch> m_corners_batch;
+  Shared<GPUBatch> m_rects_batch;
 };
 
 } // namespace zod
