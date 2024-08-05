@@ -30,7 +30,7 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
     auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
     Event event = { .kind = Event::MouseMove,
                     .button = Event::MouseButtonNone,
-                    .mouse = { f32(x), f32(y) } };
+                    .mouse = { f32(x), f32(window->m_height - y) } };
     window->m_event_callback(event);
   });
   glfwSetMouseButtonCallback(
@@ -49,6 +49,8 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
     auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
     Event event = { .kind = Event::WindowResize,
                     .size = { f32(width), f32(height) } };
+    window->m_width = width;
+    window->m_height = height;
     window->m_event_callback(event);
   });
   glfwSetWindowUserPointer(win, window.get());

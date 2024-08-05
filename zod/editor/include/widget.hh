@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/math.hh"
+#include "event.hh"
 
 namespace zod {
 
@@ -17,7 +18,8 @@ public:
   virtual auto calculate(f32 /* x */, f32 /* y */, f32 /* width */,
                          f32 /* height */) -> void = 0;
   virtual auto generate(std::vector<vec2>&) -> void = 0;
-  virtual auto on_event(Event& event) -> void = 0;
+  virtual auto draw() -> void {}
+  virtual auto on_event(Event& event) -> void {}
   virtual auto get_widget(f32, f32) -> Widget* { return this; }
 };
 

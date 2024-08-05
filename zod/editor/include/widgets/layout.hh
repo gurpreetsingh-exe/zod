@@ -67,10 +67,14 @@ public:
     s1->uniform("u_border", border);
     s1->uniform("u_color", surface0);
     m_rects_batch->draw(s1);
+    for (const auto& node : m_areas) { node->draw(); }
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
     s2->bind();
     s2->uniform("u_border", border);
     s2->uniform("u_color", surface0);
     m_corners_batch->draw_instanced(s2, m_corners.size());
+    glDisable(GL_BLEND);
   }
 
   auto get_widget(f32 x, f32 y) -> Widget* {

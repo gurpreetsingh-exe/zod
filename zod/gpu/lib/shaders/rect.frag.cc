@@ -1,6 +1,7 @@
 const char* g_rect_frag = R"(
 #version 450
 
+in vec2 uv;
 out vec4 color;
 
 const vec3 base = vec3(30., 30., 46.) / 255.;

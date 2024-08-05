@@ -21,8 +21,6 @@ public:
     offsets.push_back({ x, y + h });
     offsets.push_back({ x + w, y + h });
   }
-
-  auto on_event(Event& event) -> void override {}
 };
 
 } // namespace zod

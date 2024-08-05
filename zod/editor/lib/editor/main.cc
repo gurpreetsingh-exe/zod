@@ -5,6 +5,7 @@
 #include "backend.hh"
 #include "base/math.hh"
 #include "window.hh"
+#include "viewport.hh"
 
 #include "widget.hh"
 #include "widgets/layout.hh"
@@ -21,8 +22,8 @@ struct UIUbo {
   f32 height;
 };
 
-static int border = 8;
-static f32 factor = 0.2;
+int border = 8;
+f32 factor = 0.2;
 
 class ZodCtxt {
 public:
@@ -60,8 +61,8 @@ public:
     s1->add_node(unique<Panel>(), 0.25);
 
     Unique<Split> s2 = unique<Split>(SplitKind::Horizontal);
-    s2->add_node(unique<Panel>(), 0.75);
     s2->add_node(unique<Panel>(), 0.25);
+    s2->add_node(unique<Viewport>(), 0.75);
     s1->add_node(std::move(s2), 0.5);
 
     Unique<Split> s3 = unique<Split>(SplitKind::Horizontal);

@@ -64,6 +64,10 @@ public:
     return this;
   }
 
+  auto draw() -> void override {
+    for (const auto& node : m_nodes) { node->draw(); }
+  }
+
   auto generate(std::vector<vec2>& offsets) -> void override {
     for (const auto& node : m_nodes) { node->generate(offsets); }
   }
