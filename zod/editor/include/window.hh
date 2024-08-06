@@ -31,7 +31,7 @@ public:
   auto get_mouse_pos() -> std::tuple<f32, f32> {
     f64 x, y;
     glfwGetCursorPos(m_window, &x, &y);
-    return { x, y };
+    return { x, m_height - y };
   }
 
   auto get_window_pos() -> std::tuple<int, int> {

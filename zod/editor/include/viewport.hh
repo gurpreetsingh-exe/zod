@@ -2,6 +2,7 @@
 
 #include "widgets/panel.hh"
 #include "backend.hh"
+#include "camera.hh"
 
 namespace zod {
 
@@ -14,6 +15,8 @@ public:
 private:
   Shared<GPUShader> m_shader;
   Shared<GPUFrameBuffer> m_framebuffer;
+  Shared<GPUBatch> m_batch;
+  Camera m_camera;
 };
 
 } // namespace zod

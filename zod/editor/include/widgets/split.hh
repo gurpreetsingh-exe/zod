@@ -52,7 +52,9 @@ public:
     }
   }
 
-  auto on_event(Event& event) -> void override {}
+  auto on_event(Event& event) -> void override {
+    for (const auto& node : m_nodes) { node->on_event(event); }
+  }
 
   auto get_widget(f32 x, f32 y) -> Widget* override {
     for (const auto& node : m_nodes) {

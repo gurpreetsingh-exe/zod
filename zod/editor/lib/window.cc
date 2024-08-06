@@ -26,10 +26,18 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
 
   window->m_window = win;
   window->m_gcx = gpu_context_create(win);
+
   glfwSetCursorPosCallback(win, [](GLFWwindow* win, double x, double y) {
     auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
+    auto button = Event::MouseButtonNone;
+    if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+      button = Event::MouseButtonLeft;
+    } else if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+      button = Event::MouseButtonRight;
+    }
+
     Event event = { .kind = Event::MouseMove,
-                    .button = Event::MouseButtonNone,
+                    .button = button,
                     .mouse = { f32(x), f32(window->m_height - y) } };
     window->m_event_callback(event);
   });
@@ -42,7 +50,14 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
         } else if (action == GLFW_RELEASE) {
           kind = Event::MouseUp;
         }
-        Event event = { .kind = kind, .button = (Event::ButtonKind)button };
+        f64 x, y;
+        glfwGetCursorPos(win, &x, &y);
+        Event event = { .kind = kind,
+                        .button = (Event::ButtonKind)button,
+                        .shift = bool(mods & GLFW_MOD_SHIFT),
+                        .ctrl = bool(mods & GLFW_MOD_CONTROL),
+                        .alt = bool(mods & GLFW_MOD_ALT),
+                        .mouse = { f32(x), window->m_height - f32(y) } };
         window->m_event_callback(event);
       });
   glfwSetWindowSizeCallback(win, [](GLFWwindow* win, int width, int height) {

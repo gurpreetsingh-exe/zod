@@ -41,6 +41,8 @@ struct Event {
         return "MouseDown";
       case MouseUp:
         return "MouseUp";
+      case WindowResize:
+        return "WindowResize";
       case None:
         return "None";
       default:

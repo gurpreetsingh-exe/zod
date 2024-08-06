@@ -2,7 +2,7 @@
 
 namespace zod {
 
-Viewport::Viewport() {
+Viewport::Viewport() : m_camera(Camera(64, 64, 90.0f, 0.01f, 100.0f)) {
   m_framebuffer = GPUBackend::get().create_framebuffer(64, 64);
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
@@ -12,9 +12,19 @@ Viewport::Viewport() {
   m_framebuffer->unbind();
 
   m_shader = GPUBackend::get().create_shader("view_3d");
-  m_shader->init_vertex_shader(g_fullscreen);
-  m_shader->init_fragment_shader(g_uv);
+  m_shader->init_vertex_shader(g_view3d_vert);
+  m_shader->init_fragment_shader(g_view3d_frag);
   m_shader->compile();
+
+  f32 position[] = { -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1,
+                     -1, -1, 1,  1, -1, 1,  1, 1, 1,  -1, 1, 1 };
+  auto format = std::vector<GPUBufferLayout> {
+    { GPUDataType::Float, position, 3, 24 },
+  };
+
+  m_batch = GPUBackend::get().create_batch(
+      format, { 1, 2, 0, 2, 3, 0, 6, 2, 1, 1, 5, 6, 6, 5, 4, 4, 7, 6,
+                6, 3, 2, 7, 3, 6, 3, 7, 0, 7, 4, 0, 5, 1, 0, 4, 5, 0 });
 }
 
 extern int border;
@@ -26,12 +36,23 @@ auto Viewport::draw() -> void {
   glGetIntegerv(GL_VIEWPORT, view);
   // m_framebuffer->bind();
   glViewport(x + b, y + b, w - b * 2, h - b * 2);
+  glEnable(GL_DEPTH_TEST);
+  glClear(GL_DEPTH_BUFFER_BIT);
   m_shader->bind();
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  m_shader->uniform("u_view_projection", m_camera.get_view_projection());
+  m_batch->draw(m_shader);
+  glDisable(GL_DEPTH_TEST);
+  // glDrawArrays(GL_TRIANGLES, 0, 3);
   // m_framebuffer->unbind();
   glViewport(view[0], view[1], view[2], view[3]);
 }
 
-auto Viewport::on_event(Event& event) -> void {}
+auto Viewport::on_event(Event& event) -> void {
+  if (event.kind == Event::WindowResize) {
+    m_camera.resize(w, h);
+  }
+
+  m_camera.update(event);
+}
 
 } // namespace zod

@@ -1,14 +1,25 @@
 #pragma once
 
 #include "widget.hh"
+#include "application/context.hh"
 
 namespace zod {
+
+struct UIUbo {
+  glm::mat4 view_projection_mat;
+  f32 width;
+  f32 height;
+};
+
+extern int border;
+extern f32 factor;
 
 class Layout {
 public:
   Layout()
-      : m_areas(std::vector<Unique<Widget>>()), m_corners(std::vector<vec2>()) {
-  }
+      : m_areas(std::vector<Unique<Widget>>()), m_corners(std::vector<vec2>()),
+        m_uniform_buffer(
+            GPUBackend::get().create_uniform_buffer(sizeof(UIUbo))) {}
 
 public:
   auto init() -> void {
@@ -37,6 +48,10 @@ public:
     m_rects_batch = GPUBackend::get().create_batch(
         { { GPUDataType::Float, m_corners.data(), 2, m_corners.size() * 2 } },
         indices);
+
+    auto uiubo =
+        UIUbo { glm::ortho(0.f, 64.0f, 0.f, 64.0f, -1.f, 1.f), 64.0f, 64.0f };
+    m_uniform_buffer->upload_data(&uiubo, sizeof(UIUbo));
   }
 
   auto add_area(Unique<Widget> widget) -> void {
@@ -52,6 +67,11 @@ public:
   }
 
   auto update(f32 x, f32 y, f32 w, f32 h) -> void {
+    auto [w1, h1] = ZCtxt::get().get_window_size();
+    auto uiubo =
+        UIUbo { glm::ortho(0.f, f32(w1), 0.f, f32(h1), -1.f, 1.f), w, h };
+    m_uniform_buffer->upload_data(&uiubo, sizeof(UIUbo));
+
     m_corners.clear();
     calculate(x, y, w, h);
     generate();
@@ -61,8 +81,21 @@ public:
                                   m_corners.size() * sizeof(vec2));
   }
 
+  auto on_event(Event& event) -> void {
+    if (event.kind == Event::WindowResize) {
+      auto w = event.size[0];
+      auto h = event.size[1];
+      f32 b = border * factor;
+      f32 pw = w - b * 2;
+      f32 ph = h - b * 2;
+      update(b, b, pw, ph);
+    }
+    for (const auto& node : m_areas) { node->on_event(event); }
+  }
+
   auto draw(Shared<GPUShader> s1, Shared<GPUShader> s2, int border,
             glm::vec3 surface0) -> void {
+    m_uniform_buffer->bind();
     s1->bind();
     s1->uniform("u_border", border);
     s1->uniform("u_color", surface0);
@@ -70,6 +103,7 @@ public:
     for (const auto& node : m_areas) { node->draw(); }
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
+    m_uniform_buffer->bind();
     s2->bind();
     s2->uniform("u_border", border);
     s2->uniform("u_color", surface0);
@@ -93,6 +127,7 @@ private:
   std::vector<vec2> m_corners;
   Shared<GPUBatch> m_corners_batch;
   Shared<GPUBatch> m_rects_batch;
+  Shared<GPUUniformBuffer> m_uniform_buffer;
 };
 
 } // namespace zod

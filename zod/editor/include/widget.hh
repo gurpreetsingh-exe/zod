@@ -19,7 +19,7 @@ public:
                          f32 /* height */) -> void = 0;
   virtual auto generate(std::vector<vec2>&) -> void = 0;
   virtual auto draw() -> void {}
-  virtual auto on_event(Event& event) -> void {}
+  virtual auto on_event(Event& event) -> void = 0;
   virtual auto get_widget(f32, f32) -> Widget* { return this; }
 };
 
