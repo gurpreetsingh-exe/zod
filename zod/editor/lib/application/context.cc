@@ -108,8 +108,8 @@ auto ZCtxt::run() -> void {
   auto rect = m_shader_library->get("rect");
 
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
-  constexpr vec4 mantle = { 24. / 255., 24. / 255., 37. / 255., 1.0f };
-  glm::vec3 surface0 = { 49. / 255, 50. / 255, 68. / 255 };
+  constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
+  glm::vec3 surface0 = { 0.15f, 0.16f, 0.17f };
 
   m_window->is_running([&] {
     m_imgui_layer->begin_frame();

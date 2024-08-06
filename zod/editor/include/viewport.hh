@@ -11,6 +11,12 @@ public:
   Viewport();
   auto on_event(Event& event) -> void override;
   auto draw() -> void override;
+  auto calculate(f32 x, f32 y, f32 w, f32 h) -> void override {
+    this->x = x;
+    this->y = y;
+    this->w = w;
+    this->h = h;
+  }
 
 private:
   Shared<GPUShader> m_shader;

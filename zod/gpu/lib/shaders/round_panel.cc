@@ -4,9 +4,7 @@ const char* g_round_panel = R"(
 in vec2 uv;
 out vec4 color;
 
-const vec3 base = vec3(30., 30., 46.) / 255.;
-const vec3 mantle = vec3(24., 24., 37.) / 255.;
-const vec3 surface0 = vec3(49., 50., 68.) / 255.;
+const vec3 mantle = vec3(0.07f, 0.08f, 0.08f);
 
 uniform vec3 u_color;
 
