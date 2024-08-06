@@ -35,6 +35,10 @@ auto GLFrameBuffer::resize(i32 width, i32 height) -> void {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
                            gl_tex->m_target, gl_tex->m_id, 0);
   }
+  if (m_depth_attachment) {
+    glDeleteTextures(1, &m_depth_attachment);
+    add_depth_attachment();
+  }
   unbind();
 }
 
@@ -87,6 +91,18 @@ auto GLFrameBuffer::add_color_attachment(GPUAttachment& attach) -> void {
                          GL_COLOR_ATTACHMENT0 + m_color_attachments.size(),
                          target, gl_tex->m_id, 0);
   m_color_attachments.push_back(attach);
+}
+
+auto GLFrameBuffer::add_depth_attachment() -> void {
+  auto multisampled = m_samples > 1;
+  auto target = multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+
+  glCreateTextures(target, 1, &m_depth_attachment);
+  glBindTexture(target, m_depth_attachment);
+  glTexStorage2D(target, 1, GL_DEPTH24_STENCIL8, m_width, m_height);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, target,
+                         m_depth_attachment, 0);
+  glBindTexture(target, 0);
 }
 
 } // namespace zod

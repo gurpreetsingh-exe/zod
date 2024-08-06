@@ -34,6 +34,8 @@ ZCtxt::ZCtxt()
   GPUAttachment attach = { GPUBackend::get().create_texture(
       GPUTextureType::Texture2D, w, h, false) };
   m_framebuffer->add_color_attachment(attach);
+  // TODO: maybe don't do this here
+  m_framebuffer->add_depth_attachment();
   m_framebuffer->check();
   m_framebuffer->unbind();
   m_framebuffer->resize(w, h);
@@ -101,11 +103,6 @@ auto ZCtxt::on_event(Event& event) -> void {
 }
 
 auto ZCtxt::run() -> void {
-  auto [w, h] = m_window->get_size();
-  f32 b = border * factor;
-  // m_layout->on_event();
-  fmt::println("{} {}", w, h);
-
   auto round_panel = m_shader_library->get("round_panel");
   auto quad = m_shader_library->get("quad");
   auto rect = m_shader_library->get("rect");

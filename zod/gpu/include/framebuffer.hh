@@ -30,7 +30,6 @@ protected:
   i32 m_width = 0;
   i32 m_height = 0;
   std::vector<GPUAttachment> m_color_attachments;
-  GPUAttachment m_depth_attachment;
   i32 m_samples = 1;
   // i32 m_viewport[4] = { 0 };
   // i32 m_scissor[4] = { 0 };
@@ -43,6 +42,7 @@ public:
   virtual auto resize(i32, i32) -> void = 0;
   virtual auto check() -> void = 0;
   virtual auto add_color_attachment(GPUAttachment&) -> void = 0;
+  virtual auto add_depth_attachment() -> void = 0;
   auto get_slot(usize slot) -> GPUAttachment& {
     return m_color_attachments[slot];
   }

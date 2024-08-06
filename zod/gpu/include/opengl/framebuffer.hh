@@ -12,6 +12,7 @@ class GLFrameBuffer : public GPUFrameBuffer {
 
 private:
   GLuint m_id;
+  GLuint m_depth_attachment = 0;
 
 public:
   GLFrameBuffer(i32 /* width */, i32 /* height */);
@@ -22,6 +23,7 @@ public:
   auto resize(i32, i32) -> void override;
   auto check() -> void override;
   auto add_color_attachment(GPUAttachment&) -> void override;
+  auto add_depth_attachment() -> void override;
 };
 
 } // namespace zod

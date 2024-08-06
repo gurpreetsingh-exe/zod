@@ -8,6 +8,7 @@ Viewport::Viewport() : m_camera(Camera(64, 64, 90.0f, 0.01f, 100.0f)) {
   GPUAttachment attach = { GPUBackend::get().create_texture(
       GPUTextureType::Texture2D, 64, 64, false) };
   m_framebuffer->add_color_attachment(attach);
+  m_framebuffer->add_depth_attachment();
   m_framebuffer->check();
   m_framebuffer->unbind();
 
@@ -37,7 +38,6 @@ auto Viewport::draw() -> void {
   // m_framebuffer->bind();
   glViewport(x + b, y + b, w - b * 2, h - b * 2);
   glEnable(GL_DEPTH_TEST);
-  glClear(GL_DEPTH_BUFFER_BIT);
   m_shader->bind();
   m_shader->uniform("u_view_projection", m_camera.get_view_projection());
   m_batch->draw(m_shader);
@@ -49,6 +49,7 @@ auto Viewport::draw() -> void {
 
 auto Viewport::on_event(Event& event) -> void {
   if (event.kind == Event::WindowResize) {
+    // m_framebuffer->resize(w, h);
     m_camera.resize(w, h);
   }
 
