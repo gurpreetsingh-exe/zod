@@ -52,6 +52,9 @@ public:
     auto uiubo =
         UIUbo { glm::ortho(0.f, 64.0f, 0.f, 64.0f, -1.f, 1.f), 64.0f, 64.0f };
     m_uniform_buffer->upload_data(&uiubo, sizeof(UIUbo));
+
+    m_rect = GPUBackend::get().create_batch(
+        { { GPUDataType::Float, position, 2, 8 } }, { 0, 1, 2, 2, 1, 3 });
   }
 
   auto add_area(Unique<Widget> widget) -> void {
@@ -69,7 +72,10 @@ public:
   auto update(f32 x, f32 y, f32 w, f32 h) -> void {
     auto [w1, h1] = ZCtxt::get().get_window_size();
     auto uiubo =
+        // UIUbo { glm::ortho(0.f, f32(w), 0.f, f32(h), -1.f, 1.f), w, h };
         UIUbo { glm::ortho(0.f, f32(w1), 0.f, f32(h1), -1.f, 1.f), w, h };
+    // fmt::println("{}", 2.0f / uiubo.view_projection_mat[0][0]);
+    // fmt::println("{}", 2.0f / uiubo.view_projection_mat[1][1]);
     m_uniform_buffer->upload_data(&uiubo, sizeof(UIUbo));
 
     m_corners.clear();
@@ -85,10 +91,11 @@ public:
     if (event.kind == Event::WindowResize) {
       auto w = event.size[0];
       auto h = event.size[1];
-      f32 b = border * factor;
-      f32 pw = w - b * 2;
-      f32 ph = h - b * 2;
-      update(b, b, pw, ph);
+      // f32 b = glm::round(border * factor);
+      // f32 pw = w - b * 2;
+      // f32 ph = h - b * 2;
+      // update(b, b, pw, ph);
+      update(0, 0, w, h);
     }
     for (const auto& node : m_areas) { node->on_event(event); }
   }
@@ -99,15 +106,16 @@ public:
     s1->bind();
     s1->uniform("u_border", border);
     s1->uniform("u_color", surface0);
-    m_rects_batch->draw(s1);
-    for (const auto& node : m_areas) { node->draw(); }
+    // m_rects_batch->draw(s1);
+    DrawData draw_data = { m_rect, s1 };
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
-    m_uniform_buffer->bind();
-    s2->bind();
-    s2->uniform("u_border", border);
-    s2->uniform("u_color", surface0);
-    m_corners_batch->draw_instanced(s2, m_corners.size());
+    for (const auto& node : m_areas) { node->draw(draw_data); }
+    // m_uniform_buffer->bind();
+    // s2->bind();
+    // s2->uniform("u_border", border);
+    // s2->uniform("u_color", surface0);
+    // m_corners_batch->draw_instanced(s2, m_corners.size());
     glDisable(GL_BLEND);
   }
 
@@ -128,6 +136,7 @@ private:
   Shared<GPUBatch> m_corners_batch;
   Shared<GPUBatch> m_rects_batch;
   Shared<GPUUniformBuffer> m_uniform_buffer;
+  Shared<GPUBatch> m_rect;
 };
 
 } // namespace zod

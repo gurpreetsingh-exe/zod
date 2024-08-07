@@ -41,12 +41,12 @@ public:
          rng::views::zip(m_nodes, m_size_coefficients)) {
       switch (m_kind) {
         case SplitKind::Horizontal: {
-          node->calculate(x, y, w, h * size);
-          y += h * size;
+          node->calculate(x, y, w, round(h * size));
+          y += round(h * size);
         } break;
         case SplitKind::Vertical: {
-          node->calculate(x, y, w * size, h);
-          x += w * size;
+          node->calculate(x, y, round(w * size), h);
+          x += round(w * size);
         } break;
       }
     }
@@ -66,8 +66,8 @@ public:
     return this;
   }
 
-  auto draw() -> void override {
-    for (const auto& node : m_nodes) { node->draw(); }
+  auto draw(DrawData& data) -> void override {
+    for (const auto& node : m_nodes) { node->draw(data); }
   }
 
   auto generate(std::vector<vec2>& offsets) -> void override {

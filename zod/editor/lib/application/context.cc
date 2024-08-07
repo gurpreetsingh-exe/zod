@@ -12,6 +12,7 @@ namespace zod {
 class ZCtxt;
 static ZCtxt* g_zcx = nullptr;
 int border = 8;
+int padding = 2;
 f32 factor = 0.2;
 
 auto ZCtxt::get() -> ZCtxt& { return *g_zcx; }
@@ -124,6 +125,7 @@ auto ZCtxt::run() -> void {
       }
       ImGui::Text("PanelID: %zu", m_current_panel);
       ImGui::DragInt("border", &border);
+      ImGui::DragInt("padding", &padding);
       ImGui::DragFloat("Border Factor", &factor, 0.1);
       ImGui::ColorEdit3("Color", &surface0[0]);
       ImGui::End();

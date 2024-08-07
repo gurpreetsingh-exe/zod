@@ -22,6 +22,7 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
     eprintln("GLFW window creation failed");
   }
 
+  glfwSetWindowSizeLimits(win, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
   glfwMakeContextCurrent(win);
 
   window->m_window = win;

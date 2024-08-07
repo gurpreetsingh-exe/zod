@@ -31,12 +31,13 @@ Viewport::Viewport() : m_camera(Camera(64, 64, 90.0f, 0.01f, 100.0f)) {
 extern int border;
 extern f32 factor;
 
-auto Viewport::draw() -> void {
+auto Viewport::draw(DrawData&) -> void {
   f32 b = border * factor;
   GLint view[4];
   glGetIntegerv(GL_VIEWPORT, view);
   // m_framebuffer->bind();
-  glViewport(x + b, y + b, w - b * 2, h - b * 2);
+  // glViewport(x + b, y + b, w - b * 2, h - b * 2);
+  glViewport(x, y, w, h);
   glEnable(GL_DEPTH_TEST);
   m_shader->bind();
   m_shader->uniform("u_view_projection", m_camera.get_view_projection());
