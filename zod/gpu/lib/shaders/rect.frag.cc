@@ -11,7 +11,14 @@ uniform int u_border;
 uniform int u_padding;
 
 void main() {
-    vec4 a = vec4( 0.11f, 0.12f, 0.12f, 1.0f );
+    if (u_border == 0) {
+        vec2 size = vec2(u_width, u_height);
+        vec2 c = abs(uv - size * 0.5) - size * 0.5 + u_padding;
+        vec2 c0 = max(c, 0.0f);
+        float c1 = step(length(c0), 0.01);
+        color = vec4(u_color, c1);
+        return;
+    }
     vec2 size = vec2(u_width, u_height);
     vec2 c = abs(uv - size * 0.5) - size * 0.5 + u_border + u_padding;
     vec2 c0 = max(c, 0.0f);

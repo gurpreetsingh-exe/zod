@@ -103,9 +103,6 @@ public:
   auto draw(Shared<GPUShader> s1, Shared<GPUShader> s2, int border,
             glm::vec3 surface0) -> void {
     m_uniform_buffer->bind();
-    s1->bind();
-    s1->uniform("u_border", border);
-    s1->uniform("u_color", surface0);
     // m_rects_batch->draw(s1);
     DrawData draw_data = { m_rect, s1 };
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

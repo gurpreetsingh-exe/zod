@@ -5,13 +5,14 @@
 #include "widgets/panel.hh"
 #include "widgets/split.hh"
 
+#include "outliner.hh"
 #include "viewport.hh"
 
 namespace zod {
 
 class ZCtxt;
 static ZCtxt* g_zcx = nullptr;
-int border = 8;
+int border = 0;
 int padding = 2;
 f32 factor = 0.2;
 
@@ -27,7 +28,7 @@ auto ZCtxt::drop() -> void { delete g_zcx; }
 ZCtxt::ZCtxt()
     : m_window(Window::create(1280, 720, "Zod")),
       m_renderer(GPUBackend::get().create_renderer()),
-      m_shader_library(unique<ShaderLibrary>()), m_layout(unique<Layout>()),
+      m_layout(unique<Layout>()),
       m_framebuffer(GPUBackend::get().create_framebuffer(1280, 720)) {
   m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
   auto [w, h] = m_window->get_size();
@@ -45,8 +46,7 @@ ZCtxt::ZCtxt()
   auto n = GPUBackend::get().create_shader(#n);                                \
   n->init_vertex_shader(vert);                                                 \
   n->init_fragment_shader(frag);                                               \
-  n->compile();                                                                \
-  m_shader_library->add(n->name, n)
+  n->compile();
 
   CREATE_SHADER(quad, g_fullscreen, g_texture);
   CREATE_SHADER(rect, g_rect_vert, g_rect_frag);
@@ -55,7 +55,7 @@ ZCtxt::ZCtxt()
   m_window->set_event_callback(std::bind(&ZCtxt::on_event, this, ph::_1));
 
   Unique<Split> s1 = unique<Split>(SplitKind::Vertical);
-  s1->add_node(unique<Panel>(), 0.25);
+  s1->add_node(unique<Outliner>(), 0.25);
 
   Unique<Split> s2 = unique<Split>(SplitKind::Horizontal);
   s2->add_node(unique<Panel>(), 0.25);
@@ -104,9 +104,9 @@ auto ZCtxt::on_event(Event& event) -> void {
 }
 
 auto ZCtxt::run() -> void {
-  auto round_panel = m_shader_library->get("round_panel");
-  auto quad = m_shader_library->get("quad");
-  auto rect = m_shader_library->get("rect");
+  auto round_panel = GPUBackend::get().get_shader("round_panel");
+  auto quad = GPUBackend::get().get_shader("quad");
+  auto rect = GPUBackend::get().get_shader("rect");
 
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
@@ -124,7 +124,7 @@ auto ZCtxt::run() -> void {
         glfwSwapInterval(vsync);
       }
       ImGui::Text("PanelID: %zu", m_current_panel);
-      ImGui::DragInt("border", &border);
+      ImGui::DragInt("border", &border, 0.1, 0, 10);
       ImGui::DragInt("padding", &padding);
       ImGui::DragFloat("Border Factor", &factor, 0.1);
       ImGui::ColorEdit3("Color", &surface0[0]);
