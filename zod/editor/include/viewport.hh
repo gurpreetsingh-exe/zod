@@ -2,23 +2,17 @@
 
 #include "backend.hh"
 #include "camera.hh"
-#include "widgets/panel.hh"
 
 namespace zod {
 
-class Viewport : public Panel {
+class Viewport {
 public:
   Viewport();
-  auto on_event(Event& event) -> void override;
-  auto draw(DrawData&) -> void override;
-  auto calculate(f32 x, f32 y, f32 w, f32 h) -> void override {
-    this->x = x;
-    this->y = y;
-    this->w = w;
-    this->h = h;
-  }
+  auto update() -> void;
 
 private:
+  f32 m_width;
+  f32 m_height;
   Shared<GPUShader> m_shader;
   Shared<GPUFrameBuffer> m_framebuffer;
   Shared<GPUBatch> m_batch;

@@ -41,6 +41,7 @@ public:
   virtual auto unbind() -> void = 0;
   virtual auto resize(i32, i32) -> void = 0;
   virtual auto check() -> void = 0;
+  virtual auto clear() -> void = 0;
   virtual auto add_color_attachment(GPUAttachment&) -> void = 0;
   virtual auto add_depth_attachment() -> void = 0;
   auto get_slot(usize slot) -> GPUAttachment& {

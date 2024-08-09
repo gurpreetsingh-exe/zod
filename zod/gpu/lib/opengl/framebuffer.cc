@@ -18,11 +18,15 @@ GLFrameBuffer::GLFrameBuffer(i32 width, i32 height)
 GLFrameBuffer::~GLFrameBuffer() { glDeleteFramebuffers(1, &m_id); }
 
 auto GLFrameBuffer::bind() -> void {
+  glGetIntegerv(GL_VIEWPORT, m_view);
   glBindFramebuffer(GL_FRAMEBUFFER, m_id);
   glViewport(0, 0, m_width, m_height);
 }
 
-auto GLFrameBuffer::unbind() -> void { glBindFramebuffer(GL_FRAMEBUFFER, 0); }
+auto GLFrameBuffer::unbind() -> void {
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glViewport(m_view[0], m_view[1], m_view[2], m_view[3]);
+}
 
 auto GLFrameBuffer::resize(i32 width, i32 height) -> void {
   m_width = width;
@@ -72,6 +76,11 @@ auto GLFrameBuffer::check() -> void {
 
   fmt::println(stderr, "GPUFrameBuffer: status {}", err);
   unbind();
+}
+
+auto GLFrameBuffer::clear() -> void {
+  bind();
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 auto GLFrameBuffer::add_color_attachment(GPUAttachment& attach) -> void {

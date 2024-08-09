@@ -7,19 +7,9 @@ namespace zod {
 
 class Outliner : public Panel {
 public:
-  Outliner();
+  Outliner() = default;
   auto on_event(Event& event) -> void override;
-  auto draw(DrawData&) -> void override;
-  auto calculate(f32 x, f32 y, f32 w, f32 h) -> void override {
-    this->x = x;
-    this->y = y;
-    this->w = w;
-    this->h = h;
-  }
-
-private:
-  Shared<GPUShader> m_shader;
-  Shared<GPUBatch> m_batch;
+  auto draw() -> void override;
 };
 
 } // namespace zod

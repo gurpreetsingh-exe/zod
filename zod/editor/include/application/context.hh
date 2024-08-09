@@ -33,7 +33,6 @@ private:
   Unique<Window> m_window;
   Shared<GPURenderer> m_renderer;
   Unique<ShaderLibrary> m_shader_library;
-  Unique<Layout> m_layout;
   Shared<GPUFrameBuffer> m_framebuffer;
   Unique<ImGuiLayer> m_imgui_layer;
   usize m_current_panel;

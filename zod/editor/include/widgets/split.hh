@@ -31,47 +31,12 @@ public:
     m_size_coefficients.push_back(size);
   }
 
-  auto calculate(f32 x, f32 y, f32 w, f32 h) -> void override {
-    ZASSERT(m_nodes.size() == m_size_coefficients.size());
-    this->x = x;
-    this->y = y;
-    this->w = w;
-    this->h = h;
-    for (const auto& [node, size] :
-         rng::views::zip(m_nodes, m_size_coefficients)) {
-      switch (m_kind) {
-        case SplitKind::Horizontal: {
-          node->calculate(x, y, w, round(h * size));
-          y += round(h * size);
-        } break;
-        case SplitKind::Vertical: {
-          node->calculate(x, y, round(w * size), h);
-          x += round(w * size);
-        } break;
-      }
-    }
-  }
-
   auto on_event(Event& event) -> void override {
     for (const auto& node : m_nodes) { node->on_event(event); }
   }
 
-  auto get_widget(f32 x, f32 y) -> Widget* override {
-    for (const auto& node : m_nodes) {
-      if (node->x <= x and node->y <= y and node->x + node->w > x and
-          node->y + node->h > y) {
-        return node->get_widget(x, y);
-      }
-    }
-    return this;
-  }
-
-  auto draw(DrawData& data) -> void override {
-    for (const auto& node : m_nodes) { node->draw(data); }
-  }
-
-  auto generate(std::vector<vec2>& offsets) -> void override {
-    for (const auto& node : m_nodes) { node->generate(offsets); }
+  auto draw() -> void override {
+    for (const auto& node : m_nodes) { node->draw(); }
   }
 
 private:

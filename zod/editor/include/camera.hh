@@ -35,7 +35,7 @@ public:
     return { m_clip_near, m_clip_far };
   }
 
-  auto update(Event&) -> void;
+  auto update() -> void;
 
   auto resize(f32 width, f32 height) -> void {
     m_viewport_width = width;
@@ -73,7 +73,7 @@ private:
     m_view_projection = m_projection * m_view;
   }
 
-  auto _update(Event&) -> void;
+  auto _update() -> void;
 
 private:
   f32 m_viewport_width, m_viewport_height;

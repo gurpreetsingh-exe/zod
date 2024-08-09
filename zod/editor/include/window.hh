@@ -28,7 +28,7 @@ public:
     m_event_callback = cb;
   }
 
-  auto get_mouse_pos() -> std::tuple<f32, f32> {
+  auto get_mouse_pos() -> std::pair<f32, f32> {
     f64 x, y;
     glfwGetCursorPos(m_window, &x, &y);
     return { x, m_height - y };

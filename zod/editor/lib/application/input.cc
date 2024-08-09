@@ -14,4 +14,8 @@ auto Input::is_mouse_button_pressed(int button) -> bool {
   return glfwGetMouseButton(window, button) == GLFW_PRESS;
 }
 
+auto Input::get_mouse_pos() -> std::pair<f32, f32> {
+  return ZCtxt::get().get_window().get_mouse_pos();
+}
+
 } // namespace zod
