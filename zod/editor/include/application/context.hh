@@ -20,7 +20,7 @@ public:
   static auto get() -> ZCtxt&;
   static auto create() -> void;
   static auto drop() -> void;
-  auto run() -> void;
+  auto run(fs::path) -> void;
   auto get_window_size() -> std::tuple<i32, i32> {
     return m_window->get_size();
   }
@@ -32,7 +32,8 @@ private:
 private:
   Unique<Window> m_window;
   Shared<GPURenderer> m_renderer;
-  Unique<ShaderLibrary> m_shader_library;
+  Shared<GPUBatch> m_batch;
+  Shared<GPUStorageBuffer> m_ssbo;
   Shared<GPUFrameBuffer> m_framebuffer;
   Unique<ImGuiLayer> m_imgui_layer;
   usize m_current_panel;

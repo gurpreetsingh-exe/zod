@@ -24,6 +24,7 @@ struct GPUBufferLayout {
   void* buffer;
   usize size;
   usize length;
+  bool normalized = false;
   bool instanced = false;
 };
 

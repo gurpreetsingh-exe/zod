@@ -17,6 +17,7 @@ struct Prim {
 
 struct Mesh {
   std::vector<Point> points;
+  std::vector<glm::vec3> normals;
   std::vector<Prim> prims;
 };
 

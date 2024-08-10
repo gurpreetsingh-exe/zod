@@ -26,8 +26,8 @@ GLBatch::GLBatch(const std::vector<GPUBufferLayout>& layouts,
     buffer->upload_data(layout.buffer, byte_size * layout.length);
     auto attr = m_vertex_buffers.size();
     glEnableVertexAttribArray(attr);
-    glVertexAttribPointer(attr, layout.size, to_gl(layout.type), GL_FALSE,
-                          byte_size * layout.size, nullptr);
+    glVertexAttribPointer(attr, layout.size, to_gl(layout.type),
+                          layout.normalized, byte_size * layout.size, nullptr);
     if (layout.instanced) {
       glVertexBindingDivisor(attr, 1);
     }

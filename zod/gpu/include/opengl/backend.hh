@@ -16,9 +16,9 @@ class GLBackend : public GPUBackend {
 public:
   GLBackend() { GLBackend::platform_init(); }
 
-  auto
-  create_batch(const std::vector<GPUBufferLayout>& layouts,
-               const std::vector<u32>& indices) -> Shared<GPUBatch> override {
+  auto create_batch(const std::vector<GPUBufferLayout>& layouts,
+                    const std::vector<u32>& indices)
+      -> Shared<GPUBatch> override {
     return shared<GLBatch>(layouts, indices);
   }
 
@@ -40,8 +40,12 @@ public:
     return shader;
   }
 
-  auto create_texture(GPUTextureType type, i32 width, i32 height,
-                      bool bindless) -> Shared<GPUTexture> override {
+  auto create_storage_buffer() -> Shared<GPUStorageBuffer> override {
+    return shared<GLStorageBuffer>();
+  }
+
+  auto create_texture(GPUTextureType type, i32 width, i32 height, bool bindless)
+      -> Shared<GPUTexture> override {
     return shared<GLTexture>(type, width, height, bindless);
   }
 

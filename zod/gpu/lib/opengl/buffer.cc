@@ -66,4 +66,27 @@ auto GLIndexBuffer::upload_data(const void* data, usize size, usize) -> void {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
 }
 
+/// Storage Buffer
+GLStorageBuffer::GLStorageBuffer() {
+  glCreateBuffers(1, &m_id);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
+}
+
+GLStorageBuffer::~GLStorageBuffer() { glDeleteBuffers(1, &m_id); }
+
+auto GLStorageBuffer::bind() -> void {
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
+}
+
+auto GLStorageBuffer::unbind() -> void {
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+auto GLStorageBuffer::upload_data(const void* data, usize size, usize) -> void {
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
+  glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, GL_STATIC_DRAW);
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_id);
+  glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, m_id, 0, size);
+}
+
 } // namespace zod

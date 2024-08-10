@@ -5,16 +5,17 @@
 
 namespace zod {
 
-class Viewport {
+class NodeEditor {
 public:
-  Viewport();
-  auto update(Shared<GPUBatch>) -> void;
+  NodeEditor();
+  auto update() -> void;
 
 private:
   f32 m_width;
   f32 m_height;
   Shared<GPUShader> m_shader;
   Shared<GPUFrameBuffer> m_framebuffer;
+  Shared<GPUBatch> m_batch;
   Camera m_camera;
 };
 

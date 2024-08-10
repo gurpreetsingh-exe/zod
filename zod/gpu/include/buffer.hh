@@ -32,4 +32,9 @@ public:
   virtual ~GPUIndexBuffer() = default;
 };
 
+class GPUStorageBuffer : public GPUBuffer {
+public:
+  virtual ~GPUStorageBuffer() = default;
+};
+
 } // namespace zod

@@ -1,5 +1,7 @@
 #include "application/context.hh"
 
+#include "io/obj.hh"
+#include "node_editor.hh"
 #include "outliner.hh"
 #include "viewport.hh"
 
@@ -48,6 +50,7 @@ ZCtxt::ZCtxt()
   CREATE_SHADER(round_panel, g_vertex_2d, g_round_panel);
 
   m_window->set_event_callback(std::bind(&ZCtxt::on_event, this, ph::_1));
+  m_ssbo = GPUBackend::get().create_storage_buffer();
 }
 
 auto ZCtxt::on_event(Event& event) -> void {
@@ -74,7 +77,22 @@ auto ZCtxt::on_event(Event& event) -> void {
   }
 }
 
-auto ZCtxt::run() -> void {
+auto ZCtxt::run(fs::path path) -> void {
+  auto mesh = load_obj(path);
+  auto format = std::vector<GPUBufferLayout> {
+    { GPUDataType::Float, mesh->points.data(), 3, mesh->points.size() * 3 },
+  };
+
+  m_ssbo->upload_data(mesh->normals.data(),
+                      mesh->normals.size() * sizeof(glm::vec3));
+
+  auto indices = std::vector<u32>();
+  for (const auto& prim : mesh->prims) {
+    for (auto i : prim.points) { indices.push_back(i); }
+  }
+
+  m_batch = GPUBackend::get().create_batch(format, indices);
+
   auto round_panel = GPUBackend::get().get_shader("round_panel");
   auto quad = GPUBackend::get().get_shader("quad");
   auto rect = GPUBackend::get().get_shader("rect");
@@ -83,6 +101,7 @@ auto ZCtxt::run() -> void {
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
   glm::vec3 surface0 = { 0.15f, 0.16f, 0.17f };
   auto viewport = Viewport();
+  auto node_editor = NodeEditor();
 
   m_window->is_running([&] {
     m_imgui_layer->begin_frame();
@@ -102,10 +121,9 @@ auto ZCtxt::run() -> void {
       ImGui::Begin("Properties");
       ImGui::End();
 
-      ImGui::Begin("Node Editor");
-      ImGui::End();
-
-      viewport.update();
+      m_ssbo->bind();
+      viewport.update(m_batch);
+      node_editor.update();
     });
     m_imgui_layer->end_frame();
   });

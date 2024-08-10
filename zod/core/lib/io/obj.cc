@@ -18,6 +18,7 @@ auto load_obj(const fs::path& filepath) -> Mesh* {
   std::unordered_map<Point, u32> unique_vertices;
   const auto& attributes = reader.GetAttrib();
   const auto& v = attributes.vertices;
+  const auto& n = attributes.normals;
 
   for (const auto& shape : reader.GetShapes()) {
     const auto& mesh = shape.mesh;
@@ -38,6 +39,13 @@ auto load_obj(const fs::path& filepath) -> Mesh* {
         }
         prim.points.push_back(unique_vertices[point]);
       }
+      auto index_ = mesh.indices[i];
+      glm::vec3 normal = {
+        n[3 * index_.normal_index + 0],
+        n[3 * index_.normal_index + 1],
+        n[3 * index_.normal_index + 2],
+      };
+      me->normals.push_back(normal);
       me->prims.push_back(std::move(prim));
       i += count;
     }
