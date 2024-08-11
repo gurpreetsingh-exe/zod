@@ -44,6 +44,7 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   glClearColor(0, 0, 0, 1);
   m_shader->bind();
   m_shader->uniform("u_view_projection", m_camera.get_view_projection());
+  m_shader->uniform("u_direction", m_camera.get_direction());
   batch->draw(m_shader);
   glDisable(GL_DEPTH_TEST);
   m_framebuffer->unbind();

@@ -33,6 +33,7 @@ public:
   auto get_clipping() const -> std::tuple<f32, f32> {
     return { m_clip_near, m_clip_far };
   }
+  auto get_direction() const -> const glm::vec3& { return m_direction; }
 
   auto update() -> void;
 

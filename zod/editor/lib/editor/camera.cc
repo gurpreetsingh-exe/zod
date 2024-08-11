@@ -10,21 +10,20 @@ auto Camera::_update() -> void {
   auto [x, y] = Input::get_mouse_pos();
   glm::vec2 mouse_pos = glm::vec2(x, y);
   glm::vec2 delta = (mouse_pos - m_last_mouse_pos) * 0.28f;
-  auto ac = Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
-            Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL);
-  if (ac and Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
-    m_position += m_direction * delta.x * 0.06f;
+  if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
+      Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
+    if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
+      m_position += m_direction * delta.x * 0.06f;
+    }
   } else if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_RIGHT)) {
     glm::mat4 rot_mat = glm::rotate(m_model, glm::radians(delta.x), up);
     rot_mat = glm::rotate(rot_mat, glm::radians(delta.y), m_right);
     m_position = glm::vec3(glm::vec4(m_position, 1.0f) * rot_mat);
-    m_direction = glm::normalize(-m_position);
-    m_right = glm::cross(up, m_direction);
   }
+  m_direction = glm::normalize(-m_position);
+  m_right = glm::cross(up, m_direction);
   update_matrix();
   m_last_mouse_pos = mouse_pos;
-  // m_uniform_buffer->upload_data(glm::value_ptr(m_view_projection),
-  //                              sizeof(glm::mat4), sizeof(glm::mat4));
 }
 
 auto Camera::update() -> void {
