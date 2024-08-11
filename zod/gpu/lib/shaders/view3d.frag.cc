@@ -26,12 +26,6 @@ Light lights[4] = {
     Light(vec3(0), vec3(0), 0),
 };
 
-const vec3 light0 = vec3(-0.854701, 0.111111, 0.507091);
-const vec3 light1 = vec3(0.058607, -0.987943, -0.143295);
-const vec3 light2 = vec3(0.972202, 0.075846, -0.221518);
-
-const vec3 light0color = vec3(0.723042);
-
 vec4 fast_rcp(vec4 v) {
   return intBitsToFloat(0x7eef370b - floatBitsToInt(v));
 }

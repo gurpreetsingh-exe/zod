@@ -88,12 +88,14 @@ private:
 
   bool m_needs_update = false;
   bool m_look_around = false;
+  bool m_panning = false;
 
   glm::vec3 m_position = glm::vec3(2.0f, 2.0f, 2.0f);
   glm::vec3 m_direction = glm::vec3(-1.0f);
   glm::vec3 m_right = glm::vec3(1.0f, 0.0f, 0.0f);
 
   glm::vec2 m_last_mouse_pos = glm::vec2(0.0f);
+  glm::vec2 m_pan_mouse_pos = glm::vec2(0.0f);
 };
 
 } // namespace zod

@@ -14,16 +14,26 @@ auto Camera::_update() -> void {
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
       m_position += m_direction * delta.x * 0.06f;
+    } else if (Input::is_key_pressed(GLFW_KEY_RIGHT_SHIFT)) {
+      m_panning = true;
+      auto right = m_right * delta.x * 0.02f;
+      auto _up = glm::cross(m_right, m_direction) * delta.y * 0.02f;
+      m_position += right;
+      m_position += _up;
     }
   } else if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_RIGHT)) {
     glm::mat4 rot_mat = glm::rotate(m_model, glm::radians(delta.x), up);
     rot_mat = glm::rotate(rot_mat, glm::radians(delta.y), m_right);
     m_position = glm::vec3(glm::vec4(m_position, 1.0f) * rot_mat);
+    m_direction = glm::normalize(-m_position);
   }
-  m_direction = glm::normalize(-m_position);
   m_right = glm::cross(up, m_direction);
   update_matrix();
   m_last_mouse_pos = mouse_pos;
+  if (not m_panning) {
+    m_pan_mouse_pos = mouse_pos;
+  }
+  m_panning = false;
 }
 
 auto Camera::update() -> void {
