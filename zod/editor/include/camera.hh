@@ -67,10 +67,14 @@ public:
     m_needs_update = true;
   }
 
-  auto set_clipping(f32 near, f32 far) {
+  auto set_clipping(f32 near, f32 far) -> void {
     m_clip_near = near;
     m_clip_far = far;
     m_needs_update = true;
+  }
+
+  auto set_window_position(glm::vec2 position) -> void {
+    m_window_position = position;
   }
 
 private:
@@ -96,6 +100,7 @@ private:
   auto zoom(f32) -> void;
   auto rotate(glm::vec2) -> void;
   auto pan(glm::vec2) -> void;
+  auto cursor_wrap(glm::vec2) -> void;
 
 private:
   f32 m_viewport_width, m_viewport_height;
@@ -119,6 +124,8 @@ private:
 
   glm::vec2 m_last_mouse_pos = glm::vec2(0.0f);
   glm::vec2 m_pan_mouse_pos = glm::vec2(0.0f);
+
+  glm::vec2 m_window_position = glm::vec2(0.0f);
 };
 
 } // namespace zod

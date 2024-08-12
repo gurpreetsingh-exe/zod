@@ -1,6 +1,7 @@
 #pragma once
 
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 #include "context.hh"
 #include "event.hh"
@@ -28,10 +29,14 @@ public:
     m_event_callback = cb;
   }
 
-  auto get_mouse_pos() -> std::pair<f32, f32> {
+  auto get_mouse_pos() -> glm::vec2 {
     f64 x, y;
     glfwGetCursorPos(m_window, &x, &y);
     return { x, m_height - y };
+  }
+
+  auto set_mouse_pos(glm::vec2 position) -> void {
+    glfwSetCursorPos(m_window, position.x, m_height - position.y);
   }
 
   auto get_window_pos() -> std::tuple<int, int> {

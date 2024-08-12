@@ -57,12 +57,14 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::Begin("Viewport");
 
-  if (ImGui::IsWindowHovered()) {
-    m_camera.update();
+  auto update_camera_ubo = [&] {
     auto ubo = CameraUBO { m_camera.get_view_projection(),
                            glm::vec4(m_camera.get_direction(), 0.0f) };
     m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
-  }
+  };
+
+  auto position = ImGui::GetWindowPos();
+  m_camera.set_window_position(glm::vec2(position.x, position.y));
 
   auto size = ImGui::GetContentRegionAvail();
   if (size.x != m_width or size.y != m_height) {
@@ -70,8 +72,11 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
     m_height = size.y;
     m_framebuffer->resize(m_width, m_height);
     m_camera.resize(m_width, m_height);
-    m_camera.update();
   }
+
+  m_camera.update();
+  update_camera_ubo();
+
   m_framebuffer->bind();
   m_framebuffer->clear();
   glEnable(GL_DEPTH_TEST);

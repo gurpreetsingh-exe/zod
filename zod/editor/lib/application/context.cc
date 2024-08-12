@@ -54,9 +54,7 @@ ZCtxt::ZCtxt()
 }
 
 auto ZCtxt::on_event(Event& event) -> void {
-  // auto x = event.mouse[0];
-  // auto y = event.mouse[1];
-  auto [x, y] = m_window->get_mouse_pos();
+  auto pos = m_window->get_mouse_pos();
   switch (event.kind) {
     case Event::MouseDown: {
     } break;

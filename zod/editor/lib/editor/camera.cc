@@ -24,24 +24,48 @@ auto Camera::rotate(glm::vec2 delta) -> void {
   m_direction = glm::normalize(-m_position);
 }
 
+auto Camera::cursor_wrap(glm::vec2 position) -> void {
+  constexpr f32 padding = 16;
+  if (position.x < m_window_position.x + padding) {
+    auto pos = glm::vec2(m_window_position.x + m_viewport_width - padding,
+                         Input::get_mouse_pos().y);
+    Input::set_mouse_pos(pos);
+  } else if (position.x > m_window_position.x + m_viewport_width - padding) {
+    auto pos =
+        glm::vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
+    Input::set_mouse_pos(pos);
+  }
+  // if (position.y < m_window_position.y + padding) {
+  //   auto pos = glm::vec2(Input::get_mouse_pos().x,
+  //                        m_window_position.y + m_viewport_height - padding);
+  //   Input::set_mouse_pos(pos);
+  // } else if (position.y > m_window_position.y + m_viewport_height - padding) {
+  //   auto pos =
+  //       glm::vec2(Input::get_mouse_pos().x, m_window_position.y + padding);
+  //   Input::set_mouse_pos(pos);
+  // }
+}
+
 auto Camera::_update() -> void {
-  auto [x, y] = Input::get_mouse_pos();
-  glm::vec2 mouse_pos = glm::vec2(x, y);
+  auto mouse_pos = Input::get_mouse_pos();
   glm::vec2 delta = (mouse_pos - m_last_mouse_pos) * 0.28f;
   if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
       zoom(delta.x);
+      cursor_wrap(mouse_pos);
     } else if (Input::is_key_pressed(GLFW_KEY_RIGHT_SHIFT)) {
       m_panning = true;
       pan(delta);
+      cursor_wrap(mouse_pos);
     }
   } else if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_RIGHT)) {
     rotate(delta);
+    cursor_wrap(mouse_pos);
   }
   m_right = glm::cross(up, m_direction);
   update_matrix();
-  m_last_mouse_pos = mouse_pos;
+  m_last_mouse_pos = Input::get_mouse_pos();
   if (not m_panning) {
     m_pan_mouse_pos = mouse_pos;
   }
@@ -55,9 +79,7 @@ auto Camera::update() -> void {
     return;
   }
 
-  auto [x, y] = Input::get_mouse_pos();
-  glm::vec2 mouse_pos = glm::vec2(x, y);
-  if (m_last_mouse_pos == mouse_pos) {
+  if (m_last_mouse_pos == Input::get_mouse_pos()) {
     return;
   }
 
