@@ -2,9 +2,28 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
 
 #include "backend.hh"
 #include "event.hh"
+
+#define FMT(type, fmt_str, ...)                                                \
+  template <>                                                                  \
+  struct fmt::formatter<type> {                                                \
+    constexpr auto                                                             \
+    parse(format_parse_context& ctx) -> format_parse_context::iterator {       \
+      return ctx.begin();                                                      \
+    }                                                                          \
+    auto format(type v,                                                        \
+                format_context& ctx) const -> format_context::iterator {       \
+      return fmt::format_to(ctx.out(), fmt_str, __VA_ARGS__);                  \
+    }                                                                          \
+  }
+
+FMT(glm::vec3, "{{ {}, {}, {} }}", v.x, v.y, v.z);
+FMT(glm::vec4, "{{ {}, {}, {}, {} }}", v.x, v.y, v.z, v.w);
+FMT(glm::mat4, "{{ {},\n  {},\n  {},\n  {} }}", v[0], v[1], v[2], v[3]);
 
 namespace zod {
 
@@ -74,6 +93,9 @@ private:
   }
 
   auto _update() -> void;
+  auto zoom(f32) -> void;
+  auto rotate(glm::vec2) -> void;
+  auto pan(glm::vec2) -> void;
 
 private:
   f32 m_viewport_width, m_viewport_height;
@@ -93,6 +115,7 @@ private:
   glm::vec3 m_position = glm::vec3(2.0f, 2.0f, 2.0f);
   glm::vec3 m_direction = glm::vec3(-1.0f);
   glm::vec3 m_right = glm::vec3(1.0f, 0.0f, 0.0f);
+  glm::vec3 m_focal_point = glm::vec3(0.0f);
 
   glm::vec2 m_last_mouse_pos = glm::vec2(0.0f);
   glm::vec2 m_pan_mouse_pos = glm::vec2(0.0f);
