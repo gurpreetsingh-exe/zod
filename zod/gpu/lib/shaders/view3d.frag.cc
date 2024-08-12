@@ -7,7 +7,10 @@ const char* g_view3d_frag = R"(
 in vec3 P;
 out vec4 color;
 
-uniform vec3 u_direction;
+layout(std140) uniform Camera {
+    mat4 view_projection;
+    vec4 direction;
+};
 
 layout(std430, binding = 0) buffer vertexNormals {
   float N[];
@@ -39,7 +42,7 @@ vec4 wrapped_lighting(vec4 NL, vec4 w) {
 void main(void) {
   int id = gl_PrimitiveID * 3;
   vec3 n = vec3(N[id], N[id + 1], N[id + 2]);
-  float fresnel = dot(u_direction, n) * 0.5 + 0.5;
+  float fresnel = dot(direction.xyz, n) * 0.5 + 0.5;
 
   vec3 ambient = vec3(0);
   vec3 diffuse_light = ambient;

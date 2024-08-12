@@ -4,6 +4,11 @@
 
 namespace zod {
 
+struct CameraUBO {
+  glm::mat4 view_projection;
+  glm::vec4 direction;
+};
+
 Viewport::Viewport()
     : m_width(64), m_height(64),
       m_camera(Camera(64, 64, 90.0f, 0.01f, 100.0f)) {
@@ -20,6 +25,32 @@ Viewport::Viewport()
   m_shader->init_vertex_shader(g_view3d_vert);
   m_shader->init_fragment_shader(g_view3d_frag);
   m_shader->compile();
+
+  f32 position[] = {
+    -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1,
+    -1, -1, 1,  1, -1, 1,  1, 1, 1,  -1, 1, 1,
+  };
+
+  auto format = std::vector<GPUBufferLayout> {
+    { GPUDataType::Float, position, 3, 24 },
+  };
+  m_cubemap_batch = GPUBackend::get().create_batch(
+      format, { 1, 2, 0, 2, 3, 0, 6, 2, 1, 1, 5, 6, 6, 5, 4, 4, 7, 6,
+                6, 3, 2, 7, 3, 6, 3, 7, 0, 7, 4, 0, 5, 1, 0, 4, 5, 0 });
+
+  m_cubemap_shader = GPUBackend::get().create_shader("cubemap");
+  m_cubemap_shader->init_vertex_shader(g_cubemap_vert);
+  m_cubemap_shader->init_fragment_shader(g_cubemap_frag);
+  m_cubemap_shader->compile();
+
+  m_camera_ubo = GPUBackend::get().create_uniform_buffer(sizeof(CameraUBO));
+}
+
+auto Viewport::draw_cubemap() -> void {
+  glDepthFunc(GL_LEQUAL);
+  m_cubemap_shader->bind();
+  m_cubemap_batch->draw(m_cubemap_shader);
+  glDepthFunc(GL_LESS);
 }
 
 auto Viewport::update(Shared<GPUBatch> batch) -> void {
@@ -28,6 +59,9 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
 
   if (ImGui::IsWindowHovered()) {
     m_camera.update();
+    auto ubo = CameraUBO { m_camera.get_view_projection(),
+                           glm::vec4(m_camera.get_direction(), 0.0f) };
+    m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
   }
 
   auto size = ImGui::GetContentRegionAvail();
@@ -43,9 +77,9 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   glEnable(GL_DEPTH_TEST);
   glClearColor(0, 0, 0, 1);
   m_shader->bind();
-  m_shader->uniform("u_view_projection", m_camera.get_view_projection());
-  m_shader->uniform("u_direction", m_camera.get_direction());
+  m_camera_ubo->bind();
   batch->draw(m_shader);
+  draw_cubemap();
   glDisable(GL_DEPTH_TEST);
   m_framebuffer->unbind();
 
