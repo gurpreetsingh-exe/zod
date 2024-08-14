@@ -1,3 +1,5 @@
+#pragma once
+
 #include <glad/glad.h>
 
 #include "../batch.hh"
@@ -14,6 +16,7 @@ public:
   auto draw(Shared<GPUShader>) -> void override;
   auto draw_instanced(Shared<GPUShader>, usize /* instance_count */)
       -> void override;
+  auto draw_lines(Shared<GPUShader>) -> void;
 
 private:
   usize m_elements;

@@ -12,6 +12,8 @@ public:
 
 private:
   auto draw_cubemap() -> void;
+  auto draw_grid() -> void;
+  auto draw_axes() -> void;
 
 private:
   f32 m_width;
@@ -19,6 +21,8 @@ private:
   Shared<GPUShader> m_shader;
   Shared<GPUBatch> m_cubemap_batch;
   Shared<GPUShader> m_cubemap_shader;
+  Shared<GPUBatch> m_grid_batch;
+  Shared<GPUShader> m_grid_shader;
   Shared<GPUFrameBuffer> m_framebuffer;
   Shared<GPUUniformBuffer> m_camera_ubo;
   Camera m_camera;

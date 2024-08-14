@@ -24,7 +24,6 @@ auto ZCtxt::drop() -> void { delete g_zcx; }
 
 ZCtxt::ZCtxt()
     : m_window(Window::create(1280, 720, "Zod")),
-      m_renderer(GPUBackend::get().create_renderer()),
       m_framebuffer(GPUBackend::get().create_framebuffer(1280, 720)) {
   m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
   auto [w, h] = m_window->get_size();

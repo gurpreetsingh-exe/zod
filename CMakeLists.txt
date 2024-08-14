@@ -24,6 +24,7 @@ set(ZOD_COMPILER_DRIVER ${ZOD_COMPILER_DIR}/lib/driver/zodc.cc)
 set(THIRD_PARTY_DIR ${CMAKE_SOURCE_DIR}/third-party)
 set(IMGUI_DIR ${THIRD_PARTY_DIR}/imgui)
 
+add_compile_options(-msse3)
 # add_compile_options(-fsanitize=address)
 # add_link_options(-fsanitize=address)
 

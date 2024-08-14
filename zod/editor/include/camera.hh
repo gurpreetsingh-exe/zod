@@ -118,9 +118,8 @@ private:
   bool m_panning = false;
 
   glm::vec3 m_position = glm::vec3(2.0f, 2.0f, 2.0f);
-  glm::vec3 m_direction = glm::vec3(-1.0f);
+  glm::vec3 m_direction = glm::normalize(-m_position);
   glm::vec3 m_right = glm::vec3(1.0f, 0.0f, 0.0f);
-  glm::vec3 m_focal_point = glm::vec3(0.0f);
 
   glm::vec2 m_last_mouse_pos = glm::vec2(0.0f);
   glm::vec2 m_pan_mouse_pos = glm::vec2(0.0f);

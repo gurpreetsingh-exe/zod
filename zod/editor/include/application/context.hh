@@ -31,12 +31,10 @@ private:
 
 private:
   Unique<Window> m_window;
-  Shared<GPURenderer> m_renderer;
   Shared<GPUBatch> m_batch;
   Shared<GPUStorageBuffer> m_ssbo;
   Shared<GPUFrameBuffer> m_framebuffer;
   Unique<ImGuiLayer> m_imgui_layer;
-  usize m_current_panel;
 };
 
 } // namespace zod

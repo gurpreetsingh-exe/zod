@@ -15,7 +15,8 @@ static auto to_gl(GPUDataType type) -> GLenum {
 
 GLBatch::GLBatch(const std::vector<GPUBufferLayout>& layouts,
                  const std::vector<u32>& indices) {
-  m_elements = indices.size();
+  m_elements =
+      indices.size() ? indices.size() : layouts[0].length / layouts[0].size;
   glCreateVertexArrays(1, &m_id);
   glBindVertexArray(m_id);
 
@@ -49,11 +50,18 @@ auto GLBatch::draw(Shared<GPUShader> shader) -> void {
   glBindVertexArray(0);
 }
 
-auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
-    -> void {
+auto GLBatch::draw_instanced(Shared<GPUShader> shader,
+                             usize instance_count) -> void {
   glBindVertexArray(m_id);
   glDrawElementsInstanced(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr,
                           instance_count);
+  glBindVertexArray(0);
+}
+
+auto GLBatch::draw_lines(Shared<GPUShader> shader) -> void {
+  glBindVertexArray(m_id);
+  glLineWidth(2);
+  glDrawArrays(GL_LINES, 0, m_elements);
   glBindVertexArray(0);
 }
 
