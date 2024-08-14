@@ -1,5 +1,6 @@
 #include <imgui.h>
 
+#include "application/context.hh"
 #include "viewport.hh"
 
 namespace zod {
@@ -99,10 +100,12 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  m_shader->bind();
-  batch->draw(m_shader);
-  draw_cubemap();
-  draw_grid();
+  GPU_TIME("mesh", {
+    m_shader->bind();
+    batch->draw(m_shader);
+  });
+  GPU_TIME("cubemap", { draw_cubemap(); });
+  GPU_TIME("grid", { draw_grid(); });
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
   m_framebuffer->unbind();

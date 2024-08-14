@@ -11,12 +11,12 @@
 #define FMT(type, fmt_str, ...)                                                \
   template <>                                                                  \
   struct fmt::formatter<type> {                                                \
-    constexpr auto                                                             \
-    parse(format_parse_context& ctx) -> format_parse_context::iterator {       \
+    constexpr auto parse(format_parse_context& ctx)                            \
+        -> format_parse_context::iterator {                                    \
       return ctx.begin();                                                      \
     }                                                                          \
-    auto format(type v,                                                        \
-                format_context& ctx) const -> format_context::iterator {       \
+    auto format(type v, format_context& ctx) const                             \
+        -> format_context::iterator {                                          \
       return fmt::format_to(ctx.out(), fmt_str, __VA_ARGS__);                  \
     }                                                                          \
   }

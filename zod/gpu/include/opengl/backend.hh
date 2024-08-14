@@ -5,6 +5,7 @@
 #include "opengl/buffer.hh"
 #include "opengl/context.hh"
 #include "opengl/framebuffer.hh"
+#include "opengl/query.hh"
 #include "opengl/renderer.hh"
 #include "opengl/shader.hh"
 
@@ -29,6 +30,8 @@ public:
   auto create_framebuffer(int w, int h) -> Shared<GPUFrameBuffer> override {
     return shared<GLFrameBuffer>(w, h);
   }
+
+  auto create_query() -> Shared<GPUQuery> override { return shared<GLQuery>(); }
 
   auto create_renderer() -> Shared<GPURenderer> override {
     return shared<GLRenderer>();

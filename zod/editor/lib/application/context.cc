@@ -99,28 +99,36 @@ auto ZCtxt::run(fs::path path) -> void {
   auto node_editor = NodeEditor();
 
   m_window->is_running([&] {
-    m_imgui_layer->begin_frame();
-    m_imgui_layer->update([&] {
-      ImGui::Begin("DebugEditor");
-      ImGuiIO& io = ImGui::GetIO();
-      ImGui::Text("Delta Time: %.3f ms", 1000.0f / io.Framerate);
-      static bool vsync = true;
-      if (ImGui::Checkbox("V-Sync", &vsync)) {
-        glfwSwapInterval(vsync);
-      }
-      ImGui::End();
+    GPU_TIME("main-loop", {
+      m_imgui_layer->begin_frame();
+      m_imgui_layer->update([&] {
+        ImGui::Begin("DebugEditor");
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("Delta Time: %.3f ms", 1000.0f / io.Framerate);
+        static bool vsync = true;
+        if (ImGui::Checkbox("V-Sync", &vsync)) {
+          glfwSwapInterval(vsync);
+        }
 
-      ImGui::Begin("Outliner");
-      ImGui::End();
+        ImGui::Separator();
+        for (const auto& [name, time] : m_times) {
+          ImGui::Text("%s: %.3f ms", name.c_str(), time);
+        }
 
-      ImGui::Begin("Properties");
-      ImGui::End();
+        ImGui::End();
 
-      m_ssbo->bind();
-      viewport.update(m_batch);
-      node_editor.update();
+        ImGui::Begin("Outliner");
+        ImGui::End();
+
+        ImGui::Begin("Properties");
+        ImGui::End();
+
+        m_ssbo->bind();
+        GPU_TIME("viewport", { viewport.update(m_batch); });
+        node_editor.update();
+      });
+      m_imgui_layer->end_frame();
     });
-    m_imgui_layer->end_frame();
   });
 }
 

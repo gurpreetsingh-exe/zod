@@ -39,7 +39,8 @@ auto Camera::cursor_wrap(glm::vec2 position) -> void {
   //   auto pos = glm::vec2(Input::get_mouse_pos().x,
   //                        m_window_position.y + m_viewport_height - padding);
   //   Input::set_mouse_pos(pos);
-  // } else if (position.y > m_window_position.y + m_viewport_height - padding) {
+  // } else if (position.y > m_window_position.y + m_viewport_height - padding)
+  // {
   //   auto pos =
   //       glm::vec2(Input::get_mouse_pos().x, m_window_position.y + padding);
   //   Input::set_mouse_pos(pos);

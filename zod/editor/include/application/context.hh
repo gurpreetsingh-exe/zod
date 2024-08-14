@@ -14,6 +14,8 @@ namespace zod {
 
 class Layout;
 
+#define GPU_TIME(name, ...) ZCtxt::get().with_scope(name, [&] __VA_ARGS__);
+
 class ZCtxt {
 public:
   ZCtxt();
@@ -26,6 +28,18 @@ public:
   }
   auto get_window() -> Window& { return *m_window; }
 
+  template <typename Callback>
+  auto with_scope(const std::string& name, Callback cb) -> void {
+    if (not m_queries.contains(name)) {
+      m_queries[name] = GPUBackend::get().create_query();
+    }
+    auto query = m_queries[name];
+    query->begin();
+    cb();
+    query->end();
+    m_times[name] = query->get_time();
+  }
+
 private:
   auto on_event(Event&) -> void;
 
@@ -35,6 +49,8 @@ private:
   Shared<GPUStorageBuffer> m_ssbo;
   Shared<GPUFrameBuffer> m_framebuffer;
   Unique<ImGuiLayer> m_imgui_layer;
+  std::unordered_map<std::string, Shared<GPUQuery>> m_queries;
+  std::unordered_map<std::string, f32> m_times;
 };
 
 } // namespace zod
