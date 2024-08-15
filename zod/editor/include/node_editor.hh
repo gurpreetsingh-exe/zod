@@ -22,7 +22,7 @@ private:
   Shared<GPUShader> m_node_shader;
   Shared<GPUFrameBuffer> m_framebuffer;
   Shared<GPUBatch> m_batch;
-  Camera m_camera;
+  OrthographicCamera m_camera;
   bool m_node_add = false;
 };
 

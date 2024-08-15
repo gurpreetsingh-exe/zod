@@ -29,6 +29,69 @@ namespace zod {
 
 inline constexpr glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
 
+class OrthographicCamera {
+public:
+  bool updating = false;
+  OrthographicCamera(f32 width, f32 height) : m_width(width), m_height(height) {
+    update_matrix();
+  }
+
+  ~OrthographicCamera() = default;
+
+public:
+  auto get_view_projection() const -> const glm::mat4& {
+    return m_view_projection;
+  }
+
+  auto resize(f32 width, f32 height) -> void {
+    m_width = width;
+    m_height = height;
+    m_needs_update = true;
+  }
+
+  auto set_window_position(glm::vec2 position) -> void {
+    m_window_position = position;
+  }
+
+  auto update() -> void;
+
+private:
+  auto _update() -> void;
+  auto zoom(f32) -> void;
+  auto pan(glm::vec2) -> void;
+  auto cursor_wrap(glm::vec2) -> void;
+  auto update_matrix() -> void {
+    update_view();
+    update_projection();
+    m_view_projection = m_projection * m_view;
+  }
+
+  auto update_view() -> void {
+    m_view =
+        glm::lookAt(m_position, m_position + m_direction, glm::vec3(0, 1, 0));
+  }
+
+  auto update_projection() -> void {
+    m_projection =
+        glm::ortho(0.0f, m_width / m_zoom, 0.0f, m_height / m_zoom, -1.f, 1.f);
+  }
+
+private:
+  f32 m_width;
+  f32 m_height;
+  f32 m_zoom = 1.0f;
+  glm::vec3 m_position = glm::vec3(0.0f, 0.0f, 1.0f);
+  glm::vec3 m_direction = glm::normalize(-m_position);
+  glm::mat4 m_view;
+  glm::mat4 m_projection;
+  glm::mat4 m_view_projection;
+  bool m_needs_update = false;
+  bool m_panning = false;
+  glm::vec2 m_last_mouse_pos;
+  glm::vec2 m_pan_mouse_pos;
+  glm::vec2 m_window_position = glm::vec2(0.0f);
+};
+
 class Camera {
 public:
   bool updating = false;

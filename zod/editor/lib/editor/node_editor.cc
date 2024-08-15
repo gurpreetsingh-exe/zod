@@ -11,8 +11,7 @@ struct CameraUBO {
 };
 
 NodeEditor::NodeEditor()
-    : m_width(64), m_height(64),
-      m_camera(Camera(64, 64, 90.0f, 0.01f, 100.0f)) {
+    : m_width(64), m_height(64), m_camera(OrthographicCamera(64.0f, 64.0f)) {
   m_framebuffer = GPUBackend::get().create_framebuffer(m_width, m_height);
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
@@ -52,17 +51,21 @@ auto NodeEditor::update() -> void {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::Begin("NodeEditor");
 
+  auto position = ImGui::GetWindowPos();
+  m_camera.set_window_position(glm::vec2(position.x, position.y));
+
   auto size = ImGui::GetContentRegionAvail();
   if (size.x != m_width or size.y != m_height) {
     m_width = size.x;
     m_height = size.y;
     m_framebuffer->resize(m_width, m_height);
-    auto ubo = CameraUBO { glm::ortho(0.f, size.x, 0.f, size.y, -1.f, 1.f),
-                           glm::vec4(0.0f) };
-    m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
-    // m_camera.resize(m_width, m_height);
-    // m_camera.update();
+    m_camera.resize(m_width, m_height);
   }
+
+  m_camera.update();
+  m_camera.updating = ImGui::IsWindowHovered();
+  auto ubo = CameraUBO { m_camera.get_view_projection(), glm::vec4(0.0f) };
+  m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
 
   ImGui::PopStyleVar();
 
