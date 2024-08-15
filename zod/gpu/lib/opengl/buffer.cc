@@ -12,7 +12,9 @@ GLUniformBuffer::GLUniformBuffer(usize size) : GPUUniformBuffer(size) {
 
 GLUniformBuffer::~GLUniformBuffer() { glDeleteBuffers(1, &m_id); }
 
-auto GLUniformBuffer::bind() -> void { glBindBuffer(GL_UNIFORM_BUFFER, m_id); }
+auto GLUniformBuffer::bind(int slot) -> void {
+  glBindBufferBase(GL_UNIFORM_BUFFER, slot, m_id);
+}
 
 auto GLUniformBuffer::unbind() -> void { glBindBuffer(GL_UNIFORM_BUFFER, 0); }
 
@@ -31,7 +33,7 @@ GLVertexBuffer::GLVertexBuffer() {
 
 GLVertexBuffer::~GLVertexBuffer() { glDeleteBuffers(1, &m_id); }
 
-auto GLVertexBuffer::bind() -> void { glBindBuffer(GL_ARRAY_BUFFER, m_id); }
+auto GLVertexBuffer::bind(int) -> void { glBindBuffer(GL_ARRAY_BUFFER, m_id); }
 
 auto GLVertexBuffer::unbind() -> void { glBindBuffer(GL_ARRAY_BUFFER, 0); }
 
@@ -53,7 +55,7 @@ GLIndexBuffer::GLIndexBuffer() {
 
 GLIndexBuffer::~GLIndexBuffer() { glDeleteBuffers(1, &m_id); }
 
-auto GLIndexBuffer::bind() -> void {
+auto GLIndexBuffer::bind(int) -> void {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_id);
 }
 
@@ -74,8 +76,8 @@ GLStorageBuffer::GLStorageBuffer() {
 
 GLStorageBuffer::~GLStorageBuffer() { glDeleteBuffers(1, &m_id); }
 
-auto GLStorageBuffer::bind() -> void {
-  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
+auto GLStorageBuffer::bind(int slot) -> void {
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, slot, m_id);
 }
 
 auto GLStorageBuffer::unbind() -> void {
@@ -85,7 +87,6 @@ auto GLStorageBuffer::unbind() -> void {
 auto GLStorageBuffer::upload_data(const void* data, usize size, usize) -> void {
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
   glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, GL_STATIC_DRAW);
-  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_id);
   glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, m_id, 0, size);
 }
 

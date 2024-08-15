@@ -31,6 +31,9 @@ inline constexpr glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
 
 class Camera {
 public:
+  bool updating = false;
+
+public:
   Camera(f32 width, f32 height, f32 fov, f32 clip_near, f32 clip_far)
       : m_viewport_width(width), m_viewport_height(height), m_fov(fov),
         m_clip_near(clip_near), m_clip_far(clip_far) {

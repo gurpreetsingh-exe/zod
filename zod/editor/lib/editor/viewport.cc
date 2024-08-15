@@ -92,6 +92,7 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   }
 
   m_camera.update();
+  m_camera.updating = ImGui::IsWindowHovered();
   update_camera_ubo();
 
   m_framebuffer->bind();

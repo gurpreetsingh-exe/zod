@@ -4,7 +4,7 @@ namespace zod {
 
 class GPUBuffer {
 public:
-  virtual auto bind() -> void = 0;
+  virtual auto bind(int = 0) -> void = 0;
   virtual auto unbind() -> void = 0;
   virtual auto upload_data(const void*, usize /* size */, usize start = 0)
       -> void = 0;

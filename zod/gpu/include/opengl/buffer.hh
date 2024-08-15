@@ -12,7 +12,7 @@ public:
   ~GLUniformBuffer();
 
 public:
-  auto bind() -> void override;
+  auto bind(int) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize) -> void override;
   auto update_data(const void*, usize) -> void override { TODO(); }
@@ -27,7 +27,7 @@ public:
   ~GLVertexBuffer();
 
 public:
-  auto bind() -> void override;
+  auto bind(int = 0) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize size = 0) -> void override;
   auto update_data(const void*, usize) -> void override;
@@ -42,7 +42,7 @@ public:
   ~GLIndexBuffer();
 
 public:
-  auto bind() -> void override;
+  auto bind(int = 0) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize size = 0) -> void override;
   auto update_data(const void*, usize) -> void override { TODO(); }
@@ -57,7 +57,7 @@ public:
   ~GLStorageBuffer();
 
 public:
-  auto bind() -> void override;
+  auto bind(int = 0) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize size = 0) -> void override;
   auto update_data(const void*, usize) -> void override { TODO(); }

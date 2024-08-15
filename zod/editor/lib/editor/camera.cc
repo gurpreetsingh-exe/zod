@@ -84,6 +84,10 @@ auto Camera::update() -> void {
     return;
   }
 
+  if (not updating) {
+    return;
+  }
+
   _update();
 }
 
