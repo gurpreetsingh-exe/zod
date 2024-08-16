@@ -20,15 +20,17 @@ auto OrthographicCamera::cursor_wrap(glm::vec2 position) -> void {
 }
 
 auto OrthographicCamera::zoom(f32 delta) -> void {
-  m_zoom += delta * 0.002f;
-  if (m_zoom < 0.25f) {
-    m_zoom = 0.25f;
-    return;
-  }
+  auto zoom = delta * 0.002f;
+  m_zoom += zoom;
+
+  auto coords = screen_to_world(m_pan_mouse_pos);
+  m_view = glm::translate(m_view, -glm::vec3(coords));
+  m_view = glm::scale(m_view, 1.0f + glm::vec3(zoom, zoom, 0.0f));
+  m_view = glm::translate(m_view, glm::vec3(coords));
 }
 
 auto OrthographicCamera::pan(glm::vec2 delta) -> void {
-  m_position -= glm::vec3(delta / m_zoom, 0.0f);
+  m_view = glm::translate(m_view, glm::vec3(delta, 0.0f));
 }
 
 auto OrthographicCamera::_update() -> void {
@@ -37,15 +39,16 @@ auto OrthographicCamera::_update() -> void {
   if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
+      m_panning = true;
       zoom(delta.x);
       cursor_wrap(mouse_pos);
     } else if (Input::is_key_pressed(GLFW_KEY_RIGHT_SHIFT)) {
-      m_panning = true;
       pan(delta);
       cursor_wrap(mouse_pos);
     }
   }
-  update_matrix();
+  update_projection();
+  m_view_projection = m_projection * m_view;
   m_last_mouse_pos = Input::get_mouse_pos();
   if (not m_panning) {
     m_pan_mouse_pos = mouse_pos;

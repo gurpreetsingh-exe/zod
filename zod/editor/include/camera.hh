@@ -73,7 +73,13 @@ private:
 
   auto update_projection() -> void {
     m_projection =
-        glm::ortho(0.0f, m_width / m_zoom, 0.0f, m_height / m_zoom, -1.f, 1.f);
+        glm::ortho(-m_width, m_width, -m_height, m_height, -1.f, 1.f);
+  }
+
+  auto screen_to_world(glm::vec2 v) -> glm::vec4 {
+    auto ndc =
+        glm::vec4((v / glm::vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 0.0f);
+    return glm::inverse(m_view_projection) * ndc;
   }
 
 private:

@@ -28,7 +28,7 @@ NodeEditor::NodeEditor()
 
   m_node_shader = GPUBackend::get().create_shader("node");
   m_node_shader->init_vertex_shader(g_node_vert);
-  m_node_shader->init_fragment_shader(g_uv);
+  m_node_shader->init_fragment_shader(g_node_frag);
   m_node_shader->compile();
 
   f32 position[] = { 0, 0, 1, 0, 0, 1, 1, 1 };

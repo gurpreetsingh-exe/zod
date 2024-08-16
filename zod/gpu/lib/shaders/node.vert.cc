@@ -15,6 +15,6 @@ layout (std430, binding = 1) buffer nodePosition {
 
 void main(void) {
   uv = position;
-  gl_Position = view_projection * vec4(position * vec2(92.0f, 100.0f) + offset[gl_InstanceID], 0.0f, 1.f);
+  gl_Position = view_projection * vec4(position * vec2(84.0f, 100.0f) + offset[gl_InstanceID], 0.0f, 1.f);
 }
 )";
