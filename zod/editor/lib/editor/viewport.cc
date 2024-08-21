@@ -1,9 +1,14 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
 #include "application/context.hh"
 #include "viewport.hh"
 
 namespace zod {
+
+static auto grid = true;
+constexpr auto padding = 4.0f;
+constexpr auto inner = 4.0f;
 
 struct CameraUBO {
   glm::mat4 view_projection;
@@ -70,6 +75,29 @@ auto Viewport::draw_grid() -> void {
 
 auto Viewport::draw_axes() -> void {}
 
+static auto Button(const char* name, bool& enabled) -> void {
+  ImGui::SetNextItemAllowOverlap();
+  auto button_size = ImGui::CalcTextSize(name);
+  auto cursor = ImVec2(ImGui::GetWindowContentRegionMax().x - button_size.x -
+                           padding - inner * 2,
+                       ImGui::GetWindowContentRegionMin().y + padding);
+  ImGui::SetCursorPos(cursor);
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(inner, inner));
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.f);
+  if (enabled) {
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0.45f, 0.82f, 1));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0.35f, 0.82f, 1));
+  }
+  ImGui::Button(name);
+  if (enabled) {
+    ImGui::PopStyleColor(2);
+  }
+  if (ImGui::IsItemClicked(0)) {
+    enabled = not enabled;
+  }
+  ImGui::PopStyleVar(2);
+}
+
 auto Viewport::update(Shared<GPUBatch> batch) -> void {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::Begin("Viewport");
@@ -106,7 +134,9 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
     batch->draw(m_shader);
   });
   GPU_TIME("cubemap", { draw_cubemap(); });
-  GPU_TIME("grid", { draw_grid(); });
+  if (grid) {
+    GPU_TIME("grid", { draw_grid(); });
+  }
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
   m_framebuffer->unbind();
@@ -114,6 +144,7 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   auto& texture = m_framebuffer->get_slot(0).texture;
   ImGui::Image(texture->get_id(), size, ImVec2 { 0.0, 0.0 },
                ImVec2 { 1.0, -1.0 });
+  Button("Grid", grid);
 
   ImGui::End();
   ImGui::PopStyleVar();

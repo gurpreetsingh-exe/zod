@@ -22,6 +22,10 @@ ImGuiLayer::ImGuiLayer(GLFWwindow* window) {
   style.WindowMenuButtonPosition = ImGuiDir_None;
   style.TabBarOverlineSize = 0;
 
+  style.WindowBorderSize = 0.5f;
+  style.FrameRounding = 4.f;
+  style.ChildRounding = 3.f;
+
   auto& colors = style.Colors;
   auto pink = ImVec4 { 1.0f, 0.0f, 1.0f, 1.0f };
 
