@@ -3,6 +3,13 @@
 
 namespace zod {
 
+static GLenum g_attachments[4] = {
+  GL_COLOR_ATTACHMENT0,
+  GL_COLOR_ATTACHMENT1,
+  GL_COLOR_ATTACHMENT2,
+  GL_COLOR_ATTACHMENT3,
+};
+
 GLFrameBuffer::GLFrameBuffer(i32 width, i32 height)
     : GPUFrameBuffer(width, height) {
   // m_width = w;
@@ -48,6 +55,11 @@ auto GLFrameBuffer::resize(i32 width, i32 height) -> void {
 
 auto GLFrameBuffer::check() -> void {
   bind();
+
+  if (m_color_attachments.size() > 1) {
+    glDrawBuffers(m_color_attachments.size(), g_attachments);
+  }
+
   GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
 #define FORMAT_STATUS(X)                                                       \

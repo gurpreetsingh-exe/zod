@@ -16,6 +16,7 @@ public:
   auto compile() -> void override;
   auto bind() -> void override;
   auto unbind() -> void override;
+  auto uniform(const std::string&, u32) -> void override;
   auto uniform(const std::string&, i32) -> void override;
   auto uniform(const std::string&, glm::vec3) -> void override;
   auto uniform(const std::string&, const glm::mat4&) -> void override;

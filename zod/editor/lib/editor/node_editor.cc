@@ -1,7 +1,9 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
 #include "input.hh"
 #include "node_editor.hh"
+#include "widgets/button.hh"
 
 namespace zod {
 
@@ -11,11 +13,19 @@ struct CameraUBO {
 };
 
 NodeEditor::NodeEditor()
-    : m_width(64), m_height(64), m_camera(OrthographicCamera(64.0f, 64.0f)) {
+    : m_width(64), m_height(64), m_camera(OrthographicCamera(64.0f, 64.0f)),
+      m_node_tree(shared<NodeTree>()) {
+  m_font = unique<Font>();
+  m_font->load_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
   m_framebuffer = GPUBackend::get().create_framebuffer(m_width, m_height);
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
-      GPUTextureType::Texture2D, m_width, m_height, false) };
+      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, m_width, m_height,
+      false) };
+  m_framebuffer->add_color_attachment(attach);
+  attach = { GPUBackend::get().create_texture(GPUTextureType::Texture2D,
+                                              GPUTextureFormat::RGBA8, m_width,
+                                              m_height, false) };
   m_framebuffer->add_color_attachment(attach);
   m_framebuffer->add_depth_attachment();
   m_framebuffer->check();
@@ -38,11 +48,14 @@ NodeEditor::NodeEditor()
 
   m_batch = GPUBackend::get().create_batch(format, { 1, 2, 0, 2, 3, 1 });
 
+  m_node_tree->add_node(glm::vec2(0, 0));
+  m_node_tree->add_node(glm::vec2(0, 200));
+
   m_camera_ubo = GPUBackend::get().create_uniform_buffer(sizeof(CameraUBO));
   m_node_locations = GPUBackend::get().create_storage_buffer();
 
-  glm::vec2 loc[2] = { { 0, 0 }, { 100, 0 } };
-  m_node_locations->upload_data(loc, 2 * sizeof(glm::vec2));
+  m_node_locations->upload_data(m_node_tree->get_data(),
+                                m_node_tree->get_size());
 }
 
 auto NodeEditor::add_node() -> void { m_node_add = true; }
@@ -91,20 +104,41 @@ auto NodeEditor::update() -> void {
   m_camera_ubo->bind(1);
   m_framebuffer->bind();
   m_framebuffer->clear();
-  // glEnable(GL_DEPTH_TEST);
-  glClearColor(0, 0, 0, 1);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   m_shader->bind();
   glBindVertexArray(0);
   glDrawArrays(GL_TRIANGLES, 0, 3);
   m_node_locations->bind(1);
   m_node_shader->bind();
+  m_node_shader->uniform("u_active", m_active);
   m_batch->draw_instanced(m_node_shader, 2);
-  // glDisable(GL_DEPTH_TEST);
+  m_font->render_text("LoadGLTF", 200, 100 - 8, 1, 1);
+  glDisable(GL_BLEND);
   m_framebuffer->unbind();
 
   auto& texture = m_framebuffer->get_slot(0).texture;
   ImGui::Image(texture->get_id(), size, ImVec2 { 0.0, 0.0 },
                ImVec2 { 1.0, -1.0 });
+
+  auto pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
+  auto pixel = 0u;
+  if (ImGui::IsWindowHovered() and
+      Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
+    pixel = pos.x > m_framebuffer->get_width() or
+                    pos.y > m_framebuffer->get_height()
+                ? 0
+                : m_framebuffer->read_pixel(
+                      1, pos.x, m_framebuffer->get_height() - pos.y);
+    if (auto id = pixel & 0xffffff) {
+      m_active = id;
+    } else {
+      m_active = 0;
+    }
+  }
+
+  ImGui::SetCursorPos(ImVec2(5, 20));
+  ImGui::Text("Active: %u", m_active);
 
   ImGui::End();
 }

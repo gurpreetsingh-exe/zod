@@ -10,3 +10,9 @@
 [submodule "third-party/imgui"]
 	path = third-party/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "third-party/tinygltf"]
+	path = third-party/tinygltf
+	url = https://github.com/syoyo/tinygltf.git
+[submodule "third-party/freetype"]
+	path = third-party/freetype
+	url = https://github.com/freetype/freetype.git

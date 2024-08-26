@@ -33,6 +33,8 @@ add_subdirectory(${THIRD_PARTY_DIR}/glm glm)
 add_subdirectory(${THIRD_PARTY_DIR}/glfw glfw)
 add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
 add_subdirectory(${THIRD_PARTY_DIR}/glad glad)
+add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
+add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
 find_package(OpenGL REQUIRED)
 
 add_library(imgui
@@ -74,7 +76,7 @@ file(GLOB_RECURSE ZOD_GPU_SRC ${ZOD_GPU_DIR}/lib/*.cc)
 add_library(gpu ${ZOD_GPU_SRC})
 target_include_directories(gpu PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(gpu PUBLIC ${ZOD_GPU_DIR}/include)
-target_link_libraries(gpu zodpch OpenGL::GL glad)
+target_link_libraries(gpu zodpch OpenGL::GL glad stbi)
 
 ##########################################################################
 # zod editor
@@ -84,7 +86,7 @@ add_executable(zod ${ZOD_EDITOR_SRC})
 target_compile_definitions(zod PUBLIC GLFW_INCLUDE_NONE=1)
 target_include_directories(zod PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)
-target_link_libraries(zod zodpch zodcore gpu glm::glm glfw imgui pthread ${CMAKE_DL_LIBS})
+target_link_libraries(zod zodpch zodcore gpu glm::glm glfw imgui freetype pthread ${CMAKE_DL_LIBS})
 
 ##########################################################################
 # libzc

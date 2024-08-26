@@ -50,6 +50,12 @@ auto GLBatch::draw(Shared<GPUShader> shader) -> void {
   glBindVertexArray(0);
 }
 
+auto GLBatch::draw(Shared<GPUShader> shader, usize n) -> void {
+  glBindVertexArray(m_id);
+  glDrawElements(GL_TRIANGLES, n, GL_UNSIGNED_INT, nullptr);
+  glBindVertexArray(0);
+}
+
 auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
     -> void {
   glBindVertexArray(m_id);

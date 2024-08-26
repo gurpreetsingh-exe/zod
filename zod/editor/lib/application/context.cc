@@ -29,7 +29,7 @@ ZCtxt::ZCtxt()
   auto [w, h] = m_window->get_size();
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
-      GPUTextureType::Texture2D, w, h, false) };
+      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, w, h, false) };
   m_framebuffer->add_color_attachment(attach);
   m_framebuffer->check();
   m_framebuffer->unbind();

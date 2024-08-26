@@ -33,8 +33,8 @@ auto GLBackend::platform_init() -> void {
     TODO();
   }
   g_platform.init(GPUBackendType::OpenGL, device, vendor, version, renderer);
-  glEnable(GL_DEBUG_OUTPUT);
-  glDebugMessageCallback(message_callback, 0);
+  // glEnable(GL_DEBUG_OUTPUT);
+  // glDebugMessageCallback(message_callback, 0);
 }
 
 } // namespace zod

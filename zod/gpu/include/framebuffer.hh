@@ -44,6 +44,7 @@ public:
   virtual auto clear() -> void = 0;
   virtual auto add_color_attachment(GPUAttachment&) -> void = 0;
   virtual auto add_depth_attachment() -> void = 0;
+  virtual auto read_pixel(usize, i32, i32) -> u32 = 0;
   auto get_slot(usize slot) -> GPUAttachment& {
     return m_color_attachments[slot];
   }

@@ -47,9 +47,15 @@ public:
     return shared<GLStorageBuffer>();
   }
 
-  auto create_texture(GPUTextureType type, i32 width, i32 height, bool bindless)
+  auto create_texture(GPUTextureType type, GPUTextureFormat format, i32 width,
+                      i32 height, bool bindless)
       -> Shared<GPUTexture> override {
-    return shared<GLTexture>(type, width, height, bindless);
+    return shared<GLTexture>(type, format, width, height, bindless);
+  }
+
+  auto create_texture(GPUTextureType type, GPUTextureFormat format,
+                      const fs::path& path) -> Shared<GPUTexture> override {
+    return shared<GLTexture>(type, format, path);
   }
 
   auto create_uniform_buffer(usize size) -> Shared<GPUUniformBuffer> override {

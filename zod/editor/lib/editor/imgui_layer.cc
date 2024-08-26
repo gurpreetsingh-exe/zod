@@ -34,6 +34,7 @@ ImGuiLayer::ImGuiLayer(GLFWwindow* window) {
   auto hover = ImVec4 { 0.3f, 0.32f, 0.32f, 1.0f };
   auto active = ImVec4 { 0.15f, 0.16f, 0.17f, 1.0f };
 
+  // colors[ImGuiCol_Border] = active;
   colors[ImGuiCol_WindowBg] = bg;
   colors[ImGuiCol_Header] = fg;
   colors[ImGuiCol_HeaderHovered] = hover;

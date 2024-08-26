@@ -15,7 +15,8 @@ private:
   bool m_bindless;
 
 public:
-  GLTexture(GPUTextureType, int w, int h, bool bindless);
+  GLTexture(GPUTextureType, GPUTextureFormat, int w, int h, bool bindless);
+  GLTexture(GPUTextureType, GPUTextureFormat, const fs::path&);
   ~GLTexture() = default;
 
 public:

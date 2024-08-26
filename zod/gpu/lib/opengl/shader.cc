@@ -71,6 +71,10 @@ auto GLShader::get_uniform_location(const std::string& name) -> GLuint {
   return m_uniforms[name];
 }
 
+auto GLShader::uniform(const std::string& name, u32 n) -> void {
+  glUniform1ui(get_uniform_location(name), n);
+}
+
 auto GLShader::uniform(const std::string& name, i32 n) -> void {
   glUniform1i(get_uniform_location(name), n);
 }

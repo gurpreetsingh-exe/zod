@@ -2,6 +2,8 @@
 
 #include "backend.hh"
 #include "camera.hh"
+#include "font.hh"
+#include "node_tree.hh"
 
 namespace zod {
 
@@ -22,8 +24,11 @@ private:
   Shared<GPUShader> m_node_shader;
   Shared<GPUFrameBuffer> m_framebuffer;
   Shared<GPUBatch> m_batch;
+  Shared<NodeTree> m_node_tree;
   OrthographicCamera m_camera;
   bool m_node_add = false;
+  u32 m_active = 0;
+  Unique<Font> m_font;
 };
 
 } // namespace zod

@@ -3,12 +3,11 @@
 
 #include "application/context.hh"
 #include "viewport.hh"
+#include "widgets/button.hh"
 
 namespace zod {
 
 static auto grid = true;
-constexpr auto padding = 4.0f;
-constexpr auto inner = 4.0f;
 
 struct CameraUBO {
   glm::mat4 view_projection;
@@ -21,7 +20,8 @@ Viewport::Viewport()
   m_framebuffer = GPUBackend::get().create_framebuffer(m_width, m_height);
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
-      GPUTextureType::Texture2D, m_width, m_height, false) };
+      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, m_width, m_height,
+      false) };
   m_framebuffer->add_color_attachment(attach);
   m_framebuffer->add_depth_attachment();
   m_framebuffer->check();
@@ -74,29 +74,6 @@ auto Viewport::draw_grid() -> void {
 }
 
 auto Viewport::draw_axes() -> void {}
-
-static auto Button(const char* name, bool& enabled) -> void {
-  ImGui::SetNextItemAllowOverlap();
-  auto button_size = ImGui::CalcTextSize(name);
-  auto cursor = ImVec2(ImGui::GetWindowContentRegionMax().x - button_size.x -
-                           padding - inner * 2,
-                       ImGui::GetWindowContentRegionMin().y + padding);
-  ImGui::SetCursorPos(cursor);
-  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(inner, inner));
-  ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.f);
-  if (enabled) {
-    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0.45f, 0.82f, 1));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0.35f, 0.82f, 1));
-  }
-  ImGui::Button(name);
-  if (enabled) {
-    ImGui::PopStyleColor(2);
-  }
-  if (ImGui::IsItemClicked(0)) {
-    enabled = not enabled;
-  }
-  ImGui::PopStyleVar(2);
-}
 
 auto Viewport::update(Shared<GPUBatch> batch) -> void {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
