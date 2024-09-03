@@ -31,7 +31,7 @@ public:
     u32 pixel;
     glBindFramebuffer(GL_FRAMEBUFFER, m_id);
     glReadBuffer(GL_COLOR_ATTACHMENT0 + idx);
-    glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+    glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_UNSIGNED_INT, &pixel);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return pixel;
   }

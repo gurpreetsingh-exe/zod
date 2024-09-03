@@ -8,7 +8,8 @@ public:
   virtual auto unbind() -> void = 0;
   virtual auto upload_data(const void*, usize /* size */, usize start = 0)
       -> void = 0;
-  virtual auto update_data(const void*, usize /* size */) -> void = 0;
+  virtual auto update_data(const void*, usize /* size */, usize start = 0)
+      -> void = 0;
 };
 
 class GPUUniformBuffer : public GPUBuffer {

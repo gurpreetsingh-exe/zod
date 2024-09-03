@@ -145,4 +145,10 @@ auto Font::render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void {
   m_batch->draw(m_text_shader, (n / 8) * 6);
 }
 
+Font::~Font() {
+  delete[] m_position;
+  delete[] m_uv;
+  FT_Done_FreeType(m_ft);
+}
+
 } // namespace zod

@@ -28,6 +28,22 @@ static auto to_gl(GPUTextureFormat format) -> GLenum {
       return GL_RGB32F;
     case GPUTextureFormat::RGBA32F:
       return GL_RGBA32F;
+    case GPUTextureFormat::R32UI:
+      return GL_R32UI;
+    default:
+      ZASSERT(false, "texture format not found");
+      UNREACHABLE();
+  }
+}
+
+static auto gl_format(GPUTextureFormat format) -> GLenum {
+  switch (format) {
+    case GPUTextureFormat::RGBA8:
+    case GPUTextureFormat::RGB32F:
+    case GPUTextureFormat::RGBA32F:
+      return GL_RGBA;
+    case GPUTextureFormat::R32UI:
+      return GL_RED_INTEGER;
     default:
       ZASSERT(false, "texture format not found");
       UNREACHABLE();
@@ -42,8 +58,8 @@ GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format, int w, int h,
   glBindTexture(m_target, m_id);
   glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(m_target, 0, to_gl(format), m_width, m_height, 0, GL_RGBA,
-               GL_UNSIGNED_BYTE, nullptr);
+  glTexImage2D(m_target, 0, to_gl(format), m_width, m_height, 0,
+               gl_format(format), GL_UNSIGNED_BYTE, nullptr);
   glGenerateMipmap(m_target);
   glBindTexture(m_target, 0);
 }

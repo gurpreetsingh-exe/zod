@@ -24,7 +24,7 @@ NodeEditor::NodeEditor()
       false) };
   m_framebuffer->add_color_attachment(attach);
   attach = { GPUBackend::get().create_texture(GPUTextureType::Texture2D,
-                                              GPUTextureFormat::RGBA8, m_width,
+                                              GPUTextureFormat::R32UI, m_width,
                                               m_height, false) };
   m_framebuffer->add_color_attachment(attach);
   m_framebuffer->add_depth_attachment();
@@ -48,17 +48,26 @@ NodeEditor::NodeEditor()
 
   m_batch = GPUBackend::get().create_batch(format, { 1, 2, 0, 2, 3, 1 });
 
-  m_node_tree->add_node(glm::vec2(0, 0));
-  m_node_tree->add_node(glm::vec2(0, 200));
+  for (usize i = 0; i < 5; ++i) {
+    m_node_tree->add_node<NODE_FILE>(glm::vec2(-100, (f32(i) * 150) - 400));
+  }
 
   m_camera_ubo = GPUBackend::get().create_uniform_buffer(sizeof(CameraUBO));
-  m_node_locations = GPUBackend::get().create_storage_buffer();
+  m_node_ssbo = GPUBackend::get().create_storage_buffer();
 
-  m_node_locations->upload_data(m_node_tree->get_data(),
-                                m_node_tree->get_size());
+  m_node_ssbo->upload_data(m_node_tree->get_data(),
+                           m_node_tree->get_size() * sizeof(NodeType));
 }
 
 auto NodeEditor::add_node() -> void { m_node_add = true; }
+
+auto NodeEditor::draw_props() -> void {
+  if (not m_active) {
+    return;
+  }
+  auto* node = m_node_tree->node_from_id(m_active);
+  node->draw(*node);
+}
 
 auto NodeEditor::update() -> void {
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -109,11 +118,12 @@ auto NodeEditor::update() -> void {
   m_shader->bind();
   glBindVertexArray(0);
   glDrawArrays(GL_TRIANGLES, 0, 3);
-  m_node_locations->bind(1);
+  m_node_ssbo->bind(1);
   m_node_shader->bind();
   m_node_shader->uniform("u_active", m_active);
-  m_batch->draw_instanced(m_node_shader, 2);
-  m_font->render_text("LoadGLTF", 200, 100 - 8, 1, 1);
+  m_node_shader->uniform("u_vis", m_vis);
+  m_batch->draw_instanced(m_node_shader, m_node_tree->get_size());
+  // m_font->render_text("LoadGLTF", 200, 100 - 8, 1, 1);
   glDisable(GL_BLEND);
   m_framebuffer->unbind();
 
@@ -131,6 +141,23 @@ auto NodeEditor::update() -> void {
                 : m_framebuffer->read_pixel(
                       1, pos.x, m_framebuffer->get_height() - pos.y);
     if (auto id = pixel & 0xffffff) {
+      auto extra = (pixel & 0xff000000) >> 24;
+      switch (extra) {
+        case 0:
+          break;
+        case 1: {
+          m_vis = id;
+          // if (m_active) {
+          //   node = &m_node_tree->get_data()[m_active - 1];
+          //   node->extra = 0;
+          //   m_node_locations->update_data(node, sizeof(Node),
+          //                                 (m_active - 1) * sizeof(Node));
+          // }
+        } break;
+        default:
+          UNREACHABLE();
+          break;
+      }
       m_active = id;
     } else {
       m_active = 0;
@@ -139,6 +166,10 @@ auto NodeEditor::update() -> void {
 
   ImGui::SetCursorPos(ImVec2(5, 20));
   ImGui::Text("Active: %u", m_active);
+  ImGui::SetCursorPos(ImVec2(5, 35));
+  ImGui::Text("Pixel: %u (%u, %u, %u, %u)", pixel, (pixel & 0x000000ff),
+              (pixel & 0x0000ff00) >> 8, (pixel & 0x00ff0000) >> 16,
+              (pixel & 0xff000000) >> 24);
 
   ImGui::End();
 }

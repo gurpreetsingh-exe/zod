@@ -42,7 +42,7 @@ auto GLVertexBuffer::upload_data(const void* data, usize size, usize) -> void {
   glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 }
 
-auto GLVertexBuffer::update_data(const void* data, usize size) -> void {
+auto GLVertexBuffer::update_data(const void* data, usize size, usize) -> void {
   glBindBuffer(GL_ARRAY_BUFFER, m_id);
   glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 }
@@ -88,6 +88,12 @@ auto GLStorageBuffer::upload_data(const void* data, usize size, usize) -> void {
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
   glBufferData(GL_SHADER_STORAGE_BUFFER, size, data, GL_STATIC_DRAW);
   glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, m_id, 0, size);
+}
+
+auto GLStorageBuffer::update_data(const void* data, usize size, usize offset)
+    -> void {
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_id);
+  glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data);
 }
 
 } // namespace zod

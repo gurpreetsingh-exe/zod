@@ -15,7 +15,7 @@ public:
   auto bind(int) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize) -> void override;
-  auto update_data(const void*, usize) -> void override { TODO(); }
+  auto update_data(const void*, usize, usize = 0) -> void override { TODO(); }
 
 private:
   GLuint m_id;
@@ -30,7 +30,7 @@ public:
   auto bind(int = 0) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize size = 0) -> void override;
-  auto update_data(const void*, usize) -> void override;
+  auto update_data(const void*, usize, usize = 0) -> void override;
 
 private:
   GLuint m_id;
@@ -45,7 +45,7 @@ public:
   auto bind(int = 0) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize size = 0) -> void override;
-  auto update_data(const void*, usize) -> void override { TODO(); }
+  auto update_data(const void*, usize, usize = 0) -> void override { TODO(); }
 
 private:
   GLuint m_id;
@@ -60,7 +60,7 @@ public:
   auto bind(int = 0) -> void override;
   auto unbind() -> void override;
   auto upload_data(const void*, usize, usize size = 0) -> void override;
-  auto update_data(const void*, usize) -> void override { TODO(); }
+  auto update_data(const void*, usize, usize = 0) -> void override;
 
 private:
   GLuint m_id;

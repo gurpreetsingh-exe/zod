@@ -12,6 +12,7 @@ namespace zod {
 class Font {
 public:
   Font();
+  ~Font();
 
 public:
   auto load_font(const fs::path&) -> void;

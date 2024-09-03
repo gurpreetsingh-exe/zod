@@ -121,6 +121,7 @@ auto ZCtxt::run(fs::path path) -> void {
         ImGui::End();
 
         ImGui::Begin("Properties");
+        node_editor.draw_props();
         ImGui::End();
 
         m_ssbo->bind();
@@ -130,6 +131,8 @@ auto ZCtxt::run(fs::path path) -> void {
       m_imgui_layer->end_frame();
     });
   });
+
+  delete mesh;
 }
 
 } // namespace zod
