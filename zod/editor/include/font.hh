@@ -11,6 +11,9 @@ namespace zod {
 
 class Font {
 public:
+  static constexpr usize size = 20;
+
+public:
   Font();
   ~Font();
 
@@ -20,6 +23,7 @@ public:
   auto get_width() -> i32 { return m_width; }
   auto get_height() -> i32 { return m_height; }
   auto render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void;
+  auto submit() -> void;
 
 private:
   FT_Library m_ft;
@@ -32,6 +36,7 @@ private:
   f32* m_position = nullptr;
   f32* m_uv = nullptr;
   usize m_coord_count = 0;
+  usize m_nvert = 0;
 };
 
 } // namespace zod

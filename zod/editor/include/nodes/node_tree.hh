@@ -4,9 +4,14 @@
 
 namespace zod {
 
+constexpr usize MAX_NODES = 1024;
+
 class NodeTree {
 public:
-  NodeTree() = default;
+  NodeTree() {
+    m_type_infos.reserve(MAX_NODES);
+    m_nodes.reserve(MAX_NODES);
+  }
 
 public:
   template <typename... Args>
@@ -44,8 +49,8 @@ public:
   auto get_nodes() -> std::vector<Node>& { return m_nodes; }
 
 private:
-  std::vector<NodeType> m_type_infos;
-  std::vector<Node> m_nodes;
+  std::vector<NodeType> m_type_infos = {};
+  std::vector<Node> m_nodes = {};
 };
 
 } // namespace zod

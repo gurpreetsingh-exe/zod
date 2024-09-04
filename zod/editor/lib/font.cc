@@ -2,6 +2,8 @@
 
 namespace zod {
 
+constexpr usize MAX_VERTICES = 64 * 1024;
+
 struct character_info {
   f32 ax; // advance.x
   f32 ay; // advance.y
@@ -17,14 +19,14 @@ Font::Font() {
     eprintln("Could not init freetype library");
   }
 
-  m_position = new f32[1024 * 2];
-  m_uv = new f32[1024 * 2];
+  m_position = new f32[MAX_VERTICES * 2];
+  m_uv = new f32[MAX_VERTICES * 2];
   auto format = std::vector<GPUBufferLayout> {
-    { GPUDataType::Float, m_position, 2, 1024 * 2 },
-    { GPUDataType::Float, m_uv, 2, 1024 * 2 },
+    { GPUDataType::Float, m_position, 2, MAX_VERTICES * 2 },
+    { GPUDataType::Float, m_uv, 2, MAX_VERTICES * 2 },
   };
   auto indices = std::vector<u32>();
-  for (usize i = 0; i < 1024; i += 4) {
+  for (usize i = 0; i < MAX_VERTICES; i += 4) {
     indices.push_back(i);
     indices.push_back(i + 1);
     indices.push_back(i + 2);
@@ -45,7 +47,7 @@ auto Font::load_font(const fs::path& path) -> void {
   if (FT_New_Face(m_ft, path.string().c_str(), 0, &m_face)) {
     eprintln("Could not open font");
   }
-  FT_Set_Pixel_Sizes(m_face, 0, 16);
+  FT_Set_Pixel_Sizes(m_face, 0, size);
 
   FT_GlyphSlot g = m_face->glyph;
   unsigned int w = 0;
@@ -96,7 +98,6 @@ auto Font::load_font(const fs::path& path) -> void {
 }
 
 auto Font::render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void {
-  int n = 0;
   for (const char* p = text; *p; p++) {
     f32 x2 = (x + c[*p].bl * sx);
     f32 y2 = (-y - c[*p].bt * sy);
@@ -110,39 +111,42 @@ auto Font::render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void {
       continue;
     }
 
-    m_position[n] = x2;
-    m_position[n + 1] = -y2;
+    m_position[m_nvert] = x2;
+    m_position[m_nvert + 1] = -y2;
 
-    m_position[n + 2] = x2 + w;
-    m_position[n + 3] = -y2;
+    m_position[m_nvert + 2] = x2 + w;
+    m_position[m_nvert + 3] = -y2;
 
-    m_position[n + 4] = x2;
-    m_position[n + 5] = -y2 - h;
+    m_position[m_nvert + 4] = x2;
+    m_position[m_nvert + 5] = -y2 - h;
 
-    m_position[n + 6] = x2 + w;
-    m_position[n + 7] = -y2 - h;
+    m_position[m_nvert + 6] = x2 + w;
+    m_position[m_nvert + 7] = -y2 - h;
 
-    m_uv[n] = c[*p].tx;
-    m_uv[n + 1] = 0;
+    m_uv[m_nvert] = c[*p].tx;
+    m_uv[m_nvert + 1] = 0;
 
-    m_uv[n + 2] = c[*p].tx + c[*p].bw / m_width;
-    m_uv[n + 3] = 0;
+    m_uv[m_nvert + 2] = c[*p].tx + c[*p].bw / m_width;
+    m_uv[m_nvert + 3] = 0;
 
-    m_uv[n + 4] = c[*p].tx;
-    m_uv[n + 5] = c[*p].bh / m_height;
+    m_uv[m_nvert + 4] = c[*p].tx;
+    m_uv[m_nvert + 5] = c[*p].bh / m_height;
 
-    m_uv[n + 6] = c[*p].tx + c[*p].bw / m_width;
-    m_uv[n + 7] = c[*p].bh / m_height;
+    m_uv[m_nvert + 6] = c[*p].tx + c[*p].bw / m_width;
+    m_uv[m_nvert + 7] = c[*p].bh / m_height;
 
-    n += 8;
+    m_nvert += 8;
   }
+}
 
-  m_batch->update_binding(0, m_position, sizeof(f32) * n);
-  m_batch->update_binding(1, m_uv, sizeof(f32) * n);
+auto Font::submit() -> void {
+  m_batch->update_binding(0, m_position, sizeof(f32) * m_nvert);
+  m_batch->update_binding(1, m_uv, sizeof(f32) * m_nvert);
   m_text_shader->bind();
   glBindTexture(GL_TEXTURE_2D, m_texture);
   m_text_shader->uniform("u_texture", 0);
-  m_batch->draw(m_text_shader, (n / 8) * 6);
+  m_batch->draw(m_text_shader, (m_nvert >> 3) * 6);
+  m_nvert = 0;
 }
 
 Font::~Font() {

@@ -25,6 +25,7 @@ using NodeUpdateFn = std::function<void(Node&)>;
 extern NodeInitFn node_init_functions[TOTAL_NODES];
 extern NodeDrawFn node_draw_functions[TOTAL_NODES];
 extern NodeUpdateFn node_update_functions[TOTAL_NODES];
+extern const char* node_names[TOTAL_NODES];
 
 struct alignas(16) NodeType {
   glm::vec2 location = { 0, 0 };

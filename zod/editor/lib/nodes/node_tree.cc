@@ -21,4 +21,9 @@ NodeDrawFn node_draw_functions[TOTAL_NODES] = {
 
 NodeUpdateFn node_update_functions[TOTAL_NODES];
 
+const char* node_names[TOTAL_NODES] = {
+  [NODE_NONE] = "None",
+  [NODE_FILE] = "File",
+};
+
 } // namespace zod

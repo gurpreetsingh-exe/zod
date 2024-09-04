@@ -123,7 +123,12 @@ auto NodeEditor::update() -> void {
   m_node_shader->uniform("u_active", m_active);
   m_node_shader->uniform("u_vis", m_vis);
   m_batch->draw_instanced(m_node_shader, m_node_tree->get_size());
-  // m_font->render_text("LoadGLTF", 200, 100 - 8, 1, 1);
+  for (const auto& node : m_node_tree->get_nodes()) {
+    auto loc = node.type->location;
+    m_font->render_text(node_names[node.type->type], loc.x + 200,
+                        loc.y + 100 - (Font::size >> 2), 1, 1);
+  }
+  m_font->submit();
   glDisable(GL_BLEND);
   m_framebuffer->unbind();
 
