@@ -151,9 +151,20 @@ auto NodeEditor::update() -> void {
 
   auto mouse_pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
   auto pos = vec2(mouse_pos.x, mouse_pos.y);
+  auto delta = pos - m_last_mouse_pos;
+  auto click = delta.x == 0 and delta.y == 0;
   auto pixel = 0u;
   if (ImGui::IsWindowHovered() and not is_camera_updating and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
+    if (not click and m_active) {
+      m_node_tree->update_node(m_active, [&](auto* node) {
+        delta /= m_camera.get_zoom();
+        node->type->location.x += delta.x;
+        node->type->location.y -= delta.y;
+        m_node_ssbo->update_data(node->type, sizeof(NodeType),
+                                 (m_active - 1) * sizeof(NodeType));
+      });
+    }
     pixel = pos.x > m_framebuffer->get_width() or
                     pos.y > m_framebuffer->get_height()
                 ? 0
@@ -177,11 +188,15 @@ auto NodeEditor::update() -> void {
           UNREACHABLE();
           break;
       }
-      m_active = id;
-    } else {
+      if (click) {
+        m_active = id;
+      }
+    } else if (click) {
       m_active = 0;
     }
   }
+
+  m_last_mouse_pos = pos;
 
   ImGui::SetCursorPos(ImVec2(5, 20));
   ImGui::Text("Active: %u", m_active);
@@ -189,6 +204,8 @@ auto NodeEditor::update() -> void {
   ImGui::Text("Pixel: %u (%u, %u, %u, %u)", pixel, (pixel & 0x000000ff),
               (pixel & 0x0000ff00) >> 8, (pixel & 0x00ff0000) >> 16,
               (pixel & 0xff000000) >> 24);
+  ImGui::SetCursorPos(ImVec2(5, 50));
+  ImGui::Text("Zoom: %f", m_camera.get_zoom());
 
   ImGui::End();
 }

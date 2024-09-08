@@ -30,6 +30,7 @@ public:
   }
 
   auto update() -> void;
+  auto get_zoom() -> f32 { return m_zoom * 0.5f; }
 
 private:
   auto _update() -> void;

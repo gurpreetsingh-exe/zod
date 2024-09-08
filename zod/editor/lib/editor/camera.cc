@@ -20,7 +20,7 @@ auto OrthographicCamera::cursor_wrap(vec2 position) -> void {
 
 auto OrthographicCamera::zoom(f32 delta) -> void {
   auto zoom = delta * 0.002f;
-  m_zoom += zoom;
+  m_zoom *= 1.0f + zoom;
 
   auto coords = screen_to_world(m_pan_mouse_pos);
   m_view = translate(m_view, -vec3(coords));
@@ -29,7 +29,7 @@ auto OrthographicCamera::zoom(f32 delta) -> void {
 }
 
 auto OrthographicCamera::pan(vec2 delta) -> void {
-  m_view = translate(m_view, vec3(delta, 0.0f));
+  m_view = translate(m_view, vec3(delta / get_zoom(), 0.0f));
 }
 
 auto OrthographicCamera::_update() -> void {

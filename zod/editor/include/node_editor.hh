@@ -31,6 +31,7 @@ private:
   u32 m_active = 0;
   u32 m_vis = 0;
   Unique<Font> m_font;
+  vec2 m_last_mouse_pos = vec2(0);
 };
 
 } // namespace zod
