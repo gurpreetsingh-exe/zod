@@ -1,14 +1,8 @@
 #pragma once
 
-#include <glad/glad.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "backend.hh"
-#include "base/math.hh"
-#include "window.hh"
-
 #include "imgui_layer.hh"
+#include "window.hh"
 
 namespace zod {
 

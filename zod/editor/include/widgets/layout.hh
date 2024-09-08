@@ -6,7 +6,7 @@
 namespace zod {
 
 struct UIUbo {
-  glm::mat4 view_projection_mat;
+  mat4 view_projection_mat;
   f32 width;
   f32 height;
 };
@@ -24,7 +24,7 @@ public:
 public:
   auto init() -> void {
     auto uiubo =
-        UIUbo { glm::ortho(0.f, 64.0f, 0.f, 64.0f, -1.f, 1.f), 64.0f, 64.0f };
+        UIUbo { ortho(0.f, 64.0f, 0.f, 64.0f, -1.f, 1.f), 64.0f, 64.0f };
     m_uniform_buffer->upload_data(&uiubo, sizeof(UIUbo));
   }
 

@@ -10,8 +10,8 @@ namespace zod {
 static auto grid = true;
 
 struct CameraUBO {
-  glm::mat4 view_projection;
-  glm::vec4 direction;
+  mat4 view_projection;
+  vec4 direction;
 };
 
 Viewport::Viewport()
@@ -69,7 +69,7 @@ auto Viewport::draw_cubemap() -> void {
 auto Viewport::draw_grid() -> void {
   glBindVertexArray(0);
   m_grid_shader->bind();
-  m_grid_shader->uniform("u_color", glm::vec3(0.25f));
+  m_grid_shader->uniform("u_color", vec3(0.25f));
   glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
@@ -81,12 +81,12 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
 
   auto update_camera_ubo = [&] {
     auto ubo = CameraUBO { m_camera.get_view_projection(),
-                           glm::vec4(m_camera.get_direction(), 0.0f) };
+                           vec4(m_camera.get_direction(), 0.0f) };
     m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
   };
 
   auto position = ImGui::GetWindowPos();
-  m_camera.set_window_position(glm::vec2(position.x, position.y));
+  m_camera.set_window_position(vec2(position.x, position.y));
 
   auto size = ImGui::GetContentRegionAvail();
   if (size.x != m_width or size.y != m_height) {

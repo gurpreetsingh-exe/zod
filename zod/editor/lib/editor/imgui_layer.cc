@@ -23,7 +23,7 @@ ImGuiLayer::ImGuiLayer(GLFWwindow* window) {
   style.TabBarOverlineSize = 0;
 
   style.WindowBorderSize = 0.5f;
-  style.FrameRounding = 4.f;
+  style.FrameRounding = 3.f;
   style.ChildRounding = 3.f;
 
   auto& colors = style.Colors;

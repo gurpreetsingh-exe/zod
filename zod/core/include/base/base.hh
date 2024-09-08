@@ -21,6 +21,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "lazy.hh"
+#include "macros.hh"
+#include "math.hh"
+
 namespace fs = std::filesystem;
 namespace chr = std::chrono;
 namespace ph = std::placeholders;
@@ -62,25 +66,6 @@ template <typename T, typename... Args>
 auto unique(Args&&... args) -> Unique<T> {
   return std::make_unique<T>(std::forward<Args>(args)...);
 }
-
-#define DISALLOW_COPY_AND_ASSIGN(T)                                            \
-  T(const T&) = delete;                                                        \
-  void operator=(const T&) = delete
-
-#define UNREACHABLE() __builtin_unreachable()
-
-#define PANIC(...) (::zod::__panic(::zod::loc::current(), "\n    " __VA_ARGS__))
-
-#define TODO() PANIC("TODO: not implemented in %s", __func__)
-
-#define ZASSERT(cond, ...)                                                     \
-  (((cond) ? static_cast<void>(0)                                              \
-           : PANIC("assertion failed " #cond " " __VA_ARGS__)))
-
-#define eprintln(...)                                                          \
-  ::fmt::print(stderr, "\x1b[1;31merror\x1b[0m: ");                            \
-  ::fmt::println(stderr, __VA_ARGS__);                                         \
-  ::std::exit(1)
 
 template <typename... T>
 auto __panic(loc loc, fmt::format_string<T...> fmt, T&&... args) {

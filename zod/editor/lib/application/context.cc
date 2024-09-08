@@ -79,7 +79,7 @@ auto ZCtxt::run(fs::path path) -> void {
   };
 
   m_ssbo->upload_data(mesh->normals.data(),
-                      mesh->normals.size() * sizeof(glm::vec3));
+                      mesh->normals.size() * sizeof(vec3));
 
   auto indices = std::vector<u32>();
   for (const auto& prim : mesh->prims) {
@@ -94,7 +94,7 @@ auto ZCtxt::run(fs::path path) -> void {
 
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
-  glm::vec3 surface0 = { 0.15f, 0.16f, 0.17f };
+  vec3 surface0 = { 0.15f, 0.16f, 0.17f };
   auto viewport = Viewport();
   auto node_editor = NodeEditor();
 

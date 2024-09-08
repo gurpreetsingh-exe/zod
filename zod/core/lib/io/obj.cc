@@ -40,7 +40,7 @@ auto load_obj(const fs::path& filepath) -> Mesh* {
         prim.points.push_back(unique_vertices[point]);
       }
       auto index_ = mesh.indices[i];
-      glm::vec3 normal = {
+      vec3 normal = {
         n[3 * index_.normal_index + 0],
         n[3 * index_.normal_index + 1],
         n[3 * index_.normal_index + 2],

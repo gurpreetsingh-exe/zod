@@ -1,10 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
-
 #include "property.hh"
 
 namespace zod {
@@ -12,6 +7,7 @@ namespace zod {
 enum {
   NODE_NONE = 0,
   NODE_FILE,
+  NODE_TRANSFORM,
 
   TOTAL_NODES,
 };
@@ -28,7 +24,7 @@ extern NodeUpdateFn node_update_functions[TOTAL_NODES];
 extern const char* node_names[TOTAL_NODES];
 
 struct alignas(16) NodeType {
-  glm::vec2 location = { 0, 0 };
+  vec2 location = { 0, 0 };
   u32 id;
 
   u32 selected : 1;
@@ -36,7 +32,7 @@ struct alignas(16) NodeType {
   u32 _padding : 22;
 
   NodeType(u32 Id) : id(Id) {}
-  NodeType(u32 Id, glm::vec2 Loc) : id(Id), location(Loc) {}
+  NodeType(u32 Id, vec2 Loc) : id(Id), location(Loc) {}
 };
 
 struct Node {

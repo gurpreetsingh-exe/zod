@@ -6,15 +6,14 @@
 
 namespace zod {
 
-auto OrthographicCamera::cursor_wrap(glm::vec2 position) -> void {
+auto OrthographicCamera::cursor_wrap(vec2 position) -> void {
   constexpr f32 padding = 16;
   if (position.x < m_window_position.x + padding) {
-    auto pos = glm::vec2(m_window_position.x + m_width - padding,
-                         Input::get_mouse_pos().y);
+    auto pos =
+        vec2(m_window_position.x + m_width - padding, Input::get_mouse_pos().y);
     Input::set_mouse_pos(pos);
   } else if (position.x > m_window_position.x + m_width - padding) {
-    auto pos =
-        glm::vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
+    auto pos = vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
     Input::set_mouse_pos(pos);
   }
 }
@@ -24,18 +23,18 @@ auto OrthographicCamera::zoom(f32 delta) -> void {
   m_zoom += zoom;
 
   auto coords = screen_to_world(m_pan_mouse_pos);
-  m_view = glm::translate(m_view, -glm::vec3(coords));
-  m_view = glm::scale(m_view, 1.0f + glm::vec3(zoom, zoom, 0.0f));
-  m_view = glm::translate(m_view, glm::vec3(coords));
+  m_view = translate(m_view, -vec3(coords));
+  m_view = scale(m_view, 1.0f + vec3(zoom, zoom, 0.0f));
+  m_view = translate(m_view, vec3(coords));
 }
 
-auto OrthographicCamera::pan(glm::vec2 delta) -> void {
-  m_view = glm::translate(m_view, glm::vec3(delta, 0.0f));
+auto OrthographicCamera::pan(vec2 delta) -> void {
+  m_view = translate(m_view, vec3(delta, 0.0f));
 }
 
 auto OrthographicCamera::_update() -> void {
   auto mouse_pos = Input::get_mouse_pos();
-  glm::vec2 delta = mouse_pos - m_last_mouse_pos;
+  vec2 delta = mouse_pos - m_last_mouse_pos;
   if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
@@ -78,36 +77,35 @@ auto Camera::zoom(f32 delta) -> void {
   m_position += m_direction * delta * 0.06f;
 }
 
-auto Camera::pan(glm::vec2 delta) -> void {
+auto Camera::pan(vec2 delta) -> void {
   auto right = m_right * delta.x * 0.02f;
-  auto _up = glm::cross(m_right, m_direction) * delta.y * 0.02f;
+  auto _up = cross(m_right, m_direction) * delta.y * 0.02f;
   m_position += right;
   m_position += _up;
 }
 
-auto Camera::rotate(glm::vec2 delta) -> void {
-  auto rot_mat = glm::rotate(m_model, glm::radians(-delta.x), up);
-  rot_mat = glm::rotate(rot_mat, glm::radians(-delta.y), m_right);
-  m_position = glm::vec3(rot_mat * glm::vec4(m_position, 1.0f));
-  m_direction = glm::normalize(-m_position);
+auto Camera::rotate(vec2 delta) -> void {
+  auto rot_mat = zod::rotate(m_model, radians(-delta.x), up);
+  rot_mat = zod::rotate(rot_mat, radians(-delta.y), m_right);
+  m_position = vec3(rot_mat * vec4(m_position, 1.0f));
+  m_direction = normalize(-m_position);
 }
 
-auto Camera::cursor_wrap(glm::vec2 position) -> void {
+auto Camera::cursor_wrap(vec2 position) -> void {
   constexpr f32 padding = 16;
   if (position.x < m_window_position.x + padding) {
-    auto pos = glm::vec2(m_window_position.x + m_viewport_width - padding,
-                         Input::get_mouse_pos().y);
+    auto pos = vec2(m_window_position.x + m_viewport_width - padding,
+                    Input::get_mouse_pos().y);
     Input::set_mouse_pos(pos);
   } else if (position.x > m_window_position.x + m_viewport_width - padding) {
-    auto pos =
-        glm::vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
+    auto pos = vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
     Input::set_mouse_pos(pos);
   }
 }
 
 auto Camera::_update() -> void {
   auto mouse_pos = Input::get_mouse_pos();
-  glm::vec2 delta = (mouse_pos - m_last_mouse_pos) * 0.28f;
+  vec2 delta = (mouse_pos - m_last_mouse_pos) * 0.28f;
   if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
@@ -122,7 +120,7 @@ auto Camera::_update() -> void {
     rotate(delta);
     cursor_wrap(mouse_pos);
   }
-  m_right = glm::cross(up, m_direction);
+  m_right = cross(up, m_direction);
   update_matrix();
   m_last_mouse_pos = Input::get_mouse_pos();
   if (not m_panning) {

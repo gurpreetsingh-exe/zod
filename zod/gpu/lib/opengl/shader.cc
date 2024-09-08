@@ -1,5 +1,3 @@
-#include <glm/gtc/type_ptr.hpp>
-
 #include "opengl/shader.hh"
 
 namespace zod {
@@ -79,13 +77,12 @@ auto GLShader::uniform(const std::string& name, i32 n) -> void {
   glUniform1i(get_uniform_location(name), n);
 }
 
-auto GLShader::uniform(const std::string& name, glm::vec3 vec) -> void {
+auto GLShader::uniform(const std::string& name, vec3 vec) -> void {
   glUniform3f(get_uniform_location(name), vec.x, vec.y, vec.z);
 }
 
-auto GLShader::uniform(const std::string& name, const glm::mat4& mat) -> void {
-  glUniformMatrix4fv(get_uniform_location(name), 1, GL_FALSE,
-                     glm::value_ptr(mat));
+auto GLShader::uniform(const std::string& name, const mat4& mat) -> void {
+  glUniformMatrix4fv(get_uniform_location(name), 1, GL_FALSE, value_ptr(mat));
 }
 
 } // namespace zod

@@ -8,8 +8,8 @@
 namespace zod {
 
 struct CameraUBO {
-  glm::mat4 view_projection;
-  glm::vec4 direction;
+  mat4 view_projection;
+  vec4 direction;
 };
 
 NodeEditor::NodeEditor()
@@ -49,7 +49,7 @@ NodeEditor::NodeEditor()
   m_batch = GPUBackend::get().create_batch(format, { 1, 2, 0, 2, 3, 1 });
 
   for (usize i = 0; i < 5; ++i) {
-    m_node_tree->add_node<NODE_FILE>(glm::vec2(-100, (f32(i) * 150) - 400));
+    m_node_tree->add_node<NODE_TRANSFORM>(vec2(-100, (f32(i) * 150) - 400));
   }
 
   m_camera_ubo = GPUBackend::get().create_uniform_buffer(sizeof(CameraUBO));
@@ -66,7 +66,12 @@ auto NodeEditor::draw_props() -> void {
     return;
   }
   auto* node = m_node_tree->node_from_id(m_active);
-  node->draw(*node);
+  auto name =
+      fmt::format("{}.{}", node_names[node->type->type], node->type->id);
+  ImGui::SeparatorText(name.c_str());
+  ImGui::Spacing();
+  for (auto& prop : node->props) { prop.draw(); }
+  // node->draw(*node);
 }
 
 auto NodeEditor::update() -> void {
@@ -74,7 +79,14 @@ auto NodeEditor::update() -> void {
   ImGui::Begin("NodeEditor");
 
   auto position = ImGui::GetWindowPos();
-  m_camera.set_window_position(glm::vec2(position.x, position.y));
+  m_camera.set_window_position(vec2(position.x, position.y));
+
+  auto update_camera = [&] {
+    m_camera.update();
+    m_camera.updating = ImGui::IsWindowHovered();
+    auto ubo = CameraUBO { m_camera.get_view_projection(), vec4(0.0f) };
+    m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
+  };
 
   auto size = ImGui::GetContentRegionAvail();
   if (size.x != m_width or size.y != m_height) {
@@ -82,12 +94,13 @@ auto NodeEditor::update() -> void {
     m_height = size.y;
     m_framebuffer->resize(m_width, m_height);
     m_camera.resize(m_width, m_height);
+    update_camera();
   }
 
-  m_camera.update();
-  m_camera.updating = ImGui::IsWindowHovered();
-  auto ubo = CameraUBO { m_camera.get_view_projection(), glm::vec4(0.0f) };
-  m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
+  auto is_camera_updating = Input::is_key_pressed(GLFW_KEY_RIGHT_ALT);
+  if (is_camera_updating) {
+    update_camera();
+  }
 
   ImGui::PopStyleVar();
 
@@ -136,9 +149,10 @@ auto NodeEditor::update() -> void {
   ImGui::Image(texture->get_id(), size, ImVec2 { 0.0, 0.0 },
                ImVec2 { 1.0, -1.0 });
 
-  auto pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
+  auto mouse_pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
+  auto pos = vec2(mouse_pos.x, mouse_pos.y);
   auto pixel = 0u;
-  if (ImGui::IsWindowHovered() and
+  if (ImGui::IsWindowHovered() and not is_camera_updating and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     pixel = pos.x > m_framebuffer->get_width() or
                     pos.y > m_framebuffer->get_height()

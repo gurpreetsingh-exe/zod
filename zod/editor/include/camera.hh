@@ -1,33 +1,11 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/quaternion.hpp>
-
 #include "backend.hh"
 #include "event.hh"
 
-#define FMT(type, fmt_str, ...)                                                \
-  template <>                                                                  \
-  struct fmt::formatter<type> {                                                \
-    constexpr auto parse(format_parse_context& ctx)                            \
-        -> format_parse_context::iterator {                                    \
-      return ctx.begin();                                                      \
-    }                                                                          \
-    auto format(type v, format_context& ctx) const                             \
-        -> format_context::iterator {                                          \
-      return fmt::format_to(ctx.out(), fmt_str, __VA_ARGS__);                  \
-    }                                                                          \
-  }
-
-FMT(glm::vec3, "{{ {}, {}, {} }}", v.x, v.y, v.z);
-FMT(glm::vec4, "{{ {}, {}, {}, {} }}", v.x, v.y, v.z, v.w);
-FMT(glm::mat4, "{{ {},\n  {},\n  {},\n  {} }}", v[0], v[1], v[2], v[3]);
-
 namespace zod {
 
-inline constexpr glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
+inline constexpr vec3 up = vec3(0.0f, 0.0f, 1.0f);
 
 class OrthographicCamera {
 public:
@@ -39,9 +17,7 @@ public:
   ~OrthographicCamera() = default;
 
 public:
-  auto get_view_projection() const -> const glm::mat4& {
-    return m_view_projection;
-  }
+  auto get_view_projection() const -> const mat4& { return m_view_projection; }
 
   auto resize(f32 width, f32 height) -> void {
     m_width = width;
@@ -49,7 +25,7 @@ public:
     m_needs_update = true;
   }
 
-  auto set_window_position(glm::vec2 position) -> void {
+  auto set_window_position(vec2 position) -> void {
     m_window_position = position;
   }
 
@@ -58,8 +34,8 @@ public:
 private:
   auto _update() -> void;
   auto zoom(f32) -> void;
-  auto pan(glm::vec2) -> void;
-  auto cursor_wrap(glm::vec2) -> void;
+  auto pan(vec2) -> void;
+  auto cursor_wrap(vec2) -> void;
   auto update_matrix() -> void {
     update_view();
     update_projection();
@@ -67,35 +43,32 @@ private:
   }
 
   auto update_view() -> void {
-    m_view =
-        glm::lookAt(m_position, m_position + m_direction, glm::vec3(0, 1, 0));
+    m_view = lookAt(m_position, m_position + m_direction, vec3(0, 1, 0));
   }
 
   auto update_projection() -> void {
-    m_projection =
-        glm::ortho(-m_width, m_width, -m_height, m_height, -1.f, 1.f);
+    m_projection = ortho(-m_width, m_width, -m_height, m_height, -1.f, 1.f);
   }
 
-  auto screen_to_world(glm::vec2 v) -> glm::vec4 {
-    auto ndc =
-        glm::vec4((v / glm::vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 0.0f);
-    return glm::inverse(m_view_projection) * ndc;
+  auto screen_to_world(vec2 v) -> vec4 {
+    auto ndc = vec4((v / vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 0.0f);
+    return inverse(m_view_projection) * ndc;
   }
 
 private:
   f32 m_width;
   f32 m_height;
   f32 m_zoom = 1.0f;
-  glm::vec3 m_position = glm::vec3(0.0f, 0.0f, 1.0f);
-  glm::vec3 m_direction = glm::normalize(-m_position);
-  glm::mat4 m_view;
-  glm::mat4 m_projection;
-  glm::mat4 m_view_projection;
+  vec3 m_position = vec3(0.0f, 0.0f, 1.0f);
+  vec3 m_direction = normalize(-m_position);
+  mat4 m_view;
+  mat4 m_projection;
+  mat4 m_view_projection;
   bool m_needs_update = false;
   bool m_panning = false;
-  glm::vec2 m_last_mouse_pos;
-  glm::vec2 m_pan_mouse_pos;
-  glm::vec2 m_window_position = glm::vec2(0.0f);
+  vec2 m_last_mouse_pos;
+  vec2 m_pan_mouse_pos;
+  vec2 m_window_position = vec2(0.0f);
 };
 
 class Camera {
@@ -114,17 +87,15 @@ public:
   ~Camera() = default;
 
 public:
-  auto get_model() const -> const glm::mat4& { return m_model; }
-  auto get_view() const -> const glm::mat4& { return m_view; }
-  auto get_projection() const -> const glm::mat4& { return m_projection; }
-  auto get_view_projection() const -> const glm::mat4& {
-    return m_view_projection;
-  }
+  auto get_model() const -> const mat4& { return m_model; }
+  auto get_view() const -> const mat4& { return m_view; }
+  auto get_projection() const -> const mat4& { return m_projection; }
+  auto get_view_projection() const -> const mat4& { return m_view_projection; }
   auto get_fov() const -> f32 { return m_fov; }
   auto get_clipping() const -> std::tuple<f32, f32> {
     return { m_clip_near, m_clip_far };
   }
-  auto get_direction() const -> const glm::vec3& { return m_direction; }
+  auto get_direction() const -> const vec3& { return m_direction; }
 
   auto update() -> void;
 
@@ -145,21 +116,21 @@ public:
     m_needs_update = true;
   }
 
-  auto set_window_position(glm::vec2 position) -> void {
+  auto set_window_position(vec2 position) -> void {
     m_window_position = position;
   }
 
 private:
-  auto update_model() -> void { m_model = glm::mat4(1.0f); }
+  auto update_model() -> void { m_model = mat4(1.0f); }
 
   auto update_view() -> void {
-    m_view = glm::lookAt(m_position, m_position + m_direction, up);
+    m_view = lookAt(m_position, m_position + m_direction, up);
   }
 
   auto update_projection() -> void {
-    m_projection = glm::perspective(glm::radians(m_fov),
-                                    m_viewport_width / m_viewport_height,
-                                    m_clip_near, m_clip_far);
+    m_projection =
+        perspective(radians(m_fov), m_viewport_width / m_viewport_height,
+                    m_clip_near, m_clip_far);
   }
 
   auto update_matrix() -> void {
@@ -170,16 +141,16 @@ private:
 
   auto _update() -> void;
   auto zoom(f32) -> void;
-  auto rotate(glm::vec2) -> void;
-  auto pan(glm::vec2) -> void;
-  auto cursor_wrap(glm::vec2) -> void;
+  auto rotate(vec2) -> void;
+  auto pan(vec2) -> void;
+  auto cursor_wrap(vec2) -> void;
 
 private:
   f32 m_viewport_width, m_viewport_height;
-  glm::mat4 m_model;
-  glm::mat4 m_view;
-  glm::mat4 m_projection;
-  glm::mat4 m_view_projection;
+  mat4 m_model;
+  mat4 m_view;
+  mat4 m_projection;
+  mat4 m_view_projection;
 
   f32 m_fov;
   f32 m_clip_near;
@@ -189,14 +160,14 @@ private:
   bool m_look_around = false;
   bool m_panning = false;
 
-  glm::vec3 m_position = glm::vec3(2.0f, 2.0f, 2.0f);
-  glm::vec3 m_direction = glm::normalize(-m_position);
-  glm::vec3 m_right = glm::vec3(1.0f, 0.0f, 0.0f);
+  vec3 m_position = vec3(2.0f, 2.0f, 2.0f);
+  vec3 m_direction = normalize(-m_position);
+  vec3 m_right = vec3(1.0f, 0.0f, 0.0f);
 
-  glm::vec2 m_last_mouse_pos = glm::vec2(0.0f);
-  glm::vec2 m_pan_mouse_pos = glm::vec2(0.0f);
+  vec2 m_last_mouse_pos = vec2(0.0f);
+  vec2 m_pan_mouse_pos = vec2(0.0f);
 
-  glm::vec2 m_window_position = glm::vec2(0.0f);
+  vec2 m_window_position = vec2(0.0f);
 };
 
 } // namespace zod
