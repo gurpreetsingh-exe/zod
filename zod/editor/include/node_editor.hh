@@ -14,7 +14,16 @@ public:
   auto draw_props() -> void;
 
 private:
-  auto add_node() -> void;
+  auto add_node(usize, vec2) -> void;
+
+  template <typename UpdateFn>
+  auto update_node(UpdateFn fn) -> void {
+    ZASSERT(m_active > 0);
+    auto* node = m_node_tree->node_from_id(m_active);
+    fn(node);
+    m_node_ssbo->update_data(node->type, sizeof(NodeType),
+                             (m_active - 1) * sizeof(NodeType));
+  }
 
 private:
   f32 m_width;

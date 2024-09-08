@@ -32,6 +32,12 @@ public:
   auto update() -> void;
   auto get_zoom() -> f32 { return m_zoom * 0.5f; }
 
+  auto screen_to_world(vec2 v) -> vec4 {
+    v.y = m_height - v.y;
+    auto ndc = vec4((v / vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 0.0f);
+    return inverse(m_view_projection) * ndc;
+  }
+
 private:
   auto _update() -> void;
   auto zoom(f32) -> void;
@@ -49,11 +55,6 @@ private:
 
   auto update_projection() -> void {
     m_projection = ortho(-m_width, m_width, -m_height, m_height, -1.f, 1.f);
-  }
-
-  auto screen_to_world(vec2 v) -> vec4 {
-    auto ndc = vec4((v / vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 0.0f);
-    return inverse(m_view_projection) * ndc;
   }
 
 private:

@@ -59,7 +59,14 @@ NodeEditor::NodeEditor()
                            m_node_tree->get_size() * sizeof(NodeType));
 }
 
-auto NodeEditor::add_node() -> void { m_node_add = true; }
+auto NodeEditor::add_node(usize type, vec2 position) -> void {
+  m_node_add = true;
+  auto pos = vec2(m_camera.screen_to_world(position)) - vec2(NODE_SIZE);
+  auto& node = m_node_tree->add_node(type, pos);
+  m_active = node.type->id;
+  m_node_ssbo->upload_data(m_node_tree->get_data(),
+                           m_node_tree->get_size() * sizeof(NodeType));
+}
 
 auto NodeEditor::draw_props() -> void {
   if (not m_active) {
@@ -80,6 +87,10 @@ auto NodeEditor::update() -> void {
 
   auto position = ImGui::GetWindowPos();
   m_camera.set_window_position(vec2(position.x, position.y));
+
+  auto mouse_pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
+  auto pos = vec2(mouse_pos.x, mouse_pos.y);
+  auto delta = pos - m_last_mouse_pos;
 
   auto update_camera = [&] {
     m_camera.update();
@@ -106,20 +117,29 @@ auto NodeEditor::update() -> void {
 
   if (ImGui::BeginPopupContextWindow("Add Menu",
                                      ImGuiPopupFlags_MouseButtonRight)) {
-    if (ImGui::MenuItem("Cube")) {
-      add_node();
+    for (usize i = 1; i < TOTAL_NODES; ++i) {
+      if (ImGui::MenuItem(node_names[i])) {
+        add_node(i, pos);
+      }
     }
 
     ImGui::EndPopup();
   }
 
   if (m_node_add) {
+    update_node([&](auto* node) {
+      delta /= m_camera.get_zoom();
+      node->type->location.x += delta.x;
+      node->type->location.y -= delta.y;
+    });
+
     if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
       m_node_add = false;
     }
 
     if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_RIGHT)) {
       m_node_add = false;
+      m_active = 0;
     }
   }
 
@@ -149,20 +169,15 @@ auto NodeEditor::update() -> void {
   ImGui::Image(texture->get_id(), size, ImVec2 { 0.0, 0.0 },
                ImVec2 { 1.0, -1.0 });
 
-  auto mouse_pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
-  auto pos = vec2(mouse_pos.x, mouse_pos.y);
-  auto delta = pos - m_last_mouse_pos;
   auto click = delta.x == 0 and delta.y == 0;
   auto pixel = 0u;
   if (ImGui::IsWindowHovered() and not is_camera_updating and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     if (not click and m_active) {
-      m_node_tree->update_node(m_active, [&](auto* node) {
+      update_node([&](auto* node) {
         delta /= m_camera.get_zoom();
         node->type->location.x += delta.x;
         node->type->location.y -= delta.y;
-        m_node_ssbo->update_data(node->type, sizeof(NodeType),
-                                 (m_active - 1) * sizeof(NodeType));
       });
     }
     pixel = pos.x > m_framebuffer->get_width() or

@@ -12,6 +12,8 @@ enum {
   TOTAL_NODES,
 };
 
+constexpr f32 NODE_SIZE = 100.0f;
+
 struct Node;
 
 using NodeInitFn = std::function<void(Node&)>;

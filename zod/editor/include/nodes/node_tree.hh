@@ -15,12 +15,11 @@ public:
 
 public:
   template <typename... Args>
-  auto add_node(Args... args) -> Node& {
-    auto id = m_type_infos.size() + 1;
-    m_type_infos.push_back(NodeType(id, args...));
-    auto* info = &m_type_infos.data()[id - 1];
-    auto& node = m_nodes.emplace_back();
-    node.type = info;
+  auto add_node(usize type, Args... args) -> Node& {
+    auto& node = add_node(args...);
+    node.type->type = type;
+    node_init_functions[type](node);
+    node.draw = node_draw_functions[type];
     return node;
   }
 
@@ -47,6 +46,17 @@ public:
   auto get_data() -> NodeType* { return m_type_infos.data(); }
   auto get_size() const -> const usize { return m_type_infos.size(); }
   auto get_nodes() -> std::vector<Node>& { return m_nodes; }
+
+private:
+  template <typename... Args>
+  auto add_node(Args... args) -> Node& {
+    auto id = m_type_infos.size() + 1;
+    m_type_infos.push_back(NodeType(id, args...));
+    auto* info = &m_type_infos.data()[id - 1];
+    auto& node = m_nodes.emplace_back();
+    node.type = info;
+    return node;
+  }
 
 private:
   std::vector<NodeType> m_type_infos = {};
