@@ -37,8 +37,11 @@ struct alignas(16) NodeType {
   NodeType(u32 Id, vec2 Loc) : id(Id), location(Loc) {}
 };
 
+class NodeTree;
+
 struct Node {
   NodeType* type;
+  NodeTree* parent;
   std::vector<Property> props = {};
   NodeDrawFn draw;
   NodeUpdateFn update;

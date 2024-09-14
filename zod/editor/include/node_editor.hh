@@ -12,6 +12,7 @@ public:
   NodeEditor();
   auto update() -> void;
   auto draw_props() -> void;
+  auto get_node_tree() -> Shared<NodeTree> { return m_node_tree; }
 
 private:
   auto add_node(usize, vec2) -> void;
@@ -38,7 +39,6 @@ private:
   OrthographicCamera m_camera;
   bool m_node_add = false;
   u32 m_active = 0;
-  u32 m_vis = 0;
   Unique<Font> m_font;
   vec2 m_last_mouse_pos = vec2(0);
 };

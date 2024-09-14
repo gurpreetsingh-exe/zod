@@ -1,5 +1,6 @@
 #pragma once
 
+#include "asset_manager.hh"
 #include "backend.hh"
 #include "imgui_layer.hh"
 #include "window.hh"
@@ -21,6 +22,7 @@ public:
     return m_window->get_size();
   }
   auto get_window() -> Window& { return *m_window; }
+  auto get_normals() -> Shared<GPUStorageBuffer> { return m_ssbo; }
 
   template <typename Callback>
   auto with_scope(const std::string& name, Callback cb) -> void {
@@ -34,6 +36,8 @@ public:
     m_times[name] = query->get_time();
   }
 
+  auto get_asset_manager() -> AssetManager& { return m_asset_manager; }
+
 private:
   auto on_event(Event&) -> void;
 
@@ -45,6 +49,7 @@ private:
   Unique<ImGuiLayer> m_imgui_layer;
   std::unordered_map<std::string, Shared<GPUQuery>> m_queries;
   std::unordered_map<std::string, f32> m_times;
+  AssetManager m_asset_manager;
 };
 
 } // namespace zod

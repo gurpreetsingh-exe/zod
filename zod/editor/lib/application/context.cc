@@ -73,7 +73,8 @@ auto ZCtxt::on_event(Event& event) -> void {
 }
 
 auto ZCtxt::run(fs::path path) -> void {
-  auto mesh = load_obj(path);
+  auto uuid = m_asset_manager.load(path);
+  auto mesh = m_asset_manager.get(uuid);
   auto format = std::vector<GPUBufferLayout> {
     { GPUDataType::Float, mesh->points.data(), 3, mesh->points.size() * 3 },
   };
@@ -125,7 +126,13 @@ auto ZCtxt::run(fs::path path) -> void {
         ImGui::End();
 
         m_ssbo->bind();
-        GPU_TIME("viewport", { viewport.update(m_batch); });
+        GPU_TIME("viewport", {
+          auto batch = node_editor.get_node_tree()->get_batch();
+          if (not batch) {
+            return;
+          }
+          viewport.update(batch);
+        });
         node_editor.update();
       });
       m_imgui_layer->end_frame();

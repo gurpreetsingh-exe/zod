@@ -35,6 +35,7 @@ add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
 add_subdirectory(${THIRD_PARTY_DIR}/glad glad)
 add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
 add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
+add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
 find_package(OpenGL REQUIRED)
 
 add_library(imgui
@@ -86,7 +87,7 @@ add_executable(zod ${ZOD_EDITOR_SRC})
 target_compile_definitions(zod PUBLIC GLFW_INCLUDE_NONE=1)
 target_include_directories(zod PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)
-target_link_libraries(zod zodpch zodcore gpu glm::glm glfw imgui freetype pthread ${CMAKE_DL_LIBS})
+target_link_libraries(zod zodpch zodcore gpu glm::glm glfw imgui freetype uuid_v4 pthread ${CMAKE_DL_LIBS})
 
 ##########################################################################
 # libzc

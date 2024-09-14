@@ -6,7 +6,10 @@
 
 namespace zod {
 
-Property::Property(Property&& prop) : name(prop.name), type(prop.type) {
+static constexpr int padding = 70;
+
+Property::Property(Property&& prop)
+    : name(prop.name), type(prop.type), subtype(prop.subtype) {
   switch (prop.type) {
     case PROP_STRING: {
       s = prop.s;
@@ -163,7 +166,7 @@ auto DragFloat3(const char* name, f32* value) -> bool {
   ImGui::BeginGroup();
   ImGui::AlignTextToFramePadding();
   ImGui::Text(name);
-  ImGui::SameLine(70);
+  ImGui::SameLine(padding);
   ImGui::PushID(name);
   ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
   ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
@@ -187,10 +190,19 @@ auto DragFloat3(const char* name, f32* value) -> bool {
   return needs_update;
 }
 
-auto Property::draw() -> void {
+auto Property::draw() -> bool {
   switch (type) {
     case PROP_STRING: {
-      needs_update = ImGui::InputText(name, s, 64);
+      ImGui::BeginGroup();
+      ImGui::AlignTextToFramePadding();
+      ImGui::Text(name);
+      ImGui::SameLine(padding);
+      needs_update = ImGui::InputText("##", s, 64);
+      if (subtype == PROP_SUBTYPE_FILEPATH) {
+        ImGui::SameLine();
+        ImGui::Button("Open");
+      }
+      ImGui::EndGroup();
     } break;
     case PROP_INT: {
       needs_update = ImGui::DragInt(name, &i);
@@ -202,6 +214,7 @@ auto Property::draw() -> void {
       needs_update = DragFloat3(name, &v3[0]);
     } break;
   }
+  return needs_update;
 }
 
 Property::~Property() {

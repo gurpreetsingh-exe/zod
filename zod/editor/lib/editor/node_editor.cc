@@ -5,6 +5,8 @@
 #include "node_editor.hh"
 #include "widgets/button.hh"
 
+#include "base/reflection.hh"
+
 namespace zod {
 
 struct CameraUBO {
@@ -77,7 +79,13 @@ auto NodeEditor::draw_props() -> void {
       fmt::format("{}.{}", node_names[node->type->type], node->type->id);
   ImGui::SeparatorText(name.c_str());
   ImGui::Spacing();
-  for (auto& prop : node->props) { prop.draw(); }
+  for (usize i = 0; i < node->props.size(); ++i) {
+    auto& prop = node->props[i];
+    if (prop.draw() and m_node_tree->get_visualized() == node->type->id) {
+      node->update(*node);
+    }
+  }
+  // for (auto& prop : node->props) { prop.draw(); }
   // node->draw(*node);
 }
 
@@ -154,7 +162,7 @@ auto NodeEditor::update() -> void {
   m_node_ssbo->bind(1);
   m_node_shader->bind();
   m_node_shader->uniform("u_active", m_active);
-  m_node_shader->uniform("u_vis", m_vis);
+  m_node_shader->uniform("u_vis", m_node_tree->get_visualized());
   m_batch->draw_instanced(m_node_shader, m_node_tree->get_size());
   for (const auto& node : m_node_tree->get_nodes()) {
     auto loc = node.type->location;
@@ -191,7 +199,9 @@ auto NodeEditor::update() -> void {
         case 0:
           break;
         case 1: {
-          m_vis = id;
+          m_node_tree->set_visualized(id);
+          auto* node = m_node_tree->node_from_id(id);
+          node->update(*node);
           // if (m_active) {
           //   node = &m_node_tree->get_data()[m_active - 1];
           //   node->extra = 0;
@@ -221,6 +231,9 @@ auto NodeEditor::update() -> void {
               (pixel & 0xff000000) >> 24);
   ImGui::SetCursorPos(ImVec2(5, 50));
   ImGui::Text("Zoom: %f", m_camera.get_zoom());
+  static auto i = 0ZU;
+  // get_field_count(i, std::make_index_sequence<NodeEditor>{});
+  ImGui::Text("Field count: %zu", i);
 
   ImGui::End();
 }
