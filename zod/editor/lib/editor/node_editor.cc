@@ -231,9 +231,6 @@ auto NodeEditor::update() -> void {
               (pixel & 0xff000000) >> 24);
   ImGui::SetCursorPos(ImVec2(5, 50));
   ImGui::Text("Zoom: %f", m_camera.get_zoom());
-  static auto i = 0ZU;
-  // get_field_count(i, std::make_index_sequence<NodeEditor>{});
-  ImGui::Text("Field count: %zu", i);
 
   ImGui::End();
 }

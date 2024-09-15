@@ -60,7 +60,6 @@ GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format, int w, int h,
   glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexImage2D(m_target, 0, to_gl(format), m_width, m_height, 0,
                gl_format(format), GL_UNSIGNED_BYTE, nullptr);
-  glGenerateMipmap(m_target);
   glBindTexture(m_target, 0);
 }
 
@@ -99,7 +98,6 @@ GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format,
   glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexImage2D(m_target, 0, to_gl(format), m_width, m_height, 0, GL_RGBA,
                GL_FLOAT, data);
-  glGenerateMipmap(m_target);
   glBindTexture(m_target, 0);
   stbi_image_free(data);
 }

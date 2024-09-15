@@ -45,6 +45,7 @@ private:
   Unique<Window> m_window;
   Shared<GPUBatch> m_batch;
   Shared<GPUStorageBuffer> m_ssbo;
+  Shared<GPUStorageBuffer> m_vertex_buffer;
   Shared<GPUFrameBuffer> m_framebuffer;
   Unique<ImGuiLayer> m_imgui_layer;
   std::unordered_map<std::string, Shared<GPUQuery>> m_queries;

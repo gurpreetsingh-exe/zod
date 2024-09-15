@@ -53,7 +53,6 @@ NodeUpdateFn node_update_functions[TOTAL_NODES] = {
           return;
         }
         ZASSERT(node.parent);
-        node.parent->update_batch(mgr.get(id));
       },
   [NODE_TRANSFORM] = [](Node& node) {},
 };
@@ -63,19 +62,5 @@ const char* node_names[TOTAL_NODES] = {
   [NODE_FILE] = "File",
   [NODE_TRANSFORM] = "Transform",
 };
-
-auto NodeTree::update_batch(Mesh* mesh) -> void {
-  auto format = std::vector<GPUBufferLayout> {
-    { GPUDataType::Float, mesh->points.data(), 3, mesh->points.size() * 3 },
-  };
-  auto indices = std::vector<u32>();
-  for (const auto& prim : mesh->prims) {
-    for (auto i : prim.points) { indices.push_back(i); }
-  }
-
-  m_batch = GPUBackend::get().create_batch(format, indices);
-  ZCtxt::get().get_normals()->upload_data(mesh->normals.data(),
-                                          mesh->normals.size() * sizeof(vec3));
-}
 
 } // namespace zod

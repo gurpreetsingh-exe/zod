@@ -48,6 +48,7 @@ ZCtxt::ZCtxt()
 
   m_window->set_event_callback(std::bind(&ZCtxt::on_event, this, ph::_1));
   m_ssbo = GPUBackend::get().create_storage_buffer();
+  m_vertex_buffer = GPUBackend::get().create_storage_buffer();
 }
 
 auto ZCtxt::on_event(Event& event) -> void {
@@ -74,24 +75,32 @@ auto ZCtxt::on_event(Event& event) -> void {
 
 auto ZCtxt::run(fs::path path) -> void {
   auto uuid = m_asset_manager.load(path);
-  auto mesh = m_asset_manager.get(uuid);
-  auto format = std::vector<GPUBufferLayout> {
-    { GPUDataType::Float, mesh->points.data(), 3, mesh->points.size() * 3 },
-  };
+  auto* mesh = m_asset_manager.get(uuid);
+  auto vertex_buffer_out = GPUBackend::get().create_storage_buffer();
+  m_vertex_buffer->upload_data(mesh->points.data(),
+                               mesh->points.size() * sizeof(vec3));
+  vertex_buffer_out->upload_data(mesh->points.data(),
+                                 mesh->points.size() * sizeof(vec3));
 
   m_ssbo->upload_data(mesh->normals.data(),
                       mesh->normals.size() * sizeof(vec3));
 
-  auto indices = std::vector<u32>();
-  for (const auto& prim : mesh->prims) {
-    for (auto i : prim.points) { indices.push_back(i); }
+  auto points = mesh->points.size();
+  {
+    auto indices = std::vector<u32>();
+    for (const auto& prim : mesh->prims) {
+      for (auto i : prim.points) { indices.push_back(i); }
+    }
+    m_batch = GPUBackend::get().create_batch({}, indices);
   }
-
-  m_batch = GPUBackend::get().create_batch(format, indices);
 
   auto round_panel = GPUBackend::get().get_shader("round_panel");
   auto quad = GPUBackend::get().get_shader("quad");
   auto rect = GPUBackend::get().get_shader("rect");
+
+  auto transform = GPUBackend::get().create_shader("transform");
+  transform->init_compute_shader(g_transform_comp);
+  transform->compile();
 
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
@@ -111,6 +120,18 @@ auto ZCtxt::run(fs::path path) -> void {
           glfwSwapInterval(vsync);
         }
 
+        static auto offset = vec3(0.0f);
+
+        if (ImGui::DragFloat3("offset", &offset[0])) {
+          transform->bind();
+          transform->uniform("u_num_vertices", u32(points));
+          transform->uniform("u_offset", offset);
+          m_vertex_buffer->bind(2);
+          vertex_buffer_out->bind(3);
+          auto workgroup_size = u32(std::ceil(points / 64.0f));
+          transform->dispatch(workgroup_size, 1, 1);
+        }
+
         ImGui::Separator();
         for (const auto& [name, time] : m_times) {
           ImGui::Text("%s: %.3f ms", name.c_str(), time);
@@ -126,13 +147,8 @@ auto ZCtxt::run(fs::path path) -> void {
         ImGui::End();
 
         m_ssbo->bind();
-        GPU_TIME("viewport", {
-          auto batch = node_editor.get_node_tree()->get_batch();
-          if (not batch) {
-            return;
-          }
-          viewport.update(batch);
-        });
+        vertex_buffer_out->bind(2);
+        GPU_TIME("viewport", { viewport.update(m_batch); });
         node_editor.update();
       });
       m_imgui_layer->end_frame();
