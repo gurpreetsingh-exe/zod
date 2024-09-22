@@ -2,7 +2,7 @@
 
 namespace zod {
 
-auto Outliner::draw() -> void {}
+auto Outliner::draw(Geometry&) -> void {}
 
 auto Outliner::on_event(Event& event) -> void {}
 

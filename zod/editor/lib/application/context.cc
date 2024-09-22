@@ -9,9 +9,6 @@ namespace zod {
 
 class ZCtxt;
 static ZCtxt* g_zcx = nullptr;
-int border = 0;
-int padding = 2;
-f32 factor = 0.2;
 
 auto ZCtxt::get() -> ZCtxt& { return *g_zcx; }
 
@@ -61,12 +58,12 @@ auto ZCtxt::on_event(Event& event) -> void {
     case Event::MouseUp: {
     } break;
     case Event::WindowResize: {
-      auto w = event.size[0];
-      auto h = event.size[1];
-      f32 b = border * factor;
-      f32 pw = w - b * 2;
-      f32 ph = h - b * 2;
-      m_framebuffer->resize(w, h);
+      // auto w = event.size[0];
+      // auto h = event.size[1];
+      // f32 b = border * factor;
+      // f32 pw = w - b * 2;
+      // f32 ph = h - b * 2;
+      // m_framebuffer->resize(w, h);
     } break;
     default:
       break;

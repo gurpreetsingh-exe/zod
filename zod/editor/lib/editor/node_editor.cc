@@ -5,8 +5,6 @@
 #include "node_editor.hh"
 #include "widgets/button.hh"
 
-#include "base/reflection.hh"
-
 namespace zod {
 
 struct CameraUBO {

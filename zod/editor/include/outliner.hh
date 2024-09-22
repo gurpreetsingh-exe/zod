@@ -9,7 +9,7 @@ class Outliner : public Panel {
 public:
   Outliner() = default;
   auto on_event(Event& event) -> void override;
-  auto draw() -> void override;
+  auto draw(Geometry&) -> void override;
 };
 
 } // namespace zod
