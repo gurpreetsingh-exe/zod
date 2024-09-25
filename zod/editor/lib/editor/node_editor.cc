@@ -231,7 +231,19 @@ auto NodeEditor::update() -> void {
                       1, pos.x, m_framebuffer->get_height() - pos.y);
     if (auto id = pixel & 0xffffff) {
       auto extra = (pixel & 0xff000000) >> 24;
-      switch (extra) {
+      struct Mask {
+        union {
+          struct {
+            u8 visualize : 1;
+            u8 padding : 7;
+          };
+          u8 data;
+        };
+        Mask(u8 d) : data(d) {}
+      };
+      static_assert(sizeof(Mask) == 1);
+      auto mask = Mask(extra);
+      switch (mask.visualize) {
         case 0:
           break;
         case 1: {
