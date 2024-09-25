@@ -35,6 +35,8 @@ private:
   Shared<GPUShader> m_node_shader;
   Shared<GPUFrameBuffer> m_framebuffer;
   Shared<GPUBatch> m_batch;
+  Shared<GPUShader> m_line_shader;
+  Shared<GPUBatch> m_curves;
   Shared<NodeTree> m_node_tree;
   OrthographicCamera m_camera;
   bool m_node_add = false;

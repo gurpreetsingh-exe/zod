@@ -5,6 +5,8 @@
 #include "node_editor.hh"
 #include "widgets/button.hh"
 
+#include "curve.hh"
+
 namespace zod {
 
 struct CameraUBO {
@@ -41,12 +43,43 @@ NodeEditor::NodeEditor()
   m_node_shader->init_fragment_shader(g_node_frag);
   m_node_shader->compile();
 
+  m_line_shader = GPUBackend::get().create_shader("line");
+  m_line_shader->init_vertex_shader(g_vertex2d);
+  m_line_shader->init_fragment_shader(g_flat_color_frag);
+  m_line_shader->compile();
+
   f32 position[] = { 0, 0, 1, 0, 0, 1, 1, 1 };
   auto format = std::vector<GPUBufferLayout> {
     { GPUDataType::Float, position, 2, 8 },
   };
 
   m_batch = GPUBackend::get().create_batch(format, { 1, 2, 0, 2, 3, 1 });
+
+  {
+    // clang-format off
+    auto curve = RoundCurve(
+      vec2(-100, 100),
+      vec2(-200, 400),
+      40.0f
+    );
+    // clang-format on
+
+    auto position = curve.get();
+    auto buf = std::vector<f32>();
+    for (usize i = 0; i < position.size() - 1; ++i) {
+      auto p1 = position[i];
+      auto p2 = position[i + 1];
+      buf.push_back(p1.x);
+      buf.push_back(p1.y);
+      buf.push_back(p2.x);
+      buf.push_back(p2.y);
+    }
+
+    auto format = std::vector<GPUBufferLayout> {
+      { GPUDataType::Float, buf.data(), 2, buf.size() },
+    };
+    m_curves = GPUBackend::get().create_batch(format);
+  }
 
   for (usize i = 0; i < 5; ++i) {
     m_node_tree->add_node<NODE_TRANSFORM>(vec2(-100, (f32(i) * 150) - 400));
@@ -162,6 +195,11 @@ auto NodeEditor::update() -> void {
   m_node_shader->uniform("u_active", m_active);
   m_node_shader->uniform("u_vis", m_node_tree->get_visualized());
   m_batch->draw_instanced(m_node_shader, m_node_tree->get_size());
+
+  m_line_shader->bind();
+  m_line_shader->uniform("u_color", vec3(1.0f));
+  m_curves->draw_lines(m_line_shader);
+
   for (const auto& node : m_node_tree->get_nodes()) {
     auto loc = node.type->location;
     m_font->render_text(node_names[node.type->type], loc.x + 200,

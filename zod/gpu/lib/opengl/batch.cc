@@ -66,7 +66,6 @@ auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
 
 auto GLBatch::draw_lines(Shared<GPUShader> shader) -> void {
   glBindVertexArray(m_id);
-  glLineWidth(2);
   glDrawArrays(GL_LINES, 0, m_elements);
   glBindVertexArray(0);
 }
