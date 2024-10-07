@@ -15,7 +15,8 @@ struct CameraUBO {
 };
 
 NodeEditor::NodeEditor()
-    : m_width(64), m_height(64), m_camera(OrthographicCamera(64.0f, 64.0f)),
+    : m_width(64), m_height(64),
+      m_camera(unique<OrthographicCamera>(64.0f, 64.0f)),
       m_node_tree(shared<NodeTree>()) {
   m_font = unique<Font>();
   m_font->load_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
@@ -94,7 +95,7 @@ NodeEditor::NodeEditor()
 
 auto NodeEditor::add_node(usize type, vec2 position) -> void {
   m_node_add = true;
-  auto pos = vec2(m_camera.screen_to_world(position)) - vec2(NODE_SIZE);
+  auto pos = vec2(m_camera->screen_to_world(position)) - vec2(NODE_SIZE);
   auto& node = m_node_tree->add_node(type, pos);
   m_active = node.type->id;
   m_node_ssbo->upload_data(m_node_tree->get_data(),
@@ -125,16 +126,17 @@ auto NodeEditor::update() -> void {
   ImGui::Begin("NodeEditor");
 
   auto position = ImGui::GetWindowPos();
-  m_camera.set_window_position(vec2(position.x, position.y));
+  m_camera->set_window_position(vec2(position.x, position.y));
 
   auto mouse_pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
   auto pos = vec2(mouse_pos.x, mouse_pos.y);
-  auto delta = pos - m_last_mouse_pos;
+  auto delta = vec2(m_camera->screen_to_world(pos)) -
+               vec2(m_camera->screen_to_world(m_last_mouse_pos));
 
   auto update_camera = [&] {
-    m_camera.update();
-    m_camera.updating = ImGui::IsWindowHovered();
-    auto ubo = CameraUBO { m_camera.get_view_projection(), vec4(0.0f) };
+    m_camera->update();
+    m_camera->force_update(ImGui::IsWindowHovered());
+    auto ubo = CameraUBO { m_camera->get_view_projection(), vec4(0.0f) };
     m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
   };
 
@@ -143,7 +145,7 @@ auto NodeEditor::update() -> void {
     m_width = size.x;
     m_height = size.y;
     m_framebuffer->resize(m_width, m_height);
-    m_camera.resize(m_width, m_height);
+    m_camera->resize(m_width, m_height);
     update_camera();
   }
 
@@ -166,11 +168,7 @@ auto NodeEditor::update() -> void {
   }
 
   if (m_node_add) {
-    update_node([&](auto* node) {
-      delta /= m_camera.get_zoom();
-      node->type->location.x += delta.x;
-      node->type->location.y -= delta.y;
-    });
+    update_node([&](auto* node) { node->type->location += delta; });
 
     if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
       m_node_add = false;
@@ -218,11 +216,7 @@ auto NodeEditor::update() -> void {
   if (ImGui::IsWindowHovered() and not is_camera_updating and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
     if (not click and m_active) {
-      update_node([&](auto* node) {
-        delta /= m_camera.get_zoom();
-        node->type->location.x += delta.x;
-        node->type->location.y -= delta.y;
-      });
+      update_node([&](auto* node) { node->type->location += delta; });
     }
     pixel = pos.x > m_framebuffer->get_width() or
                     pos.y > m_framebuffer->get_height()
@@ -269,8 +263,6 @@ auto NodeEditor::update() -> void {
     }
   }
 
-  m_last_mouse_pos = pos;
-
   ImGui::SetCursorPos(ImVec2(5, 20));
   ImGui::Text("Active: %u", m_active);
   ImGui::SetCursorPos(ImVec2(5, 35));
@@ -278,9 +270,10 @@ auto NodeEditor::update() -> void {
               (pixel & 0x0000ff00) >> 8, (pixel & 0x00ff0000) >> 16,
               (pixel & 0xff000000) >> 24);
   ImGui::SetCursorPos(ImVec2(5, 50));
-  ImGui::Text("Zoom: %f", m_camera.get_zoom());
 
   ImGui::End();
+
+  m_last_mouse_pos = pos;
 }
 
 } // namespace zod

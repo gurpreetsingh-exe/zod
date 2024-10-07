@@ -38,7 +38,7 @@ private:
   Shared<GPUShader> m_line_shader;
   Shared<GPUBatch> m_curves;
   Shared<NodeTree> m_node_tree;
-  OrthographicCamera m_camera;
+  Shared<ICamera> m_camera;
   bool m_node_add = false;
   u32 m_active = 0;
   Unique<Font> m_font;
