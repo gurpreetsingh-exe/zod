@@ -9,15 +9,10 @@ namespace zod {
 
 static auto grid = true;
 
-struct CameraUBO {
-  mat4 view_projection;
-  vec4 direction;
-};
-
 Viewport::Viewport()
-    : m_width(64), m_height(64),
-      m_camera(Camera(64, 64, 90.0f, 0.01f, 100.0f)) {
-  m_framebuffer = GPUBackend::get().create_framebuffer(m_width, m_height);
+    : Panel("Viewport",
+            unique<PerspectiveCamera>(64, 64, 90.0f, 0.01f, 100.0f)),
+      m_width(64), m_height(64) {
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
       GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, m_width, m_height,
@@ -49,8 +44,6 @@ Viewport::Viewport()
   m_cubemap_shader->init_fragment_shader(g_cubemap_frag);
   m_cubemap_shader->compile();
 
-  m_camera_ubo = GPUBackend::get().create_uniform_buffer(sizeof(CameraUBO));
-
   // Shader taken from
   // https://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/
   m_grid_shader = GPUBackend::get().create_shader("grid");
@@ -80,28 +73,29 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   ImGui::Begin("Viewport");
 
   auto update_camera_ubo = [&] {
-    auto ubo = CameraUBO { m_camera.get_view_projection(),
-                           vec4(m_camera.get_direction(), 0.0f) };
-    m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
+    auto storage =
+        CameraUniformBufferStorage { m_camera->get_view_projection(),
+                                     vec4(m_camera->get_direction(), 0.0f) };
+    m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
   };
 
   auto position = ImGui::GetWindowPos();
-  m_camera.set_window_position(vec2(position.x, position.y));
+  m_camera->set_window_position(vec2(position.x, position.y));
 
   auto size = ImGui::GetContentRegionAvail();
   if (size.x != m_width or size.y != m_height) {
     m_width = size.x;
     m_height = size.y;
     m_framebuffer->resize(m_width, m_height);
-    m_camera.resize(m_width, m_height);
+    m_camera->resize(m_width, m_height);
   }
 
-  m_camera.update();
-  m_camera.updating = ImGui::IsWindowHovered();
+  m_camera->update();
+  m_camera->updating = ImGui::IsWindowHovered();
   update_camera_ubo();
 
   m_framebuffer->bind();
-  m_camera_ubo->bind();
+  m_uniform_buffer->bind();
   m_framebuffer->clear();
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);

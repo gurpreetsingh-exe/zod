@@ -4,6 +4,7 @@
 #include "node_editor.hh"
 #include "outliner.hh"
 #include "viewport.hh"
+#include "widgets/layout.hh"
 
 namespace zod {
 
@@ -19,18 +20,9 @@ auto ZCtxt::create() -> void {
 
 auto ZCtxt::drop() -> void { delete g_zcx; }
 
-ZCtxt::ZCtxt()
-    : m_window(Window::create(1280, 720, "Zod")),
-      m_framebuffer(GPUBackend::get().create_framebuffer(1280, 720)) {
+ZCtxt::ZCtxt() : m_window(Window::create(1280, 720, "Zod")) {
   m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
-  auto [w, h] = m_window->get_size();
-  m_framebuffer->bind();
-  GPUAttachment attach = { GPUBackend::get().create_texture(
-      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, w, h, false) };
-  m_framebuffer->add_color_attachment(attach);
-  m_framebuffer->check();
-  m_framebuffer->unbind();
-  m_framebuffer->resize(w, h);
+  m_layout = unique<Layout>();
 
 #define CREATE_SHADER(n, vert, frag)                                           \
   auto n = GPUBackend::get().create_shader(#n);                                \
@@ -103,7 +95,10 @@ auto ZCtxt::run(fs::path path) -> void {
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
   vec3 surface0 = { 0.15f, 0.16f, 0.17f };
   auto viewport = Viewport();
-  auto node_editor = NodeEditor();
+  // auto node_editor = NodeEditor();
+  // m_layout->add_area(unique<Viewport>());
+  m_layout->add_area(unique<NodeEditor>());
+  auto g = Geometry();
 
   m_window->is_running([&] {
     GPU_TIME("main-loop", {
@@ -140,13 +135,14 @@ auto ZCtxt::run(fs::path path) -> void {
         ImGui::End();
 
         ImGui::Begin("Properties");
-        node_editor.draw_props();
+        // node_editor.draw_props();
         ImGui::End();
 
         m_ssbo->bind();
         vertex_buffer_out->bind(2);
         GPU_TIME("viewport", { viewport.update(m_batch); });
-        node_editor.update();
+        m_layout->draw(g);
+        // node_editor.update();
       });
       m_imgui_layer->end_frame();
     });

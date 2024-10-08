@@ -9,18 +9,11 @@
 
 namespace zod {
 
-struct CameraUBO {
-  mat4 view_projection;
-  vec4 direction;
-};
-
 NodeEditor::NodeEditor()
-    : m_width(64), m_height(64),
-      m_camera(unique<OrthographicCamera>(64.0f, 64.0f)),
-      m_node_tree(shared<NodeTree>()) {
+    : Panel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f)),
+      m_width(64), m_height(64), m_node_tree(shared<NodeTree>()) {
   m_font = unique<Font>();
   m_font->load_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
-  m_framebuffer = GPUBackend::get().create_framebuffer(m_width, m_height);
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
       GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, m_width, m_height,
@@ -86,7 +79,6 @@ NodeEditor::NodeEditor()
     m_node_tree->add_node<NODE_TRANSFORM>(vec2(-100, (f32(i) * 150) - 400));
   }
 
-  m_camera_ubo = GPUBackend::get().create_uniform_buffer(sizeof(CameraUBO));
   m_node_ssbo = GPUBackend::get().create_storage_buffer();
 
   m_node_ssbo->upload_data(m_node_tree->get_data(),
@@ -136,8 +128,9 @@ auto NodeEditor::update() -> void {
   auto update_camera = [&] {
     m_camera->update();
     m_camera->force_update(ImGui::IsWindowHovered());
-    auto ubo = CameraUBO { m_camera->get_view_projection(), vec4(0.0f) };
-    m_camera_ubo->upload_data(&ubo, sizeof(CameraUBO));
+    auto storage = CameraUniformBufferStorage { m_camera->get_view_projection(),
+                                                vec4(0.0f) };
+    m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
   };
 
   auto size = ImGui::GetContentRegionAvail();
@@ -180,7 +173,7 @@ auto NodeEditor::update() -> void {
     }
   }
 
-  m_camera_ubo->bind(1);
+  m_uniform_buffer->bind(1);
   m_framebuffer->bind();
   m_framebuffer->clear();
   glEnable(GL_BLEND);

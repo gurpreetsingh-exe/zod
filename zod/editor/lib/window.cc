@@ -1,4 +1,5 @@
 #include "window.hh"
+#include "input.hh"
 
 namespace zod {
 

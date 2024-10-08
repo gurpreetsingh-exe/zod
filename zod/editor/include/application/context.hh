@@ -46,11 +46,11 @@ private:
   Shared<GPUBatch> m_batch;
   Shared<GPUStorageBuffer> m_ssbo;
   Shared<GPUStorageBuffer> m_vertex_buffer;
-  Shared<GPUFrameBuffer> m_framebuffer;
   Unique<ImGuiLayer> m_imgui_layer;
   std::unordered_map<std::string, Shared<GPUQuery>> m_queries;
   std::unordered_map<std::string, f32> m_times;
   AssetManager m_asset_manager;
+  Unique<Layout> m_layout;
 };
 
 } // namespace zod

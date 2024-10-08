@@ -50,7 +50,8 @@ auto OrthographicCamera::_update() -> void {
   m_view_projection = m_projection * m_view;
   m_last_mouse_pos = Input::get_mouse_pos();
   if (not m_panning) {
-    m_pivot_point = screen_to_world(vec2(mouse_pos.x, -(mouse_pos.y - m_height)));
+    m_pivot_point =
+        screen_to_world(vec2(mouse_pos.x, -(mouse_pos.y - m_height)));
   }
   m_panning = false;
 }
@@ -73,37 +74,37 @@ auto OrthographicCamera::update() -> void {
   _update();
 }
 
-auto Camera::zoom(f32 delta) -> void {
+auto PerspectiveCamera::zoom(f32 delta) -> void {
   m_position += m_direction * delta * 0.06f;
 }
 
-auto Camera::pan(vec2 delta) -> void {
+auto PerspectiveCamera::pan(vec2 delta) -> void {
   auto right = m_right * delta.x * 0.02f;
   auto _up = cross(m_right, m_direction) * delta.y * 0.02f;
   m_position += right;
   m_position += _up;
 }
 
-auto Camera::rotate(vec2 delta) -> void {
+auto PerspectiveCamera::rotate(vec2 delta) -> void {
   auto rot_mat = zod::rotate(m_model, radians(-delta.x), up);
   rot_mat = zod::rotate(rot_mat, radians(-delta.y), m_right);
   m_position = vec3(rot_mat * vec4(m_position, 1.0f));
   m_direction = normalize(-m_position);
 }
 
-auto Camera::cursor_wrap(vec2 position) -> void {
+auto PerspectiveCamera::cursor_wrap(vec2 position) -> void {
   constexpr f32 padding = 16;
   if (position.x < m_window_position.x + padding) {
-    auto pos = vec2(m_window_position.x + m_viewport_width - padding,
-                    Input::get_mouse_pos().y);
+    auto pos =
+        vec2(m_window_position.x + m_width - padding, Input::get_mouse_pos().y);
     Input::set_mouse_pos(pos);
-  } else if (position.x > m_window_position.x + m_viewport_width - padding) {
+  } else if (position.x > m_window_position.x + m_width - padding) {
     auto pos = vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
     Input::set_mouse_pos(pos);
   }
 }
 
-auto Camera::_update() -> void {
+auto PerspectiveCamera::_update() -> void {
   auto mouse_pos = Input::get_mouse_pos();
   vec2 delta = (mouse_pos - m_last_mouse_pos) * 0.28f;
   if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
@@ -124,12 +125,12 @@ auto Camera::_update() -> void {
   update_matrix();
   m_last_mouse_pos = Input::get_mouse_pos();
   if (not m_panning) {
-    m_pan_mouse_pos = mouse_pos;
+    m_pivot_point = mouse_pos;
   }
   m_panning = false;
 }
 
-auto Camera::update() -> void {
+auto PerspectiveCamera::update() -> void {
   if (m_needs_update) {
     m_needs_update = false;
     _update();

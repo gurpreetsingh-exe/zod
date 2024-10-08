@@ -4,7 +4,9 @@ namespace zod {
 
 auto ShaderLibrary::add(const std::string& name, Shared<GPUShader> shader)
     -> void {
-  ZASSERT(not m_shaders.contains(name), "shader `{}` already present", name);
+  if (m_shaders.contains(name)) {
+    fmt::println("shader `{}` already present", name);
+  }
   m_shaders.insert({ name, shader });
 }
 
