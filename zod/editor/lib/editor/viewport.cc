@@ -10,8 +10,8 @@ namespace zod {
 static auto grid = true;
 
 Viewport::Viewport()
-    : Panel("Viewport",
-            unique<PerspectiveCamera>(64, 64, 90.0f, 0.01f, 100.0f)),
+    : Panel("Viewport", unique<PerspectiveCamera>(64, 64, 90.0f, 0.01f, 100.0f),
+            false),
       m_width(64), m_height(64) {
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
@@ -69,9 +69,6 @@ auto Viewport::draw_grid() -> void {
 auto Viewport::draw_axes() -> void {}
 
 auto Viewport::update(Shared<GPUBatch> batch) -> void {
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-  ImGui::Begin("Viewport");
-
   auto update_camera_ubo = [&] {
     auto storage =
         CameraUniformBufferStorage { m_camera->get_view_projection(),
@@ -116,9 +113,6 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   ImGui::Image(texture->get_id(), size, ImVec2 { 0.0, 0.0 },
                ImVec2 { 1.0, -1.0 });
   Button("Grid", grid);
-
-  ImGui::End();
-  ImGui::PopStyleVar();
 }
 
 } // namespace zod

@@ -22,6 +22,7 @@ public:
     node_init_functions[type](node);
     node.draw = node_draw_functions[type];
     node.update = node_update_functions[type];
+    m_active = node.type->id;
     return node;
   }
 
@@ -46,6 +47,11 @@ public:
   auto get_nodes() -> std::vector<Node>& { return m_nodes; }
   auto get_visualized() -> u32 { return m_visualized; }
   auto set_visualized(u32 v) -> void { m_visualized = v; }
+  auto get_active() -> Node* {
+    return m_active > 0 ? node_from_id(m_active) : nullptr;
+  }
+  auto set_active_id(u32 v) -> void { m_active = v; }
+  auto get_active_id() -> u32 { return m_active; }
 
 private:
   template <typename... Args>
@@ -55,6 +61,7 @@ private:
     auto* info = &m_type_infos.data()[id - 1];
     auto& node = m_nodes.emplace_back();
     node.type = info;
+    m_active = node.type->id;
     return node;
   }
 
@@ -62,6 +69,7 @@ private:
   std::vector<NodeType> m_type_infos = {};
   std::vector<Node> m_nodes = {};
   u32 m_visualized = 0;
+  u32 m_active = 0;
 };
 
 } // namespace zod

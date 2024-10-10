@@ -10,8 +10,8 @@
 namespace zod {
 
 NodeEditor::NodeEditor()
-    : Panel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f)),
-      m_width(64), m_height(64), m_node_tree(shared<NodeTree>()) {
+    : Panel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f), false),
+      m_width(64), m_height(64) {
   m_font = unique<Font>();
   m_font->load_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
   m_framebuffer->bind();
@@ -75,47 +75,29 @@ NodeEditor::NodeEditor()
     m_curves = GPUBackend::get().create_batch(format);
   }
 
+  auto node_tree = ZCtxt::get().get_node_tree();
   for (usize i = 0; i < 5; ++i) {
-    m_node_tree->add_node<NODE_TRANSFORM>(vec2(-100, (f32(i) * 150) - 400));
+    node_tree->add_node<NODE_TRANSFORM>(vec2(-100, (f32(i) * 150) - 400));
   }
 
   m_node_ssbo = GPUBackend::get().create_storage_buffer();
 
-  m_node_ssbo->upload_data(m_node_tree->get_data(),
-                           m_node_tree->get_size() * sizeof(NodeType));
+  m_node_ssbo->upload_data(node_tree->get_data(),
+                           node_tree->get_size() * sizeof(NodeType));
 }
 
 auto NodeEditor::add_node(usize type, vec2 position) -> void {
   m_node_add = true;
   auto pos = vec2(m_camera->screen_to_world(position)) - vec2(NODE_SIZE);
-  auto& node = m_node_tree->add_node(type, pos);
-  m_active = node.type->id;
-  m_node_ssbo->upload_data(m_node_tree->get_data(),
-                           m_node_tree->get_size() * sizeof(NodeType));
-}
-
-auto NodeEditor::draw_props() -> void {
-  if (not m_active) {
-    return;
-  }
-  auto* node = m_node_tree->node_from_id(m_active);
-  auto name =
-      fmt::format("{}.{}", node_names[node->type->type], node->type->id);
-  ImGui::SeparatorText(name.c_str());
-  ImGui::Spacing();
-  for (usize i = 0; i < node->props.size(); ++i) {
-    auto& prop = node->props[i];
-    if (prop.draw() and m_node_tree->get_visualized() == node->type->id) {
-      node->update(*node);
-    }
-  }
-  // for (auto& prop : node->props) { prop.draw(); }
-  // node->draw(*node);
+  auto node_tree = ZCtxt::get().get_node_tree();
+  auto& node = node_tree->add_node(type, pos);
+  m_node_ssbo->upload_data(node_tree->get_data(),
+                           node_tree->get_size() * sizeof(NodeType));
 }
 
 auto NodeEditor::update() -> void {
+  auto node_tree = ZCtxt::get().get_node_tree();
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-  ImGui::Begin("NodeEditor");
 
   auto position = ImGui::GetWindowPos();
   m_camera->set_window_position(vec2(position.x, position.y));
@@ -169,7 +151,7 @@ auto NodeEditor::update() -> void {
 
     if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_RIGHT)) {
       m_node_add = false;
-      m_active = 0;
+      node_tree->set_active_id(0);
     }
   }
 
@@ -183,15 +165,15 @@ auto NodeEditor::update() -> void {
   glDrawArrays(GL_TRIANGLES, 0, 3);
   m_node_ssbo->bind(1);
   m_node_shader->bind();
-  m_node_shader->uniform("u_active", m_active);
-  m_node_shader->uniform("u_vis", m_node_tree->get_visualized());
-  m_batch->draw_instanced(m_node_shader, m_node_tree->get_size());
+  m_node_shader->uniform("u_active", node_tree->get_active_id());
+  m_node_shader->uniform("u_vis", node_tree->get_visualized());
+  m_batch->draw_instanced(m_node_shader, node_tree->get_size());
 
   m_line_shader->bind();
   m_line_shader->uniform("u_color", vec3(1.0f));
   m_curves->draw_lines(m_line_shader);
 
-  for (const auto& node : m_node_tree->get_nodes()) {
+  for (const auto& node : node_tree->get_nodes()) {
     auto loc = node.type->location;
     m_font->render_text(node_names[node.type->type], loc.x + 200,
                         loc.y + 100 - (Font::size >> 2), 1, 1);
@@ -208,7 +190,7 @@ auto NodeEditor::update() -> void {
   auto pixel = 0u;
   if (ImGui::IsWindowHovered() and not is_camera_updating and
       Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
-    if (not click and m_active) {
+    if (not click and node_tree->get_active_id()) {
       update_node([&](auto* node) { node->type->location += delta; });
     }
     pixel = pos.x > m_framebuffer->get_width() or
@@ -234,8 +216,8 @@ auto NodeEditor::update() -> void {
         case 0:
           break;
         case 1: {
-          m_node_tree->set_visualized(id);
-          auto* node = m_node_tree->node_from_id(id);
+          node_tree->set_visualized(id);
+          auto* node = node_tree->node_from_id(id);
           node->update(*node);
           // if (m_active) {
           //   node = &m_node_tree->get_data()[m_active - 1];
@@ -249,22 +231,20 @@ auto NodeEditor::update() -> void {
           break;
       }
       if (click) {
-        m_active = id;
+        node_tree->set_active_id(id);
       }
     } else if (click) {
-      m_active = 0;
+      node_tree->set_active_id(0);
     }
   }
 
   ImGui::SetCursorPos(ImVec2(5, 20));
-  ImGui::Text("Active: %u", m_active);
+  ImGui::Text("Active: %u", node_tree->get_active_id());
   ImGui::SetCursorPos(ImVec2(5, 35));
   ImGui::Text("Pixel: %u (%u, %u, %u, %u)", pixel, (pixel & 0x000000ff),
               (pixel & 0x0000ff00) >> 8, (pixel & 0x00ff0000) >> 16,
               (pixel & 0xff000000) >> 24);
   ImGui::SetCursorPos(ImVec2(5, 50));
-
-  ImGui::End();
 
   m_last_mouse_pos = pos;
 }

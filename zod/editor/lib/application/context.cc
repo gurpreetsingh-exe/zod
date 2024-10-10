@@ -3,6 +3,7 @@
 #include "io/obj.hh"
 #include "node_editor.hh"
 #include "outliner.hh"
+#include "properties.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
 
@@ -20,7 +21,9 @@ auto ZCtxt::create() -> void {
 
 auto ZCtxt::drop() -> void { delete g_zcx; }
 
-ZCtxt::ZCtxt() : m_window(Window::create(1280, 720, "Zod")) {
+ZCtxt::ZCtxt()
+    : m_window(Window::create(1280, 720, "Zod")),
+      m_node_tree(shared<NodeTree>()) {
   m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
   m_layout = unique<Layout>();
 
@@ -94,10 +97,10 @@ auto ZCtxt::run(fs::path path) -> void {
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
   vec3 surface0 = { 0.15f, 0.16f, 0.17f };
-  auto viewport = Viewport();
-  // auto node_editor = NodeEditor();
-  // m_layout->add_area(unique<Viewport>());
+  m_layout->add_area(unique<Viewport>());
   m_layout->add_area(unique<NodeEditor>());
+  m_layout->add_area(unique<Properties>());
+  m_layout->add_area(unique<Outliner>());
   auto g = Geometry();
 
   m_window->is_running([&] {
@@ -131,18 +134,9 @@ auto ZCtxt::run(fs::path path) -> void {
 
         ImGui::End();
 
-        ImGui::Begin("Outliner");
-        ImGui::End();
-
-        ImGui::Begin("Properties");
-        // node_editor.draw_props();
-        ImGui::End();
-
         m_ssbo->bind();
         vertex_buffer_out->bind(2);
-        GPU_TIME("viewport", { viewport.update(m_batch); });
         m_layout->draw(g);
-        // node_editor.update();
       });
       m_imgui_layer->end_frame();
     });

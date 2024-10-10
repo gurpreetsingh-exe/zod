@@ -10,10 +10,10 @@ public:
   Viewport();
   auto update(Shared<GPUBatch>) -> void;
 
-  /// get batch in here somehow
-  auto draw(Geometry&) -> void override {}
-
 private:
+  auto draw_imp(Geometry&) -> void override {
+    update(ZCtxt::get().get_batch());
+  }
   auto draw_cubemap() -> void;
   auto draw_grid() -> void;
   auto draw_axes() -> void;

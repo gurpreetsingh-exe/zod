@@ -19,7 +19,9 @@ public:
   }
 
   auto draw(Geometry& g) -> void {
-    for (const auto& node : m_areas) { node->draw(g); }
+    for (const auto& node : m_areas) {
+      GPU_TIME(node->name, { node->draw(g); });
+    }
   }
 
 private:
