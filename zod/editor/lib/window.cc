@@ -43,6 +43,10 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
                     .mouse = { f32(x), f32(window->m_height - y) } };
     window->m_event_callback(event);
   });
+  glfwSetKeyCallback(
+      win, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
+        g_input_state[key] = action == GLFW_PRESS or action == GLFW_REPEAT;
+      });
   glfwSetMouseButtonCallback(
       win, [](GLFWwindow* win, int button, int action, int mods) {
         auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));

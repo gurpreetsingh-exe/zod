@@ -12,14 +12,14 @@ struct CameraUniformBufferStorage {
 
 class Panel : public Widget {
 public:
-  Panel(std::string name, Unique<ICamera> camera, bool padding = true)
-      : Widget(std::move(name), padding), m_camera(std::move(camera)),
-        m_uniform_buffer(GPUBackend::get().create_uniform_buffer(
-            sizeof(CameraUniformBufferStorage))),
-        m_framebuffer(GPUBackend::get().create_framebuffer(64.0f, 64.0f)) {}
-  auto on_event(Event&) -> void override {}
+  Panel(std::string /* name */, Unique<ICamera>, bool /* padding */ = true);
+  auto on_event(Event&) -> void override;
+  auto draw(Geometry&) -> void;
+  auto get_active() -> bool { return m_active; }
 
 protected:
+  bool m_padding = true;
+  bool m_active = false;
   Unique<ICamera> m_camera;
   Shared<GPUUniformBuffer> m_uniform_buffer;
   Shared<GPUFrameBuffer> m_framebuffer;

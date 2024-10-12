@@ -1,7 +1,6 @@
 #pragma once
 
-#include "application/context.hh"
-#include "widget.hh"
+#include "widgets/panel.hh"
 
 namespace zod {
 
@@ -10,19 +9,10 @@ public:
   Layout() : m_areas(std::vector<Unique<Panel>>()) {}
 
 public:
-  auto add_area(Unique<Panel> panel) -> void {
-    m_areas.push_back(std::move(panel));
-  }
-
-  auto on_event(Event& event) -> void {
-    for (const auto& node : m_areas) { node->on_event(event); }
-  }
-
-  auto draw(Geometry& g) -> void {
-    for (const auto& node : m_areas) {
-      GPU_TIME(node->name, { node->draw(g); });
-    }
-  }
+  auto add_area(Unique<Panel>) -> void;
+  auto on_event(Event&) -> void;
+  auto active() -> Panel*;
+  auto draw(Geometry&) -> void;
 
 private:
   std::vector<Unique<Panel>> m_areas;

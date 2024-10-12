@@ -2,10 +2,18 @@
 
 #include "backend.hh"
 #include "event.hh"
+#include "input.hh"
 
 namespace zod {
 
 inline constexpr vec3 up = vec3(0.0f, 0.0f, 1.0f);
+
+enum Navigation {
+  None = 0,
+  Zoom,
+  Pan,
+  Rotate,
+};
 
 class ICamera {
 public:
@@ -25,6 +33,11 @@ public:
   auto set_pivot_point(vec2 v) -> void {
     m_pivot_point = screen_to_world(vec2(v.x, -v.y));
   }
+  auto set_pivot_at_mouse() -> void {
+    auto mouse = Input::get_mouse_pos();
+    set_pivot_point(vec2(mouse.x, mouse.y - m_height));
+  }
+  auto set_navigation(Navigation n) -> void { m_mode = n; }
   auto get_pivot_point() -> vec2 { return m_pivot_point; }
 
   auto update_matrix() -> void {
@@ -62,6 +75,7 @@ protected:
   f32 m_height = 0.0f;
   vec2 m_window_position = vec2(0.0f);
   bool m_needs_update = false;
+  Navigation m_mode = Navigation::None;
   vec3 m_position = vec3(0.0f, 0.0f, 1.0f);
   vec3 m_direction = normalize(-m_position);
   mat4 m_model = {};
@@ -101,7 +115,6 @@ private:
 
 private:
   f32 m_zoom = 1.0f;
-  bool m_panning = false;
   vec2 m_last_mouse_pos;
 };
 
@@ -160,10 +173,21 @@ private:
   f32 m_clip_far;
 
   bool m_look_around = false;
-  bool m_panning = false;
   vec3 m_right = vec3(1.0f, 0.0f, 0.0f);
-
   vec2 m_last_mouse_pos = vec2(0.0f);
 };
 
 } // namespace zod
+
+FMT(zod::Navigation, "{}", [&] {
+  switch (v) {
+    case zod::Navigation::None:
+      return "None";
+    case zod::Navigation::Zoom:
+      return "Zoom";
+    case zod::Navigation::Pan:
+      return "Pan";
+    case zod::Navigation::Rotate:
+      return "Rotate";
+  }
+}());

@@ -45,6 +45,9 @@ ZCtxt::ZCtxt()
 
 auto ZCtxt::on_event(Event& event) -> void {
   auto pos = m_window->get_mouse_pos();
+  if (auto* area = m_layout->active()) {
+    area->on_event(event);
+  }
   switch (event.kind) {
     case Event::MouseDown: {
     } break;

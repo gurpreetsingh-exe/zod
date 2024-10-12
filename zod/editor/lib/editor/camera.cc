@@ -1,5 +1,4 @@
 #include "camera.hh"
-#include "input.hh"
 
 #define SPEED 0.007f
 #define ROT_SPEED 0.8f
@@ -35,25 +34,23 @@ auto OrthographicCamera::pan(vec2 delta) -> void {
 auto OrthographicCamera::_update() -> void {
   auto mouse_pos = Input::get_mouse_pos();
   vec2 delta = mouse_pos - m_last_mouse_pos;
-  if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
-      Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
-    if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
-      m_panning = true;
+  switch (m_mode) {
+    case Navigation::Zoom: {
       zoom(delta.x);
       cursor_wrap(mouse_pos);
-    } else if (Input::is_key_pressed(GLFW_KEY_RIGHT_SHIFT)) {
+    } break;
+    case Navigation::Pan: {
       pan(delta);
       cursor_wrap(mouse_pos);
-    }
+    } break;
+    case Navigation::None:
+    case Navigation::Rotate:
+    default:
+      break;
   }
   update_projection();
   m_view_projection = m_projection * m_view;
   m_last_mouse_pos = Input::get_mouse_pos();
-  if (not m_panning) {
-    m_pivot_point =
-        screen_to_world(vec2(mouse_pos.x, -(mouse_pos.y - m_height)));
-  }
-  m_panning = false;
 }
 
 auto OrthographicCamera::update() -> void {
@@ -107,27 +104,26 @@ auto PerspectiveCamera::cursor_wrap(vec2 position) -> void {
 auto PerspectiveCamera::_update() -> void {
   auto mouse_pos = Input::get_mouse_pos();
   vec2 delta = (mouse_pos - m_last_mouse_pos) * 0.28f;
-  if (Input::is_key_pressed(GLFW_KEY_RIGHT_ALT) and
-      Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
-    if (Input::is_key_pressed(GLFW_KEY_RIGHT_CONTROL)) {
+  switch (m_mode) {
+    case Navigation::Zoom: {
       zoom(delta.x);
       cursor_wrap(mouse_pos);
-    } else if (Input::is_key_pressed(GLFW_KEY_RIGHT_SHIFT)) {
-      m_panning = true;
+    } break;
+    case Navigation::Pan: {
       pan(delta);
       cursor_wrap(mouse_pos);
-    }
-  } else if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_RIGHT)) {
-    rotate(delta);
-    cursor_wrap(mouse_pos);
+    } break;
+    case Navigation::Rotate: {
+      rotate(delta);
+      cursor_wrap(mouse_pos);
+    } break;
+    case Navigation::None:
+    default:
+      break;
   }
   m_right = cross(up, m_direction);
   update_matrix();
   m_last_mouse_pos = Input::get_mouse_pos();
-  if (not m_panning) {
-    m_pivot_point = mouse_pos;
-  }
-  m_panning = false;
 }
 
 auto PerspectiveCamera::update() -> void {
