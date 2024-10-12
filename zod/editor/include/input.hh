@@ -129,6 +129,7 @@ enum Key {
 };
 
 inline bool g_input_state[Key::Last] = { 0 };
+inline vec2 g_last_mouse_pos = {};
 
 struct Input {
   static auto is_key_pressed(int) -> bool;

@@ -29,8 +29,8 @@ struct Event {
 
   union {
     bool pressed[GLFW_KEY_LAST + 1];
-    f32 mouse[2];
-    f32 size[2];
+    vec2 mouse;
+    vec2 size;
   };
 
   const char* name() {

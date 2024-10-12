@@ -28,20 +28,20 @@ auto OrthographicCamera::zoom(f32 delta) -> void {
 }
 
 auto OrthographicCamera::pan(vec2 delta) -> void {
-  m_view = translate(m_view, vec3(delta / get_zoom(), 0.0f));
+  m_view = translate(m_view, vec3(delta.x, -delta.y, 0.0f) / get_zoom());
 }
 
-auto OrthographicCamera::_update() -> void {
-  auto mouse_pos = Input::get_mouse_pos();
-  vec2 delta = mouse_pos - m_last_mouse_pos;
+auto OrthographicCamera::update(Event& event) -> bool {
+  vec2 delta = event.mouse - g_last_mouse_pos;
+  bool update = false;
   switch (m_mode) {
     case Navigation::Zoom: {
       zoom(delta.x);
-      cursor_wrap(mouse_pos);
+      update = true;
     } break;
     case Navigation::Pan: {
       pan(delta);
-      cursor_wrap(mouse_pos);
+      update = true;
     } break;
     case Navigation::None:
     case Navigation::Rotate:
@@ -50,25 +50,7 @@ auto OrthographicCamera::_update() -> void {
   }
   update_projection();
   m_view_projection = m_projection * m_view;
-  m_last_mouse_pos = Input::get_mouse_pos();
-}
-
-auto OrthographicCamera::update() -> void {
-  if (m_needs_update) {
-    m_needs_update = false;
-    _update();
-    return;
-  }
-
-  if (m_last_mouse_pos == Input::get_mouse_pos()) {
-    return;
-  }
-
-  if (not updating) {
-    return;
-  }
-
-  _update();
+  return update;
 }
 
 auto PerspectiveCamera::zoom(f32 delta) -> void {
@@ -77,14 +59,14 @@ auto PerspectiveCamera::zoom(f32 delta) -> void {
 
 auto PerspectiveCamera::pan(vec2 delta) -> void {
   auto right = m_right * delta.x * 0.02f;
-  auto _up = cross(m_right, m_direction) * delta.y * 0.02f;
+  auto _up = cross(m_right, m_direction) * -delta.y * 0.02f;
   m_position += right;
   m_position += _up;
 }
 
 auto PerspectiveCamera::rotate(vec2 delta) -> void {
   auto rot_mat = zod::rotate(m_model, radians(-delta.x), up);
-  rot_mat = zod::rotate(rot_mat, radians(-delta.y), m_right);
+  rot_mat = zod::rotate(rot_mat, radians(delta.y), m_right);
   m_position = vec3(rot_mat * vec4(m_position, 1.0f));
   m_direction = normalize(-m_position);
 }
@@ -101,21 +83,21 @@ auto PerspectiveCamera::cursor_wrap(vec2 position) -> void {
   }
 }
 
-auto PerspectiveCamera::_update() -> void {
-  auto mouse_pos = Input::get_mouse_pos();
-  vec2 delta = (mouse_pos - m_last_mouse_pos) * 0.28f;
+auto PerspectiveCamera::update(Event& event) -> bool {
+  vec2 delta = (event.mouse - g_last_mouse_pos) * 0.28f;
+  bool update = false;
   switch (m_mode) {
     case Navigation::Zoom: {
       zoom(delta.x);
-      cursor_wrap(mouse_pos);
+      update = true;
     } break;
     case Navigation::Pan: {
       pan(delta);
-      cursor_wrap(mouse_pos);
+      update = true;
     } break;
     case Navigation::Rotate: {
       rotate(delta);
-      cursor_wrap(mouse_pos);
+      update = true;
     } break;
     case Navigation::None:
     default:
@@ -123,25 +105,7 @@ auto PerspectiveCamera::_update() -> void {
   }
   m_right = cross(up, m_direction);
   update_matrix();
-  m_last_mouse_pos = Input::get_mouse_pos();
-}
-
-auto PerspectiveCamera::update() -> void {
-  if (m_needs_update) {
-    m_needs_update = false;
-    _update();
-    return;
-  }
-
-  if (m_last_mouse_pos == Input::get_mouse_pos()) {
-    return;
-  }
-
-  if (not updating) {
-    return;
-  }
-
-  _update();
+  return update;
 }
 
 }; // namespace zod

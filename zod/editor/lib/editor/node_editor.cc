@@ -86,7 +86,9 @@ NodeEditor::NodeEditor()
                            node_tree->get_size() * sizeof(NodeType));
 }
 
-auto NodeEditor::add_node(usize type, vec2 position) -> void {
+auto NodeEditor::add_node(usize type) -> void {
+  auto position = Input::get_mouse_pos() - m_position + vec2(0, 43);
+  position.y = m_size.y - position.y;
   m_node_add = true;
   auto pos = vec2(m_camera->screen_to_world(position)) - vec2(NODE_SIZE);
   auto node_tree = ZCtxt::get().get_node_tree();
@@ -95,64 +97,85 @@ auto NodeEditor::add_node(usize type, vec2 position) -> void {
                            node_tree->get_size() * sizeof(NodeType));
 }
 
+auto NodeEditor::on_event_imp(Event& event) -> void {
+  switch (event.kind) {
+    case Event::MouseDown: {
+      auto node_tree = ZCtxt::get().get_node_tree();
+      if (m_node_add) {
+        if (event.button == Event::MouseButtonLeft) {
+          m_node_add = false;
+        } else if (event.button == Event::MouseButtonRight) {
+          m_node_add = false;
+          node_tree->set_active_id(0);
+        }
+        return;
+      }
+
+      auto pos = Input::get_mouse_pos() - m_position + vec2(0, 43);
+      auto pixel = 0u;
+      pixel = pos.x > m_framebuffer->get_width() or
+                      pos.y > m_framebuffer->get_height()
+                  ? 0
+                  : m_framebuffer->read_pixel(
+                        1, pos.x, m_framebuffer->get_height() - pos.y);
+      if (auto id = pixel & 0xffffff) {
+        auto extra = (pixel & 0xff000000) >> 24;
+        struct Mask {
+          union {
+            struct {
+              u8 visualize : 1;
+              u8 padding : 7;
+            };
+            u8 data;
+          };
+          Mask(u8 d) : data(d) {}
+        };
+        static_assert(sizeof(Mask) == 1);
+        auto mask = Mask(extra);
+        switch (mask.visualize) {
+          case 0:
+            break;
+          case 1: {
+            node_tree->set_visualized(id);
+            auto* node = node_tree->node_from_id(id);
+            node->update(*node);
+          } break;
+          default:
+            UNREACHABLE();
+            break;
+        }
+        node_tree->set_active_id(id);
+      } else {
+        node_tree->set_active_id(0);
+      }
+    } break;
+    case Event::MouseMove: {
+      auto pos = event.mouse;
+      auto delta = vec2(m_camera->screen_to_world(pos)) -
+                   vec2(m_camera->screen_to_world(g_last_mouse_pos));
+
+      if (event.button == Event::MouseButtonLeft or m_node_add) {
+        update_node([&](auto* node) {
+          node->type->location += vec2(delta.x, -delta.y);
+        });
+      }
+    } break;
+  }
+}
+
 auto NodeEditor::update() -> void {
   auto node_tree = ZCtxt::get().get_node_tree();
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-  auto position = ImGui::GetWindowPos();
-  m_camera->set_window_position(vec2(position.x, position.y));
-
-  auto mouse_pos = ImGui::GetMousePos() - position - ImVec2(0, 20);
-  auto pos = vec2(mouse_pos.x, mouse_pos.y);
-  auto delta = vec2(m_camera->screen_to_world(pos)) -
-               vec2(m_camera->screen_to_world(m_last_mouse_pos));
-
-  auto update_camera = [&] {
-    m_camera->update();
-    m_camera->force_update(ImGui::IsWindowHovered());
-    auto storage = CameraUniformBufferStorage { m_camera->get_view_projection(),
-                                                vec4(0.0f) };
-    m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
-  };
-
-  auto size = ImGui::GetContentRegionAvail();
-  if (size.x != m_width or size.y != m_height) {
-    m_width = size.x;
-    m_height = size.y;
-    m_framebuffer->resize(m_width, m_height);
-    m_camera->resize(m_width, m_height);
-    update_camera();
-  }
-
-  auto is_camera_updating = Input::is_key_pressed(GLFW_KEY_RIGHT_ALT);
-  if (is_camera_updating) {
-    update_camera();
-  }
-
   ImGui::PopStyleVar();
-
   if (ImGui::BeginPopupContextWindow("Add Menu",
                                      ImGuiPopupFlags_MouseButtonRight)) {
     for (usize i = 1; i < TOTAL_NODES; ++i) {
       if (ImGui::MenuItem(node_names[i])) {
-        add_node(i, pos);
+        add_node(i);
       }
     }
 
     ImGui::EndPopup();
-  }
-
-  if (m_node_add) {
-    update_node([&](auto* node) { node->type->location += delta; });
-
-    if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
-      m_node_add = false;
-    }
-
-    if (Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_RIGHT)) {
-      m_node_add = false;
-      node_tree->set_active_id(0);
-    }
   }
 
   m_uniform_buffer->bind(1);
@@ -183,70 +206,8 @@ auto NodeEditor::update() -> void {
   m_framebuffer->unbind();
 
   auto& texture = m_framebuffer->get_slot(0).texture;
-  ImGui::Image(texture->get_id(), size, ImVec2 { 0.0, 0.0 },
-               ImVec2 { 1.0, -1.0 });
-
-  auto click = delta.x == 0 and delta.y == 0;
-  auto pixel = 0u;
-  if (ImGui::IsWindowHovered() and not is_camera_updating and
-      Input::is_mouse_button_pressed(GLFW_MOUSE_BUTTON_LEFT)) {
-    if (not click and node_tree->get_active_id()) {
-      update_node([&](auto* node) { node->type->location += delta; });
-    }
-    pixel = pos.x > m_framebuffer->get_width() or
-                    pos.y > m_framebuffer->get_height()
-                ? 0
-                : m_framebuffer->read_pixel(
-                      1, pos.x, m_framebuffer->get_height() - pos.y);
-    if (auto id = pixel & 0xffffff) {
-      auto extra = (pixel & 0xff000000) >> 24;
-      struct Mask {
-        union {
-          struct {
-            u8 visualize : 1;
-            u8 padding : 7;
-          };
-          u8 data;
-        };
-        Mask(u8 d) : data(d) {}
-      };
-      static_assert(sizeof(Mask) == 1);
-      auto mask = Mask(extra);
-      switch (mask.visualize) {
-        case 0:
-          break;
-        case 1: {
-          node_tree->set_visualized(id);
-          auto* node = node_tree->node_from_id(id);
-          node->update(*node);
-          // if (m_active) {
-          //   node = &m_node_tree->get_data()[m_active - 1];
-          //   node->extra = 0;
-          //   m_node_locations->update_data(node, sizeof(Node),
-          //                                 (m_active - 1) * sizeof(Node));
-          // }
-        } break;
-        default:
-          UNREACHABLE();
-          break;
-      }
-      if (click) {
-        node_tree->set_active_id(id);
-      }
-    } else if (click) {
-      node_tree->set_active_id(0);
-    }
-  }
-
-  ImGui::SetCursorPos(ImVec2(5, 20));
-  ImGui::Text("Active: %u", node_tree->get_active_id());
-  ImGui::SetCursorPos(ImVec2(5, 35));
-  ImGui::Text("Pixel: %u (%u, %u, %u, %u)", pixel, (pixel & 0x000000ff),
-              (pixel & 0x0000ff00) >> 8, (pixel & 0x00ff0000) >> 16,
-              (pixel & 0xff000000) >> 24);
-  ImGui::SetCursorPos(ImVec2(5, 50));
-
-  m_last_mouse_pos = pos;
+  ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
+               ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
 }
 
 } // namespace zod

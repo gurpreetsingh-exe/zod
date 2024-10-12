@@ -68,29 +68,14 @@ auto Viewport::draw_grid() -> void {
 
 auto Viewport::draw_axes() -> void {}
 
-auto Viewport::update(Shared<GPUBatch> batch) -> void {
-  auto update_camera_ubo = [&] {
-    auto storage =
-        CameraUniformBufferStorage { m_camera->get_view_projection(),
-                                     vec4(m_camera->get_direction(), 0.0f) };
-    m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
-  };
-
-  auto position = ImGui::GetWindowPos();
-  m_camera->set_window_position(vec2(position.x, position.y));
-
-  auto size = ImGui::GetContentRegionAvail();
-  if (size.x != m_width or size.y != m_height) {
-    m_width = size.x;
-    m_height = size.y;
-    m_framebuffer->resize(m_width, m_height);
-    m_camera->resize(m_width, m_height);
+auto Viewport::on_event_imp(Event& event) -> void {
+  switch (event.kind) {
+    case Event::MouseMove: {
+    } break;
   }
+}
 
-  m_camera->update();
-  m_camera->updating = ImGui::IsWindowHovered();
-  update_camera_ubo();
-
+auto Viewport::update(Shared<GPUBatch> batch) -> void {
   m_framebuffer->bind();
   m_uniform_buffer->bind();
   m_framebuffer->clear();
@@ -110,8 +95,8 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   m_framebuffer->unbind();
 
   auto& texture = m_framebuffer->get_slot(0).texture;
-  ImGui::Image(texture->get_id(), size, ImVec2 { 0.0, 0.0 },
-               ImVec2 { 1.0, -1.0 });
+  ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
+               ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
   Button("Grid", grid);
 }
 

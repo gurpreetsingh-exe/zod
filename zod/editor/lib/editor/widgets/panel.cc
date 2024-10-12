@@ -9,6 +9,11 @@ Panel::Panel(std::string name, Unique<ICamera> camera, bool padding)
       m_framebuffer(GPUBackend::get().create_framebuffer(64.0f, 64.0f)) {}
 
 auto Panel::on_event(Event& event) -> void {
+  // temporary hack until cursor wrapping isn't fixed
+  if (not m_active) {
+    return;
+  }
+
   switch (event.kind) {
     case Event::MouseDown: {
       auto nav = Navigation::None;
@@ -30,7 +35,20 @@ auto Panel::on_event(Event& event) -> void {
     case Event::MouseUp: {
       m_camera->set_navigation(Navigation::None);
     } break;
+
+    case Event::MouseMove: {
+      if (m_camera->update(event)) {
+        auto storage = CameraUniformBufferStorage {
+          m_camera->get_view_projection(), vec4(m_camera->get_direction(), 0.0f)
+        };
+        m_uniform_buffer->upload_data(&storage,
+                                      sizeof(CameraUniformBufferStorage));
+        return;
+      }
+    }
   }
+
+  on_event_imp(event);
 }
 
 auto Panel::draw(Geometry& g) -> void {
@@ -39,6 +57,21 @@ auto Panel::draw(Geometry& g) -> void {
   }
   ImGui::Begin(name.c_str());
   m_active = ImGui::IsWindowHovered();
+  m_position = vec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
+  auto size =
+      vec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
+  // TODO: create a resize event
+  if (size != m_size) {
+    m_size = size;
+    m_framebuffer->resize(size.x, size.y);
+    m_camera->resize(size.x, size.y);
+    auto event = Event();
+    m_camera->update(event);
+    auto storage =
+        CameraUniformBufferStorage { m_camera->get_view_projection(),
+                                     vec4(m_camera->get_direction(), 0.0f) };
+    m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
+  }
   draw_imp(g);
   ImGui::End();
   if (not m_padding) {

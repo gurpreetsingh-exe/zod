@@ -14,12 +14,16 @@ public:
   auto update() -> void;
 
 private:
-  auto add_node(usize, vec2) -> void;
+  auto add_node(usize) -> void;
   auto draw_imp(Geometry&) -> void override { update(); }
+  auto on_event_imp(Event&) -> void override;
 
   template <typename UpdateFn>
   auto update_node(UpdateFn fn) -> void {
     auto* node = ZCtxt::get().get_node_tree()->get_active();
+    if (not node) {
+      return;
+    }
     fn(node);
     m_node_ssbo->update_data(node->type, sizeof(NodeType),
                              (node->type->id - 1) * sizeof(NodeType));
@@ -36,7 +40,6 @@ private:
   Shared<GPUBatch> m_curves;
   bool m_node_add = false;
   Unique<Font> m_font;
-  vec2 m_last_mouse_pos = vec2(0);
 };
 
 } // namespace zod

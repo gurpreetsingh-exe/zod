@@ -40,8 +40,9 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
 
     Event event = { .kind = Event::MouseMove,
                     .button = button,
-                    .mouse = { f32(x), f32(window->m_height - y) } };
+                    .mouse = { f32(x), f32(y) } };
     window->m_event_callback(event);
+    g_last_mouse_pos = event.mouse;
   });
   glfwSetKeyCallback(
       win, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
@@ -63,7 +64,7 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
                         .shift = bool(mods & GLFW_MOD_SHIFT),
                         .ctrl = bool(mods & GLFW_MOD_CONTROL),
                         .alt = bool(mods & GLFW_MOD_ALT),
-                        .mouse = { f32(x), window->m_height - f32(y) } };
+                        .mouse = { f32(x), f32(y) } };
         window->m_event_callback(event);
       });
   glfwSetWindowSizeCallback(win, [](GLFWwindow* win, int width, int height) {

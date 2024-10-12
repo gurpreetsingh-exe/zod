@@ -1,6 +1,5 @@
 #pragma once
 
-#include "backend.hh"
 #include "event.hh"
 #include "input.hh"
 
@@ -58,12 +57,11 @@ public:
   }
 
   auto screen_to_world(vec2 v) -> vec4 {
-    v.y = m_height - v.y;
     auto ndc = vec4((v / vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 1.0f);
     return inverse(m_view_projection) * ndc;
   }
 
-  virtual auto update() -> void = 0;
+  virtual auto update(Event&) -> bool = 0;
 
 private:
   virtual auto update_model() -> void = 0;
@@ -94,11 +92,10 @@ public:
   ~OrthographicCamera() = default;
 
 public:
-  auto update() -> void override;
+  auto update(Event&) -> bool override;
   auto get_zoom() -> f32 { return m_zoom * 0.5f; }
 
 private:
-  auto _update() -> void;
   auto zoom(f32) -> void;
   auto pan(vec2) -> void;
   auto cursor_wrap(vec2) -> void;
@@ -115,7 +112,6 @@ private:
 
 private:
   f32 m_zoom = 1.0f;
-  vec2 m_last_mouse_pos;
 };
 
 class PerspectiveCamera : public ICamera {
@@ -136,7 +132,7 @@ public:
     return { m_clip_near, m_clip_far };
   }
 
-  auto update() -> void;
+  auto update(Event&) -> bool override;
 
   auto set_fov(f32 fov) -> void {
     m_fov = fov;
@@ -161,7 +157,6 @@ private:
                                m_clip_far);
   }
 
-  auto _update() -> void;
   auto zoom(f32) -> void;
   auto rotate(vec2) -> void;
   auto pan(vec2) -> void;
@@ -174,7 +169,6 @@ private:
 
   bool m_look_around = false;
   vec3 m_right = vec3(1.0f, 0.0f, 0.0f);
-  vec2 m_last_mouse_pos = vec2(0.0f);
 };
 
 } // namespace zod

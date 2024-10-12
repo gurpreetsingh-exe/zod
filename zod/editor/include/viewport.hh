@@ -14,6 +14,7 @@ private:
   auto draw_imp(Geometry&) -> void override {
     update(ZCtxt::get().get_batch());
   }
+  auto on_event_imp(Event&) -> void override;
   auto draw_cubemap() -> void;
   auto draw_grid() -> void;
   auto draw_axes() -> void;
