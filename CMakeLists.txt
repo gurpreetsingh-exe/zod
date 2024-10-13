@@ -32,11 +32,9 @@ add_subdirectory(${THIRD_PARTY_DIR}/fmt fmt)
 add_subdirectory(${THIRD_PARTY_DIR}/glm glm)
 add_subdirectory(${THIRD_PARTY_DIR}/glfw glfw)
 add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
-add_subdirectory(${THIRD_PARTY_DIR}/glad glad)
 add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
 add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
 add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
-find_package(OpenGL REQUIRED)
 
 add_library(imgui
   ${IMGUI_DIR}/imgui.cpp
@@ -73,11 +71,51 @@ target_link_libraries(zodcore zodpch glm::glm tinyobj)
 ##########################################################################
 # libgpu
 ##########################################################################
-file(GLOB_RECURSE ZOD_GPU_SRC ${ZOD_GPU_DIR}/lib/*.cc)
+file(GLOB_RECURSE ZOD_GPU_OPENGL_SRC ${ZOD_GPU_DIR}/lib/opengl/*.cc)
+file(GLOB_RECURSE ZOD_GPU_VULKAN_SRC ${ZOD_GPU_DIR}/lib/vulkan/*.cc)
+file(GLOB_RECURSE ZOD_GPU_SHADER_LIB ${ZOD_GPU_DIR}/lib/shaders/*.cc)
+
+if (GPU_BACKEND STREQUAL "OpenGL")
+  message(STATUS "GPU Backend: OpenGL")
+  set(OPENGL_BACKEND ON)
+elseif (GPU_BACKEND STREQUAL "Vulkan")
+  message(STATUS "GPU Backend: Vulkan")
+  set(VULKAN_BACKEND ON)
+else()
+  message(STATUS "No GPU Backend: Defaulting to OpenGL")
+  set(OPENGL_BACKEND ON)
+endif()
+
+set(ZOD_GPU_SRC
+  ${ZOD_GPU_DIR}/lib/context.cc
+  ${ZOD_GPU_DIR}/lib/platform.cc
+  ${ZOD_GPU_DIR}/lib/shader.cc)
+
+list(APPEND ZOD_GPU_SRC ${ZOD_GPU_SHADER_LIB})
+
+if (VULKAN_BACKEND)
+  list(APPEND ZOD_GPU_SRC ${ZOD_GPU_VULKAN_SRC})
+elseif (OPENGL_BACKEND)
+  list(APPEND ZOD_GPU_SRC ${ZOD_GPU_OPENGL_SRC})
+endif()
+
 add_library(gpu ${ZOD_GPU_SRC})
+
+if (VULKAN_BACKEND)
+  target_compile_definitions(gpu PRIVATE VULKAN_BACKEND)
+  find_package(Vulkan REQUIRED)
+  add_subdirectory(${THIRD_PARTY_DIR}/vk-bootstrap vk-bootstrap)
+  target_link_libraries(gpu Vulkan::Vulkan vk-bootstrap)
+elseif (OPENGL_BACKEND)
+  target_compile_definitions(gpu PRIVATE OPENGL_BACKEND)
+  find_package(OpenGL REQUIRED)
+  add_subdirectory(${THIRD_PARTY_DIR}/glad glad)
+  target_link_libraries(gpu OpenGL::GL glad)
+endif()
+
 target_include_directories(gpu PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(gpu PUBLIC ${ZOD_GPU_DIR}/include)
-target_link_libraries(gpu zodpch OpenGL::GL glad stbi)
+target_link_libraries(gpu zodpch stbi)
 
 ##########################################################################
 # zod editor
