@@ -8,6 +8,7 @@
 #include "opengl/query.hh"
 #include "opengl/renderer.hh"
 #include "opengl/shader.hh"
+#include "opengl/state.hh"
 
 namespace zod {
 
@@ -42,6 +43,8 @@ public:
     m_shader_library->add(shader->name, shader);
     return shader;
   }
+
+  auto create_state() -> Shared<GPUState> override { return shared<GLState>(); }
 
   auto create_storage_buffer() -> Shared<GPUStorageBuffer> override {
     return shared<GLStorageBuffer>();

@@ -181,11 +181,9 @@ auto NodeEditor::update() -> void {
   m_uniform_buffer->bind(1);
   m_framebuffer->bind();
   m_framebuffer->clear();
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GPUState::get().set_blend(Blend::Alpha);
   m_shader->bind();
-  glBindVertexArray(0);
-  glDrawArrays(GL_TRIANGLES, 0, 3);
+  GPUState::get().draw_immediate(3);
   m_node_ssbo->bind(1);
   m_node_shader->bind();
   m_node_shader->uniform("u_active", node_tree->get_active_id());
@@ -202,7 +200,7 @@ auto NodeEditor::update() -> void {
                         loc.y + 100 - (Font::size >> 2), 1, 1);
   }
   m_font->submit();
-  glDisable(GL_BLEND);
+  GPUState::get().set_blend(Blend::None);
   m_framebuffer->unbind();
 
   auto& texture = m_framebuffer->get_slot(0).texture;

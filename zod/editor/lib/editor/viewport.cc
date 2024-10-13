@@ -53,17 +53,16 @@ Viewport::Viewport()
 }
 
 auto Viewport::draw_cubemap() -> void {
-  glDepthFunc(GL_LEQUAL);
+  GPUState::get().set_depth_test(Depth::LessEqual);
   m_cubemap_shader->bind();
   m_cubemap_batch->draw(m_cubemap_shader);
-  glDepthFunc(GL_LESS);
+  GPUState::get().set_depth_test(Depth::Less);
 }
 
 auto Viewport::draw_grid() -> void {
-  glBindVertexArray(0);
   m_grid_shader->bind();
   m_grid_shader->uniform("u_color", vec3(0.25f));
-  glDrawArrays(GL_TRIANGLES, 0, 6);
+  GPUState::get().draw_immediate(6);
 }
 
 auto Viewport::draw_axes() -> void {}
@@ -79,9 +78,8 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   m_framebuffer->bind();
   m_uniform_buffer->bind();
   m_framebuffer->clear();
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GPUState::get().set_depth_test(Depth::Less);
+  GPUState::get().set_blend(Blend::Alpha);
   GPU_TIME("mesh", {
     m_shader->bind();
     batch->draw(m_shader);
@@ -90,8 +88,8 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
   if (grid) {
     GPU_TIME("grid", { draw_grid(); });
   }
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
+  GPUState::get().set_depth_test(Depth::None);
+  GPUState::get().set_blend(Blend::None);
   m_framebuffer->unbind();
 
   auto& texture = m_framebuffer->get_slot(0).texture;

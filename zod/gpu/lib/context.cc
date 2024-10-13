@@ -4,14 +4,13 @@
 #include "renderer.hh"
 
 #include "opengl/backend.hh"
-#include "opengl/context.hh"
-#include "opengl/renderer.hh"
 
 namespace zod {
 
 static Shared<GPUContext> g_active_context = nullptr;
 static Unique<GPUBackend> g_backend = nullptr;
 static Shared<GPURenderer> g_renderer = nullptr;
+static Shared<GPUState> g_state = nullptr;
 static GPUBackendType g_backend_type = GPUBackendType::OpenGL;
 
 GPUContext::GPUContext() { m_active = false; }
@@ -29,6 +28,7 @@ auto gpu_context_create(void* glfw_window) -> Shared<GPUContext> {
   auto context = backend.create_context(glfw_window);
   gpu_context_active_set(context);
   g_renderer = backend.create_renderer();
+  g_state = backend.create_state();
   return context;
 }
 
@@ -42,7 +42,7 @@ auto gpu_context_active_set(Shared<GPUContext> context) -> void {
 auto gpu_context_active_get() -> Shared<GPUContext> { return g_active_context; }
 
 auto GPUBackend::get() -> GPUBackend& { return *g_backend; }
-
 auto GPURenderer::get() -> GPURenderer& { return *g_renderer; }
+auto GPUState::get() -> GPUState& { return *g_state; }
 
 } // namespace zod

@@ -46,6 +46,7 @@ void main() {
         color = vec4(c, mask);
     }
 
-    id = (i & (0xffffffff * uint(mask))) | (uint(1 - visualize_toggle_mask) << 24);
+    uint extra = uint(1 - visualize_toggle_mask);
+    id = (i & (0xffffffff * uint(mask))) | (extra << 24);
 }
 )";

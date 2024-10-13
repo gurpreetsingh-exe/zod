@@ -7,6 +7,7 @@
 #include "query.hh"
 #include "renderer.hh"
 #include "shader.hh"
+#include "state.hh"
 #include "texture.hh"
 
 namespace zod {
@@ -26,6 +27,7 @@ public:
   virtual auto create_query() -> Shared<GPUQuery> = 0;
   virtual auto create_renderer() -> Shared<GPURenderer> = 0;
   virtual auto create_shader(std::string /* name */) -> Shared<GPUShader> = 0;
+  virtual auto create_state() -> Shared<GPUState> = 0;
   virtual auto create_storage_buffer() -> Shared<GPUStorageBuffer> = 0;
   virtual auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,
                               bool /* bindless */) -> Shared<GPUTexture> = 0;

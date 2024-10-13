@@ -4,7 +4,7 @@
 
 namespace zod {
 
-enum GPUAttachmentType : int {
+enum class GPUAttachmentType : int {
   Depth = 0,
   DepthStencil,
   Color0,
@@ -19,7 +19,7 @@ enum GPUAttachmentType : int {
 };
 
 constexpr int GPU_FB_MAX_COLOR_ATTACHMENT =
-    GPUAttachmentType::ColorMax - GPUAttachmentType::Color0;
+    int(GPUAttachmentType::ColorMax) - int(GPUAttachmentType::Color0);
 
 struct GPUAttachment {
   Shared<GPUTexture> texture;
