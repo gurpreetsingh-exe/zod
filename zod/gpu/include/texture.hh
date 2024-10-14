@@ -14,6 +14,7 @@ enum class GPUTextureFormat {
   RGB32F,
   RGBA32F,
   R32UI,
+  Red,
 };
 
 class GPUTexture {
@@ -35,6 +36,7 @@ public:
   virtual auto unbind() -> void = 0;
   virtual auto resize(i32, i32) -> void = 0;
   virtual auto get_id() -> void* = 0;
+  virtual auto blit(f32, f32, f32, f32, void* /* pixels */) -> void = 0;
   auto get_size() -> vec2 { return { f32(m_width), f32(m_height) }; }
 };
 

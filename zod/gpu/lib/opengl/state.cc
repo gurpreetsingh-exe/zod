@@ -24,6 +24,11 @@ static auto to_gl(Depth depth) -> GLenum {
   }
 }
 
+GLState::GLState() {
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+}
+
 auto GLState::set_depth_test(Depth depth) -> void {
   if (depth != Depth::None) {
     glEnable(GL_DEPTH_TEST);

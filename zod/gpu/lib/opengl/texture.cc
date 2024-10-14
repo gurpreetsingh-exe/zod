@@ -30,6 +30,8 @@ static auto to_gl(GPUTextureFormat format) -> GLenum {
       return GL_RGBA32F;
     case GPUTextureFormat::R32UI:
       return GL_R32UI;
+    case GPUTextureFormat::Red:
+      return GL_RED;
     default:
       ZASSERT(false, "texture format not found");
       UNREACHABLE();
@@ -44,6 +46,8 @@ static auto gl_format(GPUTextureFormat format) -> GLenum {
       return GL_RGBA;
     case GPUTextureFormat::R32UI:
       return GL_RED_INTEGER;
+    case GPUTextureFormat::Red:
+      return GL_RED;
     default:
       ZASSERT(false, "texture format not found");
       UNREACHABLE();
@@ -100,6 +104,12 @@ GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format,
                GL_FLOAT, data);
   glBindTexture(m_target, 0);
   stbi_image_free(data);
+}
+
+auto GLTexture::blit(f32 x, f32 y, f32 width, f32 height,
+                     void* pixels) -> void {
+  glTexSubImage2D(m_target, 0, x, y, width, height, gl_format(m_format),
+                  GL_UNSIGNED_BYTE, pixels);
 }
 
 auto GLTexture::resize(i32 width, i32 height) -> void {
