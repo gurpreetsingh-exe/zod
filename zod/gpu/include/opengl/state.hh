@@ -6,7 +6,7 @@ namespace zod {
 
 class GLState : public GPUState {
 public:
-  GLState() = default;
+  GLState();
 
 public:
   auto set_depth_test(Depth) -> void override;

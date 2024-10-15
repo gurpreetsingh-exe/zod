@@ -3,7 +3,12 @@
 #include "platform.hh"
 #include "renderer.hh"
 
+#ifdef OPENGL_BACKEND
 #include "opengl/backend.hh"
+#endif
+#ifdef VULKAN_BACKEND
+#include "vulkan/backend.hh"
+#endif
 
 namespace zod {
 
@@ -11,7 +16,13 @@ static Shared<GPUContext> g_active_context = nullptr;
 static Unique<GPUBackend> g_backend = nullptr;
 static Shared<GPURenderer> g_renderer = nullptr;
 static Shared<GPUState> g_state = nullptr;
+
+#ifdef OPENGL_BACKEND
 static GPUBackendType g_backend_type = GPUBackendType::OpenGL;
+#endif
+#ifdef VULKAN_BACKEND
+static GPUBackendType g_backend_type = GPUBackendType::Vulkan;
+#endif
 
 GPUContext::GPUContext() { m_active = false; }
 
@@ -19,7 +30,12 @@ auto GPUContext::get() -> Shared<GPUContext> { return g_active_context; }
 
 static auto gpu_backend_create() -> GPUBackend& {
   ZASSERT(g_backend == nullptr);
+#ifdef OPENGL_BACKEND
   g_backend = unique<GLBackend>();
+#endif
+#ifdef VULKAN_BACKEND
+  g_backend = unique<VKBackend>();
+#endif
   return *g_backend;
 }
 
