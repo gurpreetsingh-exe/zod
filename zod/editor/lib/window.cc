@@ -17,6 +17,9 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
   // glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+#ifdef VULKAN_BACKEND
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+#endif
 
   GLFWwindow* win = glfwCreateWindow(width, height, name, nullptr, nullptr);
   if (not win) {
@@ -24,7 +27,9 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
   }
 
   glfwSetWindowSizeLimits(win, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
+#ifdef OPENGL_BACKEND
   glfwMakeContextCurrent(win);
+#endif
 
   window->m_window = win;
   window->m_gcx = gpu_context_create(win);
