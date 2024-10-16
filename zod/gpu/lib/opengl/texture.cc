@@ -106,8 +106,8 @@ GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format,
   stbi_image_free(data);
 }
 
-auto GLTexture::blit(f32 x, f32 y, f32 width, f32 height,
-                     void* pixels) -> void {
+auto GLTexture::blit(f32 x, f32 y, f32 width, f32 height, void* pixels)
+    -> void {
   glTexSubImage2D(m_target, 0, x, y, width, height, gl_format(m_format),
                   GL_UNSIGNED_BYTE, pixels);
 }

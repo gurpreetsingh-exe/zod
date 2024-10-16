@@ -32,7 +32,8 @@ auto GLBackend::platform_init() -> void {
   } else {
     TODO();
   }
-  g_platform.init(GPUBackendType::OpenGL, device, vendor, version, renderer);
+  g_platform.init(GPUBackendType::OpenGL, device, std::move(vendor),
+                  std::move(version), std::move(renderer));
   // glEnable(GL_DEBUG_OUTPUT);
   // glDebugMessageCallback(message_callback, 0);
 }
