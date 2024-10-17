@@ -6,6 +6,7 @@
 extern "C" {
 auto glfwCreateWindowSurface(VkInstance, void*, const VkAllocationCallbacks*,
                              VkSurfaceKHR*) -> VkResult;
+auto glfwGetWindowSize(void*, int*, int*) -> void;
 }
 
 namespace zod {
@@ -27,6 +28,7 @@ auto VKDevice::init(void* glfw_window) -> void {
 
   auto vkb_inst = instance.value();
   m_instance = VkInstance(vkb_inst);
+  m_debug_messenger = vkb_inst.debug_messenger;
   /// this is so scuffed :(
   if (glfwCreateWindowSurface(m_instance, glfw_window, nullptr, &g_surface) !=
       VK_SUCCESS) {
@@ -68,6 +70,7 @@ auto VKDevice::init(void* glfw_window) -> void {
   m_queue = graphics_queue.value();
 
   init_physical_device_properties();
+  init_swapchain(glfw_window);
   VKBackend::platform_init(*this);
 }
 
@@ -75,6 +78,33 @@ auto VKDevice::init_physical_device_properties() -> void {
   ZASSERT(m_physical_device != VK_NULL_HANDLE);
   vkGetPhysicalDeviceProperties(m_physical_device,
                                 &m_physical_device_properties);
+}
+
+auto VKDevice::init_swapchain(void* window) -> void {
+  auto swapchain_builder = vkb::SwapchainBuilder {
+    m_physical_device,
+    m_device,
+    g_surface,
+  };
+
+  m_swapchain_image_format = VK_FORMAT_B8G8R8A8_UNORM;
+  int width, height;
+  glfwGetWindowSize(window, &width, &height);
+  vkb::Swapchain vkb_swapchain =
+      swapchain_builder
+          .set_desired_format(VkSurfaceFormatKHR {
+              .format = m_swapchain_image_format,
+              .colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR })
+          .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+          .set_desired_extent(width, height)
+          .add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT)
+          .build()
+          .value();
+
+  m_swapchain_extent = vkb_swapchain.extent;
+  m_swapchain = vkb_swapchain.swapchain;
+  m_swapchain_images = vkb_swapchain.get_images().value();
+  m_swapchain_image_views = vkb_swapchain.get_image_views().value();
 }
 
 /// https://www.reddit.com/r/vulkan/comments/4ta9nj/is_there_a_comprehensive_list_of_the_names_and/d5nso2t/
@@ -141,6 +171,19 @@ auto VKDevice::driver_version() const -> std::string {
          std::to_string(VK_VERSION_PATCH(driver_version));
 }
 
-VKDevice::~VKDevice() { vkDestroySurfaceKHR(m_instance, g_surface, nullptr); }
+VKDevice::~VKDevice() {
+  if (not is_initialized()) {
+    return;
+  }
+  vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+  for (int i = 0; i < m_swapchain_image_views.size(); i++) {
+    vkDestroyImageView(m_device, m_swapchain_image_views[i], nullptr);
+  }
+
+  vkDestroySurfaceKHR(m_instance, g_surface, nullptr);
+  vkDestroyDevice(m_device, nullptr);
+  vkb::destroy_debug_utils_messenger(m_instance, m_debug_messenger);
+  vkDestroyInstance(m_instance, nullptr);
+}
 
 } // namespace zod
