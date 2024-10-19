@@ -5,7 +5,6 @@
 #include "context.hh"
 #include "framebuffer.hh"
 #include "query.hh"
-#include "renderer.hh"
 #include "shader.hh"
 #include "state.hh"
 #include "texture.hh"
@@ -25,7 +24,6 @@ public:
   virtual auto create_context(void* /* window */) -> Shared<GPUContext> = 0;
   virtual auto create_framebuffer(int, int) -> Shared<GPUFrameBuffer> = 0;
   virtual auto create_query() -> Shared<GPUQuery> = 0;
-  virtual auto create_renderer() -> Shared<GPURenderer> = 0;
   virtual auto create_shader(std::string /* name */) -> Shared<GPUShader> = 0;
   virtual auto create_state() -> Shared<GPUState> = 0;
   virtual auto create_storage_buffer() -> Shared<GPUStorageBuffer> = 0;

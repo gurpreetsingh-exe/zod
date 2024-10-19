@@ -31,10 +31,6 @@ public:
     TODO();
     UNREACHABLE();
   }
-  auto create_renderer() -> Shared<GPURenderer> {
-    TODO();
-    UNREACHABLE();
-  }
   auto create_shader(std::string /* name */) -> Shared<GPUShader> {
     TODO();
     UNREACHABLE();
