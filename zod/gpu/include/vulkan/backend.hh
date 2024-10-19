@@ -2,6 +2,7 @@
 
 #include "../backend.hh"
 #include "vulkan/device.hh"
+#include "vulkan/state.hh"
 
 namespace zod {
 
@@ -35,10 +36,7 @@ public:
     TODO();
     UNREACHABLE();
   }
-  auto create_state() -> Shared<GPUState> {
-    TODO();
-    UNREACHABLE();
-  }
+  auto create_state() -> Shared<GPUState> { return shared<VKState>(); }
   auto create_storage_buffer() -> Shared<GPUStorageBuffer> {
     TODO();
     UNREACHABLE();
