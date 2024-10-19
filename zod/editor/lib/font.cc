@@ -66,16 +66,10 @@ auto Font::load_font(const fs::path& path) -> void {
   m_width = w;
   m_height = h + 2;
 
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glActiveTexture(GL_TEXTURE0);
-  glGenTextures(1, &m_texture);
-  glBindTexture(GL_TEXTURE_2D, m_texture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_width, m_height, 0, GL_RED,
-               GL_UNSIGNED_BYTE, 0);
+  m_texture = GPUBackend::get().create_texture(GPUTextureType::Texture2D,
+                                               GPUTextureFormat::Red, m_width,
+                                               m_height, /* bindless */ false);
+  m_texture->bind();
 
   int x = 0;
   for (int i = 32; i < 128; i++) {
@@ -89,10 +83,8 @@ auto Font::load_font(const fs::path& path) -> void {
     c[i].bl = g->bitmap_left;
     c[i].bt = g->bitmap_top;
     c[i].tx = (float)x / m_width;
-
-    glTexSubImage2D(GL_TEXTURE_2D, 0, x + 0.5, 1, g->bitmap.width,
-                    g->bitmap.rows, GL_RED, GL_UNSIGNED_BYTE, g->bitmap.buffer);
-
+    m_texture->blit(x + 0.5, 1, g->bitmap.width, g->bitmap.rows,
+                    g->bitmap.buffer);
     x += g->bitmap.width + 1;
   }
 }
@@ -143,7 +135,7 @@ auto Font::submit() -> void {
   m_batch->update_binding(0, m_position, sizeof(f32) * m_nvert);
   m_batch->update_binding(1, m_uv, sizeof(f32) * m_nvert);
   m_text_shader->bind();
-  glBindTexture(GL_TEXTURE_2D, m_texture);
+  m_texture->bind();
   m_text_shader->uniform("u_texture", 0);
   m_batch->draw(m_text_shader, (m_nvert >> 3) * 6);
   m_nvert = 0;

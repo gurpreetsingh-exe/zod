@@ -24,6 +24,7 @@ public:
   auto unbind() -> void override { glBindTexture(m_target, 0); }
   auto resize(i32, i32) -> void override;
   auto get_id() -> void* override { return (void*)(intptr_t)m_id; }
+  auto blit(f32, f32, f32, f32, void* /* pixels */) -> void override;
 };
 
 } // namespace zod
