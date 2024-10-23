@@ -80,7 +80,7 @@ auto ZCtxt::run(fs::path path) -> void {
   m_ssbo->upload_data(mesh->normals.data(),
                       mesh->normals.size() * sizeof(vec3));
 
-  auto points = mesh->points.size();
+  u32 points = mesh->points.size();
   {
     auto indices = std::vector<u32>();
     for (const auto& prim : mesh->prims) {
@@ -122,8 +122,8 @@ auto ZCtxt::run(fs::path path) -> void {
 
         if (ImGui::DragFloat3("offset", &offset[0])) {
           transform->bind();
-          transform->uniform("u_num_vertices", u32(points));
-          transform->uniform("u_offset", offset);
+          transform->uniform_uint("u_num_vertices", &points);
+          transform->uniform_float("u_offset", ADDROF(offset), 3);
           m_vertex_buffer->bind(2);
           vertex_buffer_out->bind(3);
           auto workgroup_size = u32(std::ceil(points / 64.0f));

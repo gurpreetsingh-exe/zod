@@ -6,7 +6,6 @@
 #include "opengl/context.hh"
 #include "opengl/framebuffer.hh"
 #include "opengl/query.hh"
-#include "opengl/renderer.hh"
 #include "opengl/shader.hh"
 #include "opengl/state.hh"
 
@@ -33,10 +32,6 @@ public:
   }
 
   auto create_query() -> Shared<GPUQuery> override { return shared<GLQuery>(); }
-
-  auto create_renderer() -> Shared<GPURenderer> override {
-    return shared<GLRenderer>();
-  }
 
   auto create_shader(std::string name) -> Shared<GPUShader> override {
     Shared<GPUShader> shader = shared<GLShader>(std::move(name));

@@ -31,3 +31,5 @@
       return fmt::format_to(ctx.out(), fmt_str, __VA_ARGS__);                  \
     }                                                                          \
   }
+
+#define ADDR(...) *Addr(__VA_ARGS__)

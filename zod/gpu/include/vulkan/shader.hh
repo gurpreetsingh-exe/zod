@@ -1,14 +1,19 @@
 #pragma once
 
-#include <glad/glad.h>
-
 #include "../shader.hh"
+#include "vk_common.hh"
 
 namespace zod {
 
-class GLShader : public GPUShader {
+enum ShaderStage {
+  Vertex,
+  Fragment,
+  Compute,
+};
+
+class VKShader : public GPUShader {
 public:
-  GLShader(std::string /* name */);
+  VKShader(std::string /* name */);
 
 public:
   auto init_vertex_shader(const char* /* source */) -> void override;
@@ -26,15 +31,15 @@ public:
       -> void override;
 
 private:
-  auto create_shader(GLuint /* type */, const char* /* source */) -> GLuint;
-  auto get_uniform_location(const std::string&) -> GLuint;
+  auto create_shader_module(ShaderStage, const char* /* source */)
+      -> VkShaderModule;
+  auto create_shader_stage(VkShaderModule, VkShaderStageFlagBits) -> void;
 
 private:
-  GLuint m_id;
-  GLuint m_vert = 0;
-  GLuint m_frag = 0;
-  GLuint m_comp = 0;
-  std::unordered_map<std::string, GLuint> m_uniforms;
+  VkShaderModule m_vert = VK_NULL_HANDLE;
+  VkShaderModule m_frag = VK_NULL_HANDLE;
+  VkShaderModule m_comp = VK_NULL_HANDLE;
+  std::vector<VkPipelineShaderStageCreateInfo> m_stages = {};
 };
 
 } // namespace zod

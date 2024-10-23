@@ -20,10 +20,12 @@ public:
   virtual auto bind() -> void = 0;
   virtual auto unbind() -> void = 0;
   virtual auto dispatch(u32 /* x */, u32 /* y */, u32 /* z */) -> void = 0;
-  virtual auto uniform(const std::string&, u32) -> void = 0;
-  virtual auto uniform(const std::string&, i32) -> void = 0;
-  virtual auto uniform(const std::string&, vec3) -> void = 0;
-  virtual auto uniform(const std::string&, const mat4&) -> void = 0;
+  virtual auto uniform_float(const std::string&, const f32*,
+                             usize /* size */ = 1) -> void = 0;
+  virtual auto uniform_uint(const std::string&, const u32*,
+                            usize /* size */ = 1) -> void = 0;
+  virtual auto uniform_int(const std::string&, const i32*, usize /* size */ = 1)
+      -> void = 0;
 };
 
 class ShaderLibrary {

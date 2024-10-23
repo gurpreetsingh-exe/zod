@@ -16,3 +16,12 @@
 [submodule "third-party/freetype"]
 	path = third-party/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "third-party/vk-bootstrap"]
+	path = third-party/vk-bootstrap
+	url = https://github.com/charles-lunarg/vk-bootstrap.git
+[submodule "third-party/VulkanMemoryAllocator"]
+	path = third-party/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "third-party/glslang"]
+	path = third-party/glslang
+	url = https://github.com/KhronosGroup/glslang.git

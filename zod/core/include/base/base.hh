@@ -67,6 +67,14 @@ auto unique(Args&&... args) -> Unique<T> {
   return std::make_unique<T>(std::forward<Args>(args)...);
 }
 
+/// Used in ADDR() macro
+template <typename T>
+struct Addr {
+  Addr(T v) : inner(v) {}
+  auto operator*() const -> const T* { return &inner; }
+  T inner;
+};
+
 template <typename... T>
 auto __panic(loc loc, fmt::format_string<T...> fmt, T&&... args) {
   fmt::print(stderr, "panic at {}:{}", loc.file_name(), loc.line());
