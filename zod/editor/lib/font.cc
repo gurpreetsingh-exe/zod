@@ -136,7 +136,7 @@ auto Font::submit() -> void {
   m_batch->update_binding(1, m_uv, sizeof(f32) * m_nvert);
   m_text_shader->bind();
   m_texture->bind();
-  m_text_shader->uniform("u_texture", 0);
+  m_text_shader->uniform_int("u_texture", ADDR(0));
   m_batch->draw(m_text_shader, (m_nvert >> 3) * 6);
   m_nvert = 0;
 }

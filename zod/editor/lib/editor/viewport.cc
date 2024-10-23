@@ -61,7 +61,7 @@ auto Viewport::draw_cubemap() -> void {
 
 auto Viewport::draw_grid() -> void {
   m_grid_shader->bind();
-  m_grid_shader->uniform("u_color", vec3(0.25f));
+  m_grid_shader->uniform_float("u_color", value_ptr(vec3(0.25f)), 3);
   GPUState::get().draw_immediate(6);
 }
 

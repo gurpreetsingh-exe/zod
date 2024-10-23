@@ -18,10 +18,12 @@ public:
   auto bind() -> void override;
   auto unbind() -> void override;
   auto dispatch(u32 /* x */, u32 /* y */, u32 /* z */) -> void override;
-  auto uniform(const std::string&, u32) -> void override;
-  auto uniform(const std::string&, i32) -> void override;
-  auto uniform(const std::string&, vec3) -> void override;
-  auto uniform(const std::string&, const mat4&) -> void override;
+  auto uniform_float(const std::string&, const f32*, usize /* size */)
+      -> void override;
+  auto uniform_uint(const std::string&, const u32*, usize /* size */)
+      -> void override;
+  auto uniform_int(const std::string&, const i32*, usize /* size */)
+      -> void override;
 
 private:
   auto create_shader(GLuint /* type */, const char* /* source */) -> GLuint;

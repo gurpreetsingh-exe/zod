@@ -90,20 +90,40 @@ auto GLShader::get_uniform_location(const std::string& name) -> GLuint {
   return m_uniforms[name];
 }
 
-auto GLShader::uniform(const std::string& name, u32 n) -> void {
-  glUniform1ui(get_uniform_location(name), n);
+auto GLShader::uniform_uint(const std::string& name, const u32* n, usize size)
+    -> void {
+  switch (size) {
+    case 1: {
+      glUniform1ui(get_uniform_location(name), *n);
+    } break;
+    default:
+      ZASSERT(false, "{}", size);
+  }
 }
 
-auto GLShader::uniform(const std::string& name, i32 n) -> void {
-  glUniform1i(get_uniform_location(name), n);
+auto GLShader::uniform_int(const std::string& name, const i32* n, usize size)
+    -> void {
+  switch (size) {
+    case 1: {
+      glUniform1i(get_uniform_location(name), *n);
+    } break;
+    default:
+      ZASSERT(false);
+  }
 }
 
-auto GLShader::uniform(const std::string& name, vec3 vec) -> void {
-  glUniform3f(get_uniform_location(name), vec.x, vec.y, vec.z);
-}
-
-auto GLShader::uniform(const std::string& name, const mat4& mat) -> void {
-  glUniformMatrix4fv(get_uniform_location(name), 1, GL_FALSE, value_ptr(mat));
+auto GLShader::uniform_float(const std::string& name, const f32* v, usize size)
+    -> void {
+  switch (size) {
+    case 3: {
+      glUniform3f(get_uniform_location(name), v[0], v[1], v[2]);
+    } break;
+    case 16: {
+      glUniformMatrix4fv(get_uniform_location(name), 1, GL_FALSE, v);
+    } break;
+    default:
+      ZASSERT(false);
+  }
 }
 
 } // namespace zod

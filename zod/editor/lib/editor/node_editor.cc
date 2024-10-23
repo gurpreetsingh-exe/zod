@@ -186,12 +186,13 @@ auto NodeEditor::update() -> void {
   GPUState::get().draw_immediate(3);
   m_node_ssbo->bind(1);
   m_node_shader->bind();
-  m_node_shader->uniform("u_active", node_tree->get_active_id());
-  m_node_shader->uniform("u_vis", node_tree->get_visualized());
+  m_node_shader->uniform_uint("u_active",
+                              ADDR(u32(node_tree->get_active_id())));
+  m_node_shader->uniform_uint("u_vis", ADDR(u32(node_tree->get_visualized())));
   m_batch->draw_instanced(m_node_shader, node_tree->get_size());
 
   m_line_shader->bind();
-  m_line_shader->uniform("u_color", vec3(1.0f));
+  m_line_shader->uniform_float("u_color", ADDROF(vec3(1.0f)), 3);
   m_curves->draw_lines(m_line_shader);
 
   for (const auto& node : node_tree->get_nodes()) {
