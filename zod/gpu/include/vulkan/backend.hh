@@ -2,6 +2,7 @@
 
 #include "../backend.hh"
 #include "vulkan/device.hh"
+#include "vulkan/shader.hh"
 #include "vulkan/state.hh"
 
 namespace zod {
@@ -15,6 +16,10 @@ public:
 
 public:
   VKBackend() { VKBackend::platform_init(); }
+
+  static auto get() -> VKBackend& {
+    return static_cast<VKBackend&>(GPUBackend::get());
+  }
 
   auto create_batch(const std::vector<GPUBufferLayout>&,
                     const std::vector<u32>& indices = {}) -> Shared<GPUBatch> {
@@ -32,10 +37,11 @@ public:
     TODO();
     UNREACHABLE();
   }
-  auto create_shader(std::string /* name */) -> Shared<GPUShader> {
-    TODO();
-    UNREACHABLE();
+
+  auto create_shader(std::string name) -> Shared<GPUShader> {
+    return shared<VKShader>(std::move(name));
   }
+
   auto create_state() -> Shared<GPUState> { return shared<VKState>(); }
   auto create_storage_buffer() -> Shared<GPUStorageBuffer> {
     TODO();

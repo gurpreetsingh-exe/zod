@@ -30,10 +30,8 @@ auto VKDevice::init(void* glfw_window) -> void {
   m_instance = VkInstance(vkb_inst);
   m_debug_messenger = vkb_inst.debug_messenger;
   /// this is so scuffed :(
-  if (glfwCreateWindowSurface(m_instance, glfw_window, nullptr, &g_surface) !=
-      VK_SUCCESS) {
-    eprintln("failed to create Vulkan Surface");
-  }
+  VK_CHECK(
+      glfwCreateWindowSurface(m_instance, glfw_window, nullptr, &g_surface));
 
   auto selector = vkb::PhysicalDeviceSelector(vkb_inst);
   auto physical_device =

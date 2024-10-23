@@ -104,8 +104,18 @@ add_library(gpu ${ZOD_GPU_SRC})
 if (VULKAN_BACKEND)
   target_compile_definitions(gpu PRIVATE VULKAN_BACKEND)
   find_package(Vulkan REQUIRED)
+  add_subdirectory(${THIRD_PARTY_DIR}/VulkanMemoryAllocator VulkanMemoryAllocator)
+  set(ENABLE_HLSL OFF)
+  set(ENABLE_OPT OFF)
+  set(ALLOW_EXTERNAL_SPIRV_TOOLS OFF)
+  add_subdirectory(${THIRD_PARTY_DIR}/glslang glslang)
   add_subdirectory(${THIRD_PARTY_DIR}/vk-bootstrap vk-bootstrap)
-  target_link_libraries(gpu Vulkan::Vulkan vk-bootstrap)
+  target_link_libraries(gpu
+    Vulkan::Vulkan
+    vk-bootstrap
+    glslang::glslang
+    glslang::glslang-default-resource-limits
+    GPUOpen::VulkanMemoryAllocator)
 elseif (OPENGL_BACKEND)
   target_compile_definitions(gpu PRIVATE OPENGL_BACKEND)
   find_package(OpenGL REQUIRED)

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
-
 #include "platform.hh"
+#include "vk_common.hh"
 
 namespace zod {
 
@@ -24,6 +23,8 @@ public:
       -> const VkPhysicalDeviceProperties& {
     return m_physical_device_properties;
   }
+
+  auto vk_device() const -> VkDevice { return m_device; }
 
 private:
   auto init_physical_device_properties() -> void;
