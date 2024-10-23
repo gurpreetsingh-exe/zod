@@ -22,3 +22,6 @@
 [submodule "third-party/VulkanMemoryAllocator"]
 	path = third-party/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "third-party/glslang"]
+	path = third-party/glslang
+	url = https://github.com/KhronosGroup/glslang.git
