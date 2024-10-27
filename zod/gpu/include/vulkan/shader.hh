@@ -30,6 +30,12 @@ public:
   auto uniform_int(const std::string&, const i32*, usize /* size */)
       -> void override;
 
+public:
+  auto get_shader_stages() const
+      -> const std::vector<VkPipelineShaderStageCreateInfo>& {
+    return m_stages;
+  }
+
 private:
   auto create_shader_module(ShaderStage, const char* /* source */)
       -> VkShaderModule;

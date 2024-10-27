@@ -4,6 +4,7 @@
 #include "buffer.hh"
 #include "context.hh"
 #include "framebuffer.hh"
+#include "pipeline.hh"
 #include "query.hh"
 #include "shader.hh"
 #include "state.hh"
@@ -23,6 +24,7 @@ public:
       -> Shared<GPUBatch> = 0;
   virtual auto create_context(void* /* window */) -> Shared<GPUContext> = 0;
   virtual auto create_framebuffer(int, int) -> Shared<GPUFrameBuffer> = 0;
+  virtual auto create_pipeline(PipelineSpec) -> Shared<GPUPipeline> = 0;
   virtual auto create_query() -> Shared<GPUQuery> = 0;
   virtual auto create_shader(std::string /* name */) -> Shared<GPUShader> = 0;
   virtual auto create_state() -> Shared<GPUState> = 0;
