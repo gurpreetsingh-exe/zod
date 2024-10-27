@@ -5,6 +5,7 @@
 #include "opengl/buffer.hh"
 #include "opengl/context.hh"
 #include "opengl/framebuffer.hh"
+#include "opengl/pipeline.hh"
 #include "opengl/query.hh"
 #include "opengl/shader.hh"
 #include "opengl/state.hh"
@@ -29,6 +30,10 @@ public:
 
   auto create_framebuffer(int w, int h) -> Shared<GPUFrameBuffer> override {
     return shared<GLFrameBuffer>(w, h);
+  }
+
+  auto create_pipeline(PipelineSpec spec) -> Shared<GPUPipeline> override {
+    return shared<GLPipeline>(spec);
   }
 
   auto create_query() -> Shared<GPUQuery> override { return shared<GLQuery>(); }
