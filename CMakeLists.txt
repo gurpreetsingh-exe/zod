@@ -88,6 +88,7 @@ endif()
 
 set(ZOD_GPU_SRC
   ${ZOD_GPU_DIR}/lib/context.cc
+  ${ZOD_GPU_DIR}/lib/types.cc
   ${ZOD_GPU_DIR}/lib/platform.cc
   ${ZOD_GPU_DIR}/lib/shader.cc)
 

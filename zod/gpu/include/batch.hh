@@ -2,22 +2,9 @@
 
 #include "buffer.hh"
 #include "shader.hh"
+#include "types.hh"
 
 namespace zod {
-
-enum class GPUDataType {
-  Int,
-  Float,
-};
-
-inline auto gpu_sizeof(GPUDataType type) -> usize {
-  switch (type) {
-    case GPUDataType::Int:
-    case GPUDataType::Float:
-      return 4;
-  }
-  UNREACHABLE();
-}
 
 struct GPUBufferLayout {
   GPUDataType type;

@@ -26,7 +26,7 @@ public:
   virtual auto create_framebuffer(int, int) -> Shared<GPUFrameBuffer> = 0;
   virtual auto create_pipeline(PipelineSpec) -> Shared<GPUPipeline> = 0;
   virtual auto create_query() -> Shared<GPUQuery> = 0;
-  virtual auto create_shader(std::string /* name */) -> Shared<GPUShader> = 0;
+  virtual auto create_shader(GPUShaderCreateInfo) -> Shared<GPUShader> = 0;
   virtual auto create_state() -> Shared<GPUState> = 0;
   virtual auto create_storage_buffer() -> Shared<GPUStorageBuffer> = 0;
   virtual auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,

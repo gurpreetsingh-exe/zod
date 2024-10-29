@@ -38,8 +38,8 @@ public:
 
   auto create_query() -> Shared<GPUQuery> override { return shared<GLQuery>(); }
 
-  auto create_shader(std::string name) -> Shared<GPUShader> override {
-    Shared<GPUShader> shader = shared<GLShader>(std::move(name));
+  auto create_shader(GPUShaderCreateInfo info) -> Shared<GPUShader> override {
+    Shared<GPUShader> shader = shared<GLShader>(info);
     m_shader_library->add(shader->name, shader);
     return shader;
   }

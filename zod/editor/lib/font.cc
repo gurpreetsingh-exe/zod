@@ -37,10 +37,10 @@ Font::Font() {
 
   m_batch = GPUBackend::get().create_batch(format, indices);
 
-  m_text_shader = GPUBackend::get().create_shader("text");
-  m_text_shader->init_vertex_shader(g_text_vert);
-  m_text_shader->init_fragment_shader(g_text_frag);
-  m_text_shader->compile();
+  m_text_shader =
+      GPUBackend::get().create_shader(GPUShaderCreateInfo("text")
+                                          .vertex_source(g_text_vert)
+                                          .fragment_source(g_text_frag));
 }
 
 auto Font::load_font(const fs::path& path) -> void {

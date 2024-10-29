@@ -8,13 +8,9 @@ namespace zod {
 
 class GLShader : public GPUShader {
 public:
-  GLShader(std::string /* name */);
+  GLShader(GPUShaderCreateInfo);
 
 public:
-  auto init_vertex_shader(const char* /* source */) -> void override;
-  auto init_fragment_shader(const char* /* source */) -> void override;
-  auto init_compute_shader(const char* /* source */) -> void override;
-  auto compile() -> void override;
   auto bind() -> void override;
   auto unbind() -> void override;
   auto dispatch(u32 /* x */, u32 /* y */, u32 /* z */) -> void override;
@@ -26,6 +22,12 @@ public:
       -> void override;
 
 private:
+  auto init_vertex_and_fragment_shader(const char* /* vertex_source */,
+                                       const char* /* fragment_source */)
+      -> void override;
+  auto init_compute_shader(const char* /* source */) -> void override;
+  auto compile(GPUShaderCreateInfo) -> void override;
+
   auto create_shader(GLuint /* type */, const char* /* source */) -> GLuint;
   auto get_uniform_location(const std::string&) -> GLuint;
 

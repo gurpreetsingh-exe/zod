@@ -26,18 +26,6 @@ ZCtxt::ZCtxt()
       m_node_tree(shared<NodeTree>()) {
   m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
   m_layout = unique<Layout>();
-
-#define CREATE_SHADER(n, vert, frag)                                           \
-  auto n = GPUBackend::get().create_shader(#n);                                \
-  n->init_vertex_shader(vert);                                                 \
-  n->init_fragment_shader(frag);                                               \
-  n->compile();
-
-  CREATE_SHADER(uv, g_fullscreen, g_uv);
-  CREATE_SHADER(quad, g_fullscreen, g_texture);
-  CREATE_SHADER(rect, g_rect_vert, g_rect_frag);
-  CREATE_SHADER(round_panel, g_vertex_2d, g_round_panel);
-
   m_window->set_event_callback(std::bind(&ZCtxt::on_event, this, ph::_1));
   m_ssbo = GPUBackend::get().create_storage_buffer();
   m_vertex_buffer = GPUBackend::get().create_storage_buffer();
@@ -89,13 +77,8 @@ auto ZCtxt::run(fs::path path) -> void {
     m_batch = GPUBackend::get().create_batch({}, indices);
   }
 
-  auto round_panel = GPUBackend::get().get_shader("round_panel");
-  auto quad = GPUBackend::get().get_shader("quad");
-  auto rect = GPUBackend::get().get_shader("rect");
-
-  auto transform = GPUBackend::get().create_shader("transform");
-  transform->init_compute_shader(g_transform_comp);
-  transform->compile();
+  auto transform = GPUBackend::get().create_shader(
+      GPUShaderCreateInfo("transform").compute_source(g_transform_comp));
 
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };

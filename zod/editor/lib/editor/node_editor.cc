@@ -27,20 +27,20 @@ NodeEditor::NodeEditor()
   m_framebuffer->check();
   m_framebuffer->unbind();
 
-  m_shader = GPUBackend::get().create_shader("node_editor");
-  m_shader->init_vertex_shader(g_fullscreen);
-  m_shader->init_fragment_shader(g_node_editor_frag);
-  m_shader->compile();
+  m_shader =
+      GPUBackend::get().create_shader(GPUShaderCreateInfo("node_editor")
+                                          .vertex_source(g_fullscreen)
+                                          .fragment_source(g_node_editor_frag));
 
-  m_node_shader = GPUBackend::get().create_shader("node");
-  m_node_shader->init_vertex_shader(g_node_vert);
-  m_node_shader->init_fragment_shader(g_node_frag);
-  m_node_shader->compile();
+  m_node_shader =
+      GPUBackend::get().create_shader(GPUShaderCreateInfo("node")
+                                          .vertex_source(g_node_vert)
+                                          .fragment_source(g_node_frag));
 
-  m_line_shader = GPUBackend::get().create_shader("line");
-  m_line_shader->init_vertex_shader(g_vertex2d);
-  m_line_shader->init_fragment_shader(g_flat_color_frag);
-  m_line_shader->compile();
+  m_line_shader =
+      GPUBackend::get().create_shader(GPUShaderCreateInfo("node")
+                                          .vertex_source(g_vertex2d)
+                                          .fragment_source(g_flat_color_frag));
 
   f32 position[] = { 0, 0, 1, 0, 0, 1, 1, 1 };
   auto format = std::vector<GPUBufferLayout> {

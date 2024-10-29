@@ -2,8 +2,9 @@
 
 namespace zod {
 
-GLShader::GLShader(std::string name) : GPUShader(std::move(name)) {
+GLShader::GLShader(GPUShaderCreateInfo info) : GPUShader(info) {
   m_id = glCreateProgram();
+  compile(info);
 }
 
 auto GLShader::create_shader(GLuint type, const char* source) -> GLuint {
@@ -26,52 +27,52 @@ auto GLShader::create_shader(GLuint type, const char* source) -> GLuint {
   return shader;
 }
 
-auto GLShader::init_vertex_shader(const char* source) -> void {
-  m_vert = create_shader(GL_VERTEX_SHADER, source);
-}
-
-auto GLShader::init_fragment_shader(const char* source) -> void {
-  m_frag = create_shader(GL_FRAGMENT_SHADER, source);
+auto GLShader::init_vertex_and_fragment_shader(const char* vertex_source,
+                                               const char* fragment_source)
+    -> void {
+  m_vert = create_shader(GL_VERTEX_SHADER, vertex_source);
+  m_frag = create_shader(GL_FRAGMENT_SHADER, fragment_source);
 }
 
 auto GLShader::init_compute_shader(const char* source) -> void {
   m_comp = create_shader(GL_COMPUTE_SHADER, source);
 }
 
-auto GLShader::compile() -> void {
-  if (m_comp) {
-    ZASSERT(m_vert == 0 and m_frag == 0);
-    glAttachShader(m_id, m_comp);
-  } else {
-    glAttachShader(m_id, m_vert);
-    glAttachShader(m_id, m_frag);
-  }
-  glLinkProgram(m_id);
-
-  int is_linked;
-  glGetProgramiv(m_id, GL_LINK_STATUS, &is_linked);
-  if (is_linked == GL_FALSE) {
-    int length;
-    glGetProgramiv(m_id, GL_INFO_LOG_LENGTH, &length);
-
-    auto info_log = std::vector<char>(usize(length));
-    glGetProgramInfoLog(m_id, length, &length, &info_log[0]);
-
-    glDeleteProgram(m_id);
-    if (m_comp) {
-      glDeleteShader(m_comp);
-    } else {
-      glDeleteShader(m_vert);
-      glDeleteShader(m_frag);
+auto GLShader::compile(GPUShaderCreateInfo info) -> void {
+  auto bits = info.shader_bits();
+  auto link_program_or_crash = [&] {
+    glLinkProgram(m_id);
+    int is_linked;
+    glGetProgramiv(m_id, GL_LINK_STATUS, &is_linked);
+    if (is_linked == GL_FALSE) {
+      int length;
+      glGetProgramiv(m_id, GL_INFO_LOG_LENGTH, &length);
+      auto info_log = std::vector<char>(usize(length));
+      glGetProgramInfoLog(m_id, length, &length, &info_log[0]);
+      glDeleteProgram(m_id);
+      eprintln("{}", info_log.data());
     }
-    eprintln("{}", info_log.data());
-  }
+  };
 
-  if (m_comp) {
-    glDetachShader(m_id, m_comp);
-  } else {
-    glDetachShader(m_id, m_vert);
-    glDetachShader(m_id, m_frag);
+  switch (bits) {
+    case GPU_VERTEX_SHADER_BIT | GPU_FRAGMENT_SHADER_BIT: {
+      init_vertex_and_fragment_shader(info.get_vertex_source(),
+                                      info.get_fragment_source());
+      glAttachShader(m_id, m_vert);
+      glAttachShader(m_id, m_frag);
+      link_program_or_crash();
+      glDetachShader(m_id, m_vert);
+      glDetachShader(m_id, m_frag);
+    } break;
+    case GPU_COMPUTE_SHADER_BIT: {
+      init_compute_shader(info.get_compute_source());
+      glAttachShader(m_id, m_comp);
+      link_program_or_crash();
+      glDetachShader(m_id, m_comp);
+    } break;
+    default: {
+      eprintln("invalid bits found when compiling shader");
+    } break;
   }
 }
 
