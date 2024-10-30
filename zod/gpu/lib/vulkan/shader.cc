@@ -81,27 +81,36 @@ auto compile_glsl_to_spirv(ShaderStage stage0, const char* source)
   return binary;
 }
 
-VKShader::VKShader(std::string name) : GPUShader(std::move(name)) {}
-
-auto VKShader::init_vertex_shader(const char* source) -> void {
-  m_vert = create_shader_module(ShaderStage::Vertex, source);
+VKShader::VKShader(GPUShaderCreateInfo info) : GPUShader(info.name) {
+  compile(info);
 }
 
-auto VKShader::init_fragment_shader(const char* source) -> void {
-  m_frag = create_shader_module(ShaderStage::Fragment, source);
+auto VKShader::init_vertex_and_fragment_shader(const char* vertex_source,
+                                               const char* fragment_source)
+    -> void {
+  m_vert = create_shader_module(ShaderStage::Vertex, vertex_source);
+  m_frag = create_shader_module(ShaderStage::Fragment, fragment_source);
 }
 
 auto VKShader::init_compute_shader(const char* source) -> void {
   m_comp = create_shader_module(ShaderStage::Compute, source);
 }
 
-auto VKShader::compile() -> void {
-  if (m_comp) {
-    ZASSERT(m_vert == VK_NULL_HANDLE and m_frag == VK_NULL_HANDLE);
-    TODO();
-  } else {
-    create_shader_stage(m_vert, VK_SHADER_STAGE_VERTEX_BIT);
-    create_shader_stage(m_frag, VK_SHADER_STAGE_FRAGMENT_BIT);
+auto VKShader::compile(GPUShaderCreateInfo info) -> void {
+  auto bits = info.shader_bits();
+  switch (bits) {
+    case GPU_VERTEX_SHADER_BIT | GPU_FRAGMENT_SHADER_BIT: {
+      init_vertex_and_fragment_shader(info.get_vertex_source(),
+                                      info.get_fragment_source());
+      create_shader_stage(m_vert, VK_SHADER_STAGE_VERTEX_BIT);
+      create_shader_stage(m_frag, VK_SHADER_STAGE_FRAGMENT_BIT);
+    } break;
+    case GPU_COMPUTE_SHADER_BIT: {
+      TODO();
+    } break;
+    default: {
+      eprintln("invalid bits found when compiling shader");
+    } break;
   }
 }
 

@@ -45,8 +45,8 @@ public:
     UNREACHABLE();
   }
 
-  auto create_shader(std::string name) -> Shared<GPUShader> override {
-    return shared<VKShader>(std::move(name));
+  auto create_shader(GPUShaderCreateInfo info) -> Shared<GPUShader> override {
+    return shared<VKShader>(info);
   }
 
   auto create_state() -> Shared<GPUState> override { return shared<VKState>(); }
