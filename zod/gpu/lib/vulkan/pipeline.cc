@@ -80,7 +80,8 @@ auto VKPipeline::clear() -> void {
   m_depth_stencil = {
     .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO
   };
-  m_render_info = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
+  m_render_info = { .sType =
+                        VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR };
   m_shader_stages.clear();
 }
 

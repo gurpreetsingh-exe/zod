@@ -27,7 +27,7 @@ private:
   VkPipelineMultisampleStateCreateInfo m_multisampling;
   VkPipelineLayout m_pipeline_layout;
   VkPipelineDepthStencilStateCreateInfo m_depth_stencil;
-  VkPipelineRenderingCreateInfo m_render_info;
+  VkPipelineRenderingCreateInfoKHR m_render_info;
   VkFormat m_color_attachment_format;
 };
 

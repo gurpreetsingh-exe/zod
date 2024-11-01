@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../backend.hh"
+#include "vulkan/buffer.hh"
 #include "vulkan/device.hh"
 #include "vulkan/pipeline.hh"
 #include "vulkan/shader.hh"
@@ -51,9 +52,9 @@ public:
 
   auto create_state() -> Shared<GPUState> override { return shared<VKState>(); }
 
-  auto create_storage_buffer() -> Shared<GPUStorageBuffer> override {
-    TODO();
-    UNREACHABLE();
+  auto create_storage_buffer(usize size_in_bytes)
+      -> Shared<GPUStorageBuffer> override {
+    return shared<VKStorageBuffer>(size_in_bytes);
   }
 
   auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,
@@ -68,10 +69,9 @@ public:
     UNREACHABLE();
   }
 
-  auto create_uniform_buffer(usize /* size_in_bytes */)
+  auto create_uniform_buffer(usize size_in_bytes)
       -> Shared<GPUUniformBuffer> override {
-    TODO();
-    UNREACHABLE();
+    return shared<VKUniformBuffer>(size_in_bytes);
   }
 
   auto create_vertex_buffer() -> Shared<GPUVertexBuffer> override {

@@ -28,7 +28,8 @@ public:
   virtual auto create_query() -> Shared<GPUQuery> = 0;
   virtual auto create_shader(GPUShaderCreateInfo) -> Shared<GPUShader> = 0;
   virtual auto create_state() -> Shared<GPUState> = 0;
-  virtual auto create_storage_buffer() -> Shared<GPUStorageBuffer> = 0;
+  virtual auto create_storage_buffer(usize /* size_in_bytes */)
+      -> Shared<GPUStorageBuffer> = 0;
   virtual auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,
                               bool /* bindless */) -> Shared<GPUTexture> = 0;
   virtual auto create_texture(GPUTextureType, GPUTextureFormat, const fs::path&)
