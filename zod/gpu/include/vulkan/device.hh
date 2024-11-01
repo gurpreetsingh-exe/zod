@@ -14,7 +14,6 @@ public:
 public:
   auto init(void* /* glfw_window */) -> void;
   auto is_initialized() const -> bool { return m_device != VK_NULL_HANDLE; }
-  auto init_swapchain(void*) -> void;
   auto device_type() const -> GPUDeviceType;
   auto vendor_name() const -> std::string;
   auto driver_version() const -> std::string;
@@ -25,9 +24,12 @@ public:
   }
 
   auto vk_device() const -> VkDevice { return m_device; }
+  auto mem_allocator() const -> VmaAllocator { return m_allocator; }
 
 private:
+  auto init_swapchain(void*) -> void;
   auto init_physical_device_properties() -> void;
+  auto init_allocator() -> void;
 
 private:
   VkInstance m_instance = VK_NULL_HANDLE;
@@ -42,6 +44,8 @@ private:
   std::vector<VkImage> m_swapchain_images = {};
   std::vector<VkImageView> m_swapchain_image_views = {};
   VkExtent2D m_swapchain_extent = {};
+
+  VmaAllocator m_allocator;
 };
 
 } // namespace zod

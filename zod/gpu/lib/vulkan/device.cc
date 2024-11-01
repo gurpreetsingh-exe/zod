@@ -1,4 +1,6 @@
 #include <VkBootstrap.h>
+#define VMA_IMPLEMENTATION
+#include <vk_mem_alloc.h>
 
 #include "vulkan/backend.hh"
 #include "vulkan/device.hh"
@@ -69,6 +71,7 @@ auto VKDevice::init(void* glfw_window) -> void {
 
   init_physical_device_properties();
   init_swapchain(glfw_window);
+  init_allocator();
   VKBackend::platform_init(*this);
 }
 
@@ -103,6 +106,15 @@ auto VKDevice::init_swapchain(void* window) -> void {
   m_swapchain = vkb_swapchain.swapchain;
   m_swapchain_images = vkb_swapchain.get_images().value();
   m_swapchain_image_views = vkb_swapchain.get_image_views().value();
+}
+
+auto VKDevice::init_allocator() -> void {
+  VmaAllocatorCreateInfo info = {};
+  info.physicalDevice = m_physical_device;
+  info.device = m_device;
+  info.instance = m_instance;
+  info.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
+  vmaCreateAllocator(&info, &m_allocator);
 }
 
 /// https://www.reddit.com/r/vulkan/comments/4ta9nj/is_there_a_comprehensive_list_of_the_names_and/d5nso2t/
