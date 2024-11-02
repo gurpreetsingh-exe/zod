@@ -38,8 +38,11 @@ private:
   Shared<GPUBatch> m_batch;
   Shared<GPUShader> m_line_shader;
   Shared<GPUBatch> m_curves;
-  bool m_node_add = false;
   Unique<Font> m_font;
+  std::vector<vec2> m_links = {};
+
+  /// Debug
+  bool m_framebuffer_bit = 0;
 };
 
 } // namespace zod

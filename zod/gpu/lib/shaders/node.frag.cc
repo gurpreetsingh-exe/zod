@@ -18,6 +18,9 @@ layout (std430, binding = 1) buffer Nodes {
   Node nodes[];
 };
 
+// const vec3 toggle_color = vec3(0.0, 0.65, 0.82);
+const vec3 toggle_color = vec3(0.15, 0.92, 0.45);
+
 void main() {
     Node node_ = nodes[instance];
     uint i = node_.id;
@@ -29,7 +32,7 @@ void main() {
     vec3 c = mix(vec3(0.1), vec3(0.2), node_mask);
     float visualize_toggle = abs(dot(coord, normalize(vec2(-4, 1))) + 0.6) - 0.15;
     float visualize_toggle_mask = smoothstep(-steprange, steprange, visualize_toggle);
-    c = mix(mix(vec3(0.2), vec3(0.0, 0.65, 0.82), float(u_vis == i)), c, visualize_toggle_mask);
+    c = mix(mix(vec3(0.2), toggle_color, float(u_vis == i)), c, visualize_toggle_mask);
     float socket_radius = 0.08;
     float socket = length(abs(coord) - vec2(0.0f, 0.3f + socket_radius)) - socket_radius;
     float socket_mask = smoothstep(-steprange, steprange, socket);
@@ -46,7 +49,9 @@ void main() {
         color = vec4(c, mask);
     }
 
-    uint extra = uint(1 - visualize_toggle_mask);
+    uint socket_bit = uint(coord.y < 0.0f) + 1;
+    uint extra = (uint(1 - visualize_toggle_mask))
+               | (uint(1 - socket_mask) << socket_bit);
     id = (i & (0xffffffff * uint(mask))) | (extra << 24);
 }
 )";

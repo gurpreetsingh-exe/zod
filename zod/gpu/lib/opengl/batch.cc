@@ -36,10 +36,15 @@ GLBatch::GLBatch(const std::vector<GPUBufferLayout>& layouts,
     m_vertex_buffers.push_back(buffer);
   }
 
+  if (indices.empty()) {
+    glBindVertexArray(0);
+    return;
+  }
   auto buffer = shared<GLIndexBuffer>();
   buffer->bind();
   buffer->upload_data(indices.data(), indices.size() * sizeof(u32));
   m_index_buffer = buffer;
+  glBindVertexArray(0);
 }
 
 GLBatch::~GLBatch() { glDeleteVertexArrays(1, &m_id); }
@@ -67,6 +72,12 @@ auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
 auto GLBatch::draw_lines(Shared<GPUShader> shader) -> void {
   glBindVertexArray(m_id);
   glDrawArrays(GL_LINES, 0, m_elements);
+  glBindVertexArray(0);
+}
+
+auto GLBatch::draw_lines(Shared<GPUShader> shader, usize n) -> void {
+  glBindVertexArray(m_id);
+  glDrawArrays(GL_LINES, 0, n);
   glBindVertexArray(0);
 }
 

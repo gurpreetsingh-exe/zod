@@ -24,6 +24,10 @@ public:
   virtual ~GPUBatch() = default;
 
 public:
+  auto get_buffer(usize i) -> Shared<GPUVertexBuffer> {
+    return m_vertex_buffers[i];
+  }
+
   auto update_binding(usize index, void* data, usize size) -> void {
     m_vertex_buffers[index]->update_data(data, size);
   }
@@ -33,6 +37,7 @@ public:
   virtual auto draw_instanced(Shared<GPUShader>, usize /* instance_count */)
       -> void = 0;
   virtual auto draw_lines(Shared<GPUShader>) -> void = 0;
+  virtual auto draw_lines(Shared<GPUShader>, usize) -> void = 0;
 };
 
 } // namespace zod

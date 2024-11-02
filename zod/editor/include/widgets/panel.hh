@@ -27,6 +27,7 @@ protected:
   Unique<ICamera> m_camera;
   Shared<GPUUniformBuffer> m_uniform_buffer;
   Shared<GPUFrameBuffer> m_framebuffer;
+  std::string m_debug_message = std::string();
 };
 
 } // namespace zod

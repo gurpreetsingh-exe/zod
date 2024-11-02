@@ -34,12 +34,6 @@ public:
 };
 
 class GPUStorageBuffer : public GPUBuffer {
-protected:
-  usize m_size;
-
-protected:
-  GPUStorageBuffer(usize size) : m_size(size) {}
-
 public:
   virtual ~GPUStorageBuffer() = default;
 };

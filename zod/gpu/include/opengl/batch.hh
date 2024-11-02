@@ -18,6 +18,7 @@ public:
   auto draw_instanced(Shared<GPUShader>, usize /* instance_count */)
       -> void override;
   auto draw_lines(Shared<GPUShader>) -> void;
+  auto draw_lines(Shared<GPUShader>, usize) -> void override;
 
 private:
   usize m_elements;

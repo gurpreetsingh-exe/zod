@@ -1,6 +1,6 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include "input.hh"
 
 namespace zod {
 
@@ -10,6 +10,10 @@ struct Event {
     MouseDown,
     MouseUp,
     MouseMove,
+
+    KeyDown,
+    KeyUp,
+    KeyRepeat,
 
     WindowResize,
   } kind = None;
@@ -30,6 +34,7 @@ struct Event {
     bool pressed[GLFW_KEY_LAST + 1];
     vec2 mouse;
     vec2 size;
+    Key key;
   };
 
   const char* name() {

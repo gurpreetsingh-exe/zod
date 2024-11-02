@@ -52,6 +52,21 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
   glfwSetKeyCallback(
       win, [](GLFWwindow* win, int key, int scancode, int action, int mods) {
         g_input_state[key] = action == GLFW_PRESS or action == GLFW_REPEAT;
+        auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
+        auto kind = Event::None;
+        if (action == GLFW_PRESS) {
+          kind = Event::KeyDown;
+        } else if (action == GLFW_RELEASE) {
+          kind = Event::KeyUp;
+        } else if (action == GLFW_REPEAT) {
+          kind = Event::KeyRepeat;
+        }
+        Event event = { .kind = kind,
+                        .shift = bool(mods & GLFW_MOD_SHIFT),
+                        .ctrl = bool(mods & GLFW_MOD_CONTROL),
+                        .alt = bool(mods & GLFW_MOD_ALT),
+                        .key = Key(key) };
+        window->m_event_callback(event);
       });
   glfwSetMouseButtonCallback(
       win, [](GLFWwindow* win, int button, int action, int mods) {

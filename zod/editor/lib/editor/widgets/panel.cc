@@ -73,6 +73,10 @@ auto Panel::draw(Geometry& g) -> void {
     m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
   }
   draw_imp(g);
+  if (not m_debug_message.empty()) {
+    ImGui::SetCursorPos(ImVec2(5, 20));
+    ImGui::Text(m_debug_message.c_str());
+  }
   ImGui::End();
   if (not m_padding) {
     ImGui::PopStyleVar();
