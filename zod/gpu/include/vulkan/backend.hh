@@ -52,9 +52,8 @@ public:
 
   auto create_state() -> Shared<GPUState> override { return shared<VKState>(); }
 
-  auto create_storage_buffer(usize size_in_bytes)
-      -> Shared<GPUStorageBuffer> override {
-    return shared<VKStorageBuffer>(size_in_bytes);
+  auto create_storage_buffer() -> Shared<GPUStorageBuffer> override {
+    return shared<VKStorageBuffer>(1);
   }
 
   auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,

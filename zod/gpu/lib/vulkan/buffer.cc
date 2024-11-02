@@ -21,7 +21,8 @@ auto VKBuffer::create(usize size, VkBufferUsageFlags usage) -> void {
 
   VmaAllocationCreateInfo vma_info = {};
   vma_info.usage = VMA_MEMORY_USAGE_AUTO;
-  vma_info.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+  vma_info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+                   VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
   auto allocator = VKBackend::get().device.mem_allocator();
   VK_CHECK(vmaCreateBuffer(allocator, &info, &vma_info, &m_buffer,
@@ -95,6 +96,26 @@ auto VKStorageBuffer::upload_data(const void* data, usize size, usize offset)
   ZASSERT(m_buffer.is_mapped());
   m_buffer.update(data);
 }
+
 auto VKStorageBuffer::update_data(const void*, usize, usize) -> void { TODO(); }
+
+/// VERTEX BUFFER ///////////////////////////////////////////
+VKVertexBuffer::VKVertexBuffer() : GPUVertexBuffer(), m_buffer(VKBuffer()) {
+  m_buffer.create(1, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                         VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                         VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+}
+
+VKVertexBuffer::~VKVertexBuffer() { m_buffer.destroy(); }
+
+auto VKVertexBuffer::bind(int) -> void { TODO(); }
+auto VKVertexBuffer::unbind() -> void { TODO(); }
+auto VKVertexBuffer::upload_data(const void* data, usize size, usize offset)
+    -> void {
+  ZASSERT(m_buffer.is_mapped());
+  m_buffer.update(data);
+}
+
+auto VKVertexBuffer::update_data(const void*, usize, usize) -> void { TODO(); }
 
 } // namespace zod

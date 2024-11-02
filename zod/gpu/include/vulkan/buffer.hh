@@ -60,4 +60,19 @@ private:
   VKBuffer m_buffer;
 };
 
+class VKVertexBuffer : public GPUVertexBuffer {
+public:
+  VKVertexBuffer();
+  ~VKVertexBuffer();
+
+public:
+  auto bind(int = 0) -> void override;
+  auto unbind() -> void override;
+  auto upload_data(const void*, usize, usize = 0) -> void override;
+  auto update_data(const void*, usize, usize = 0) -> void override;
+
+private:
+  VKBuffer m_buffer;
+};
+
 } // namespace zod
