@@ -4,6 +4,13 @@
 
 namespace zod {
 
+enum class MouseButton {
+  Left = 0,
+  Right,
+  Middle,
+  None,
+};
+
 struct Event {
   enum EventKind {
     None = 0,
@@ -18,12 +25,7 @@ struct Event {
     WindowResize,
   } kind = None;
 
-  enum ButtonKind {
-    MouseButtonLeft = 0,
-    MouseButtonRight,
-    MouseButtonMiddle,
-    MouseButtonNone,
-  } button = MouseButtonNone;
+  MouseButton button = MouseButton::None;
 
   float delta_time = 0.f;
   bool shift = false;
@@ -36,6 +38,12 @@ struct Event {
     vec2 size;
     Key key;
   };
+
+  auto is_key_down(Key k) const -> bool { return kind == KeyDown and k == key; }
+
+  auto is_mouse_down(MouseButton b) const -> bool {
+    return kind == MouseDown and b == button;
+  }
 
   const char* name() {
     switch (kind) {

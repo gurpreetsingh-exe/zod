@@ -50,7 +50,7 @@ public:
     m_window_position = position;
   }
 
-  auto screen_to_world(vec2 v) -> vec4 {
+  auto screen_to_world(vec2 v) const -> vec4 {
     v.y = m_height - v.y;
     auto ndc = vec4((v / vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 1.0f);
     return inverse(m_view_projection) * ndc;

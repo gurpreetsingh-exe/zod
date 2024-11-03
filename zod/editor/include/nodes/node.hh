@@ -38,13 +38,46 @@ struct alignas(16) NodeType {
 };
 
 class NodeTree;
+struct NodeSocket;
+struct NodeLink;
 
 struct Node {
   NodeType* type;
   NodeTree* parent;
   std::vector<Property> props = {};
+  std::vector<NodeSocket> inputs = {};
+  std::vector<NodeSocket> outputs = {};
   NodeDrawFn draw;
   NodeUpdateFn update;
 };
+
+struct NodeSocket {
+  u32 id;
+  std::vector<NodeLink*> links = {};
+  NodeSocket() : id(0) {}
+};
+
+struct NodeLink {
+  Node* node_from = nullptr;
+  Node* node_to = nullptr;
+  NodeSocket* socket_from = nullptr;
+  NodeSocket* socket_to = nullptr;
+};
+
+/// Helper struct to extract extra flags from NodeType::id
+struct NodeExtraFlags {
+  union {
+    struct {
+      u8 visualize : 1;
+      u8 socket_in : 1;
+      u8 socket_out : 1;
+      u8 padding : 5;
+    };
+    u8 data;
+  };
+  NodeExtraFlags(u8 d) : data(d) {}
+};
+
+static_assert(sizeof(NodeExtraFlags) == 1);
 
 } // namespace zod

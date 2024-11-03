@@ -20,7 +20,22 @@ private:
 
   template <typename UpdateFn>
   auto update_node(UpdateFn fn) -> void {
-    auto* node = ZCtxt::get().get_node_tree()->get_active();
+    auto node_tree = ZCtxt::get().get_node_tree();
+    m_links.clear();
+    auto& links = node_tree->get_links();
+    for (const auto& link : links) {
+      m_links.push_back(link.node_from->type->location + vec2(NODE_SIZE) -
+                        vec2(0, 38));
+      auto other_end =
+          link.node_to
+              ? (link.node_to->type->location + vec2(NODE_SIZE) + vec2(0, 38))
+              : region_space_mouse_position();
+      m_links.push_back(other_end);
+      m_curves->get_buffer(0)->upload_data(m_links.data(),
+                                           sizeof(vec2) * m_links.size());
+    }
+
+    auto* node = node_tree->get_active();
     if (not node) {
       return;
     }

@@ -17,8 +17,7 @@ auto Panel::on_event(Event& event) -> void {
   switch (event.kind) {
     case Event::MouseDown: {
       auto nav = Navigation::None;
-      using btn = Event::ButtonKind;
-      if (event.button == btn::MouseButtonLeft) {
+      if (event.button == MouseButton::Left) {
         m_camera->set_pivot_at_mouse();
         auto any_alt = any_key(Key::LeftAlt, Key::RightAlt);
         if (any_alt and any_key(Key::LeftCtrl, Key::RightCtrl)) {
@@ -26,7 +25,7 @@ auto Panel::on_event(Event& event) -> void {
         } else if (any_alt and any_key(Key::LeftShift, Key::RightShift)) {
           nav = Navigation::Pan;
         }
-      } else if (event.button == btn::MouseButtonRight) {
+      } else if (event.button == MouseButton::Right) {
         nav = Navigation::Rotate;
       }
       m_camera->set_navigation(nav);

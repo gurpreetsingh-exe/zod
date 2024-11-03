@@ -11,6 +11,7 @@ public:
   NodeTree() {
     m_type_infos.reserve(MAX_NODES);
     m_nodes.reserve(MAX_NODES);
+    m_links.reserve(MAX_NODES);
   }
 
 public:
@@ -31,6 +32,11 @@ public:
     return add_node(type, args...);
   }
 
+  auto add_link_partial(Node* /* from */) -> NodeLink*;
+  auto connect_link(NodeLink*, Node* /* to */) -> void;
+  auto add_link(Node* /* from */, Node* /* to */) -> NodeLink*;
+  auto remove_link(NodeLink*) -> void;
+
   auto node_from_id(usize id) -> Node* {
     ZASSERT(id > 0);
     auto idx = id - 1;
@@ -45,6 +51,7 @@ public:
   auto get_data() -> NodeType* { return m_type_infos.data(); }
   auto get_size() const -> const usize { return m_type_infos.size(); }
   auto get_nodes() -> std::vector<Node>& { return m_nodes; }
+  auto get_links() -> std::vector<NodeLink>& { return m_links; }
   auto get_visualized() -> u32 { return m_visualized; }
   auto set_visualized(u32 v) -> void { m_visualized = v; }
   auto get_active() -> Node* {
@@ -68,6 +75,7 @@ private:
 private:
   std::vector<NodeType> m_type_infos = {};
   std::vector<Node> m_nodes = {};
+  std::vector<NodeLink> m_links = {};
   u32 m_visualized = 0;
   u32 m_active = 0;
 };

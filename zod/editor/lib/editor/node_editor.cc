@@ -3,19 +3,12 @@
 
 #include "input.hh"
 #include "node_editor.hh"
+#include "operators/node.hh"
 #include "widgets/button.hh"
 
 #include "curve.hh"
 
 namespace zod {
-
-enum class AddMode {
-  None = 0,
-  Node,
-  Link,
-};
-
-static AddMode g_add_mode = AddMode::None;
 
 NodeEditor::NodeEditor()
     : Panel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f), false),
@@ -39,24 +32,18 @@ NodeEditor::NodeEditor()
       GPUBackend::get().create_shader(GPUShaderCreateInfo("node_editor")
                                           .vertex_source(g_fullscreen)
                                           .fragment_source(g_node_editor_frag));
-
   m_node_shader =
       GPUBackend::get().create_shader(GPUShaderCreateInfo("node")
                                           .vertex_source(g_node_vert)
                                           .fragment_source(g_node_frag));
-
   m_line_shader =
       GPUBackend::get().create_shader(GPUShaderCreateInfo("line")
                                           .vertex_source(g_vertex2d)
                                           .fragment_source(g_flat_color_frag));
 
   f32 position[] = { 0, 0, 1, 0, 0, 1, 1, 1 };
-  auto format = std::vector<GPUBufferLayout> {
-    { GPUDataType::Float, position, 2, 8 },
-  };
-
-  m_batch = GPUBackend::get().create_batch(format, { 1, 2, 0, 2, 3, 1 });
-
+  m_batch = GPUBackend::get().create_batch(
+      { { GPUDataType::Float, position, 2, 8 } }, { 1, 2, 0, 2, 3, 1 });
   m_curves = GPUBackend::get().create_batch(
       { { GPUDataType::Float, m_links.data(), 2, 0 } });
 
@@ -66,145 +53,106 @@ NodeEditor::NodeEditor()
   }
 
   m_node_ssbo = GPUBackend::get().create_storage_buffer();
-
   m_node_ssbo->upload_data(node_tree->get_data(),
                            node_tree->get_size() * sizeof(NodeType));
+
+  m_keymaps.insert(
+      { Key::Tab, [&] { m_framebuffer_bit = not m_framebuffer_bit; } });
 }
 
 auto NodeEditor::add_node(usize type) -> void {
-  auto position = Input::get_mouse_pos() - m_position + vec2(0, 43);
-  g_add_mode = AddMode::Node;
-  auto pos = vec2(m_camera->screen_to_world(position)) - vec2(NODE_SIZE);
+  auto position = region_space_mouse_position() - vec2(NODE_SIZE);
   auto node_tree = ZCtxt::get().get_node_tree();
-  auto& node = node_tree->add_node(type, pos);
+  auto& node = node_tree->add_node(type, position);
   m_node_ssbo->upload_data(node_tree->get_data(),
                            node_tree->get_size() * sizeof(NodeType));
 }
 
 auto NodeEditor::on_event_imp(Event& event) -> void {
+  auto operator_execute = [&] {
+    if (auto op = m_active_operator) {
+      auto result = op->execute(event);
+      if (result != OP_RUNNING) {
+        delete m_active_operator;
+        m_active_operator = nullptr;
+      }
+    }
+  };
+
   switch (event.kind) {
     case Event::MouseDown: {
       auto node_tree = ZCtxt::get().get_node_tree();
-      auto pos = Input::get_mouse_pos() - m_position + vec2(0, 43);
-      auto delete_link = [&] {
-        m_links.pop_back();
-        m_links.pop_back();
-        m_curves->update_binding(0, m_links.data(),
-                                 sizeof(vec2) * m_links.size());
-      };
-      if (g_add_mode == AddMode::Node) {
-        g_add_mode = AddMode::None;
-        if (event.button == Event::MouseButtonLeft) {
-        } else if (event.button == Event::MouseButtonRight) {
-          node_tree->set_active_id(0);
-        }
-        return;
-      } else if (g_add_mode == AddMode::Link) {
-        if (event.button == Event::MouseButtonLeft) {
-          auto& second = m_links.back();
-          second = m_camera->screen_to_world(pos);
-          m_curves->update_binding(0, m_links.data(),
-                                   sizeof(vec2) * m_links.size());
-        } else if (event.button == Event::MouseButtonRight) {
-          g_add_mode = AddMode::None;
-          delete_link();
-          return;
-        }
-      }
-
+      auto mouse = relative_mouse_position();
       auto pixel = 0u;
-      pixel = pos.x > m_framebuffer->get_width() or
-                      pos.y > m_framebuffer->get_height()
+      pixel = mouse.x > m_framebuffer->get_width() or
+                      mouse.y > m_framebuffer->get_height()
                   ? 0
                   : m_framebuffer->read_pixel(
-                        1, pos.x, m_framebuffer->get_height() - pos.y);
-      m_debug_message =
-          fmt::format("Pixel: {}\n{}, {}, {}, {}", pixel, (pixel & 0x000000ff),
-                      (pixel & 0x0000ff00) >> 8, (pixel & 0x00ff0000) >> 16,
-                      (pixel & 0xff000000) >> 24);
-      if (auto id = pixel & 0xffffff) {
-        auto extra = (pixel & 0xff000000) >> 24;
-        struct Mask {
-          union {
-            struct {
-              u8 visualize : 1;
-              u8 socket_in : 1;
-              u8 socket_out : 1;
-              u8 padding : 5;
-            };
-            u8 data;
-          };
-          Mask(u8 d) : data(d) {}
-        };
-        static_assert(sizeof(Mask) == 1);
-        auto mask = Mask(extra);
-        if (mask.visualize) {
-          node_tree->set_visualized(id);
-          auto* node = node_tree->node_from_id(id);
-          node->update(*node);
-          node_tree->set_active_id(id);
-        } else if (mask.socket_in) {
-          if (g_add_mode == AddMode::None) {
-            g_add_mode = AddMode::Link;
-          } else {
-            auto* node = node_tree->node_from_id(id);
-            g_add_mode = AddMode::None;
-            auto& second = m_links.back();
-            second = node->type->location + vec2(NODE_SIZE) + vec2(0, 38);
-            m_curves->update_binding(0, m_links.data(),
-                                     sizeof(vec2) * m_links.size());
-          }
-        } else if (mask.socket_out) {
-          auto* node = node_tree->node_from_id(id);
-          g_add_mode = AddMode::Link;
-          auto p = node->type->location + vec2(NODE_SIZE) - vec2(0, 38);
-          m_links.push_back(p);
-          m_links.push_back(m_camera->screen_to_world(pos));
-          m_curves->get_buffer(0)->upload_data(m_links.data(),
-                                               sizeof(vec2) * m_links.size());
-        } else {
-          if (g_add_mode == AddMode::Link) {
-            g_add_mode = AddMode::None;
-            delete_link();
-            return;
-          }
-          node_tree->set_active_id(id);
-        }
-      } else {
-        if (g_add_mode == AddMode::Link) {
-          g_add_mode = AddMode::None;
-          delete_link();
+                        1, mouse.x, m_framebuffer->get_height() - mouse.y);
+      if (not pixel & 0xffffff) {
+        node_tree->set_active_id(0);
+        return;
+      }
+      auto id = pixel & 0xffffff;
+      auto extra = (pixel & 0xff000000) >> 24;
+      auto flags = NodeExtraFlags(extra);
+      if (flags.visualize) {
+        node_tree->set_visualized(id);
+        auto* node = node_tree->node_from_id(id);
+        node->update(*node);
+        node_tree->set_active_id(id);
+      } else if (flags.socket_in) {
+        auto* node = node_tree->node_from_id(id);
+        if (m_active_operator) {
+          m_active_operator->set_data_ptr(node);
+          m_active_operator->execute(event);
+          delete m_active_operator;
+          m_active_operator = nullptr;
+          update_node([&](auto* node) {});
           return;
         }
-        node_tree->set_active_id(0);
+      } else if (flags.socket_out) {
+        if (m_active_operator) {
+          operator_execute();
+          return;
+        }
+        auto* node = node_tree->node_from_id(id);
+        m_active_operator = new OpNodeLinkCreateNew(this, node);
+        m_active_operator->execute(event);
+      } else {
+        if (m_active_operator) {
+          m_active_operator->execute(event);
+          delete m_active_operator;
+          m_active_operator = nullptr;
+          update_node([&](auto* node) {});
+        }
+        node_tree->set_active_id(id);
       }
     } break;
     case Event::MouseMove: {
-      auto pos = event.mouse;
-      auto delta = vec2(m_camera->screen_to_world(pos)) -
-                   vec2(m_camera->screen_to_world(g_last_mouse_pos));
-      if (event.button == Event::MouseButtonLeft or
-          g_add_mode == AddMode::Node) {
-        update_node([&](auto* node) { node->type->location += delta; });
+      if (event.button == MouseButton::Left) {
+        if (OpNodeTransform(this).execute(event) == OP_CANCELLED) {
+          return;
+        }
       }
-
-      if (g_add_mode == AddMode::Link) {
-        auto& second = m_links.back();
-        second += delta;
-        m_curves->update_binding(0, m_links.data(),
-                                 sizeof(vec2) * m_links.size());
-      }
+      operator_execute();
+      update_node([&](auto* node) {});
     } break;
     case Event::KeyDown: {
-      if (event.key == Key::Tab) {
-        m_framebuffer_bit = not m_framebuffer_bit;
+      operator_execute();
+      update_node([&](auto* node) {});
+      if (m_keymaps.contains(event.key)) {
+        m_keymaps[event.key]();
       }
     } break;
   }
 }
 
 auto NodeEditor::update() -> void {
+  m_debug_message = m_active_operator ? "Operator" : "";
   auto node_tree = ZCtxt::get().get_node_tree();
+  m_debug_message += fmt::format("\n{}", node_tree->get_links().size());
+
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   ImGui::PopStyleVar();
   if (ImGui::BeginPopupContextWindow("Add Menu",

@@ -36,11 +36,11 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
 
   glfwSetCursorPosCallback(win, [](GLFWwindow* win, double x, double y) {
     auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
-    auto button = Event::MouseButtonNone;
+    auto button = MouseButton::None;
     if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-      button = Event::MouseButtonLeft;
+      button = MouseButton::Left;
     } else if (glfwGetMouseButton(win, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
-      button = Event::MouseButtonRight;
+      button = MouseButton::Right;
     }
 
     Event event = { .kind = Event::MouseMove,
@@ -80,7 +80,7 @@ auto Window::create(int width, int height, const char* name) -> Unique<Window> {
         f64 x, y;
         glfwGetCursorPos(win, &x, &y);
         Event event = { .kind = kind,
-                        .button = (Event::ButtonKind)button,
+                        .button = MouseButton(button),
                         .shift = bool(mods & GLFW_MOD_SHIFT),
                         .ctrl = bool(mods & GLFW_MOD_CONTROL),
                         .alt = bool(mods & GLFW_MOD_ALT),
