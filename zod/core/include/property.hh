@@ -39,7 +39,6 @@ struct Property {
   Property(const char* n, vec3 v) : type(PROP_VEC3), name(n), v3(v) {}
 
   Property(Property&&);
-  auto draw() -> bool;
 
   ~Property();
 };

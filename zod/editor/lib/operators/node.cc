@@ -1,5 +1,5 @@
 #include "operators/node.hh"
-#include "application/context.hh"
+#include "context.hh"
 #include "widgets/panel.hh"
 
 namespace zod {

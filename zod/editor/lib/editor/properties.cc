@@ -1,7 +1,9 @@
 #include "properties.hh"
-#include "application/context.hh"
+#include "context.hh"
 
 namespace zod {
+
+extern auto draw_property(Property&) -> bool;
 
 Properties::Properties()
     : SPanel("Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
@@ -18,7 +20,7 @@ auto Properties::update() -> void {
   ImGui::Spacing();
   for (usize i = 0; i < node->props.size(); ++i) {
     auto& prop = node->props[i];
-    if (prop.draw() and node_tree->get_visualized() == node->type->id) {
+    if (draw_property(prop) and node_tree->get_visualized() == node->type->id) {
       node->update(*node);
     }
   }

@@ -5,7 +5,7 @@
 #include "backend.hh"
 #include "event.hh"
 #include "font.hh"
-#include "nodes/node_tree.hh"
+#include "node_types.hh"
 
 namespace zod {
 

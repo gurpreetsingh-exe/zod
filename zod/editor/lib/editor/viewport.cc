@@ -1,7 +1,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
-#include "application/context.hh"
+#include "context.hh"
 #include "timer.hh"
 #include "viewport.hh"
 #include "widgets/button.hh"

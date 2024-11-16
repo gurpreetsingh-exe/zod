@@ -1,4 +1,4 @@
-#include "application/context.hh"
+#include "context.hh"
 
 #include "io/obj.hh"
 #include "node_editor.hh"

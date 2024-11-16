@@ -8,25 +8,6 @@ namespace zod {
 
 static constexpr int padding = 70;
 
-Property::Property(Property&& prop)
-    : name(prop.name), type(prop.type), subtype(prop.subtype) {
-  switch (prop.type) {
-    case PROP_STRING: {
-      s = prop.s;
-      prop.s = nullptr;
-    } break;
-    case PROP_INT: {
-      i = prop.i;
-    } break;
-    case PROP_FLOAT: {
-      f = prop.f;
-    } break;
-    case PROP_VEC3: {
-      v3 = prop.v3;
-    } break;
-  }
-}
-
 static auto DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
                        float v_speed, const void* p_min, const void* p_max,
                        const char* format, ImGuiSliderFlags flags, ImVec4 color)
@@ -190,39 +171,31 @@ auto DragFloat3(const char* name, f32* value) -> bool {
   return needs_update;
 }
 
-auto Property::draw() -> bool {
-  switch (type) {
+auto draw_property(Property& prop) -> bool {
+  switch (prop.type) {
     case PROP_STRING: {
       ImGui::BeginGroup();
       ImGui::AlignTextToFramePadding();
-      ImGui::Text(name);
+      ImGui::Text(prop.name);
       ImGui::SameLine(padding);
-      needs_update = ImGui::InputText("##", s, 64);
-      if (subtype == PROP_SUBTYPE_FILEPATH) {
+      prop.needs_update = ImGui::InputText("##", prop.s, 64);
+      if (prop.subtype == PROP_SUBTYPE_FILEPATH) {
         ImGui::SameLine();
         ImGui::Button("Open");
       }
       ImGui::EndGroup();
     } break;
     case PROP_INT: {
-      needs_update = ImGui::DragInt(name, &i);
+      prop.needs_update = ImGui::DragInt(prop.name, &prop.i);
     } break;
     case PROP_FLOAT: {
-      needs_update = ImGui::DragFloat(name, &f);
+      prop.needs_update = ImGui::DragFloat(prop.name, &prop.f);
     } break;
     case PROP_VEC3: {
-      needs_update = DragFloat3(name, &v3[0]);
+      prop.needs_update = DragFloat3(prop.name, &prop.v3[0]);
     } break;
   }
-  return needs_update;
-}
-
-Property::~Property() {
-  switch (type) {
-    case PROP_STRING: {
-      delete[] s;
-    } break;
-  }
+  return prop.needs_update;
 }
 
 } // namespace zod

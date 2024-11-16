@@ -1,11 +1,13 @@
 #pragma once
 
-#include "application/context.hh"
 #include "backend.hh"
-#include "nodes/node_tree.hh"
+#include "context.hh"
+#include "node_types.hh"
 #include "widgets/panel.hh"
 
 namespace zod {
+
+constexpr f32 NODE_SIZE = 100.0f;
 
 class NodeEditor : public SPanel {
 public:
