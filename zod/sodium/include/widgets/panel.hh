@@ -12,7 +12,7 @@ struct CameraUniformBufferStorage {
   vec4 direction;
 };
 
-class Operator;
+class IOperator;
 
 inline Shared<GPUUniformBuffer> unit_uniform_buffer = nullptr;
 
@@ -42,7 +42,7 @@ protected:
   Shared<GPUUniformBuffer> m_uniform_buffer;
   Shared<GPUFrameBuffer> m_framebuffer;
   std::unordered_map<KeyCode, std::function<void()>> m_keymaps = {};
-  Operator* m_active_operator = nullptr;
+  IOperator* m_active_operator = nullptr;
   std::string m_debug_message = std::string();
 };
 

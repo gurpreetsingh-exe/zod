@@ -8,18 +8,18 @@ struct Node;
 struct NodeLink;
 
 // TODO: create the operator with an offset input
-class OpNodeTransform : public Operator {
+class OpNodeTransform : public IOperator {
 public:
-  OpNodeTransform(SPanel* panel) : Operator(panel) {}
+  OpNodeTransform(SPanel* panel) : IOperator(panel) {}
 
 public:
   auto execute(Event& event) -> u8 override;
 };
 
-class OpNodeLinkCreateNew : public Operator {
+class OpNodeLinkCreateNew : public IOperator {
 public:
   OpNodeLinkCreateNew(SPanel* panel, Node* from)
-      : Operator(panel), m_from(from) {}
+      : IOperator(panel), m_from(from) {}
 
 public:
   auto execute(Event& event) -> u8 override;
@@ -29,9 +29,9 @@ private:
   NodeLink* m_link = nullptr;
 };
 
-class OpNodeAdd : public Operator {
+class OpNodeAdd : public IOperator {
 public:
-  OpNodeAdd(SPanel* panel, Node* from) : Operator(panel) {}
+  OpNodeAdd(SPanel* panel, Node* from) : IOperator(panel) {}
 
 public:
   auto execute(Event& event) -> u8 override;

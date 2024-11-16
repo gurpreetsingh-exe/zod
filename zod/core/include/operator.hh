@@ -12,12 +12,12 @@ enum OperatorState : u8 {
   OP_CANCELLED,
 };
 
-class Operator {
+class IOperator {
 protected:
-  Operator(SPanel* panel) : m_panel(panel) {}
+  IOperator(SPanel* panel) : m_panel(panel) {}
 
 public:
-  virtual ~Operator() = default;
+  virtual ~IOperator() = default;
   virtual auto execute(Event&) -> u8 = 0;
   auto set_data_ptr(void* data) -> void { m_data = data; }
 
