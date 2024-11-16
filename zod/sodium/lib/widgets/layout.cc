@@ -1,4 +1,5 @@
 #include "widgets/layout.hh"
+#include "timer.hh"
 
 namespace zod {
 
@@ -22,8 +23,7 @@ auto Layout::active() -> SPanel* {
 
 auto Layout::draw(Geometry& g) -> void {
   for (const auto& node : m_areas) {
-    node->draw(g);
-    // GPU_TIME(node->name, { node->draw(g); });
+    GPU_TIME(node->name, { node->draw(g); });
   }
 }
 

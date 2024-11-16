@@ -4,6 +4,7 @@
 #include "node_editor.hh"
 #include "outliner.hh"
 #include "properties.hh"
+#include "timer.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
 
@@ -96,7 +97,7 @@ auto ZCtxt::run(fs::path path) -> void {
         }
 
         ImGui::Separator();
-        for (const auto& [name, time] : m_times) {
+        for (const auto& [name, time] : GPUTimer::get().timings()) {
           ImGui::Text("%s: %.3f ms", name.c_str(), time);
         }
 

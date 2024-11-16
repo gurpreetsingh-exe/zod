@@ -2,6 +2,7 @@
 #include <imgui.h>
 
 #include "application/context.hh"
+#include "timer.hh"
 #include "viewport.hh"
 #include "widgets/button.hh"
 

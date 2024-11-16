@@ -1,6 +1,7 @@
 #include "context.hh"
 #include "backend.hh"
 #include "platform.hh"
+#include "timer.hh"
 
 #ifdef OPENGL_BACKEND
 #include "opengl/backend.hh"
@@ -14,6 +15,7 @@ namespace zod {
 static Shared<GPUContext> g_active_context = nullptr;
 static Unique<GPUBackend> g_backend = nullptr;
 static Shared<GPUState> g_state = nullptr;
+static Unique<GPUTimer> g_timer = nullptr;
 
 #ifdef OPENGL_BACKEND
 static GPUBackendType g_backend_type = GPUBackendType::OpenGL;
@@ -42,6 +44,7 @@ auto gpu_context_create(void* glfw_window) -> Shared<GPUContext> {
   auto context = backend.create_context(glfw_window);
   gpu_context_active_set(context);
   g_state = backend.create_state();
+  g_timer = unique<GPUTimer>();
   return context;
 }
 
@@ -56,5 +59,6 @@ auto gpu_context_active_get() -> Shared<GPUContext> { return g_active_context; }
 
 auto GPUBackend::get() -> GPUBackend& { return *g_backend; }
 auto GPUState::get() -> GPUState& { return *g_state; }
+auto GPUTimer::get() -> GPUTimer& { return *g_timer; }
 
 } // namespace zod
