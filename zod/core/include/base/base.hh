@@ -7,6 +7,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <cxxabi.h>
+#if __cplusplus > 202002L && _GLIBCXX_HAVE_STACKTRACE
+#endif
+#include <execinfo.h>
 #include <experimental/source_location>
 #include <filesystem>
 #include <fmt/core.h>
@@ -75,10 +78,42 @@ struct Addr {
   T inner;
 };
 
+static constexpr bool backtrace_addr2line = true;
+static constexpr std::string_view backtrace_addr2line_options = "-p -C -f";
+static constexpr bool backtrace_llvm_symbolizer = false;
+static constexpr std::string_view backtrace_llvm_symbolizer_options =
+    "-s -p -C -i --color --output-style=GNU";
+
+inline auto print_backtrace() -> void {
+  constexpr usize size = 128;
+  void* trace[size];
+  int n = backtrace(trace, size);
+  char** strings = backtrace_symbols(&trace[0], size);
+  // for (usize i = 0; i < (usize)size; ++i) {
+  //   fmt::println(stderr, "    #{:2} {}", i, strings[i]);
+  // }
+  int skip_value = 1;
+
+  if constexpr (backtrace_addr2line) {
+    for (int i = skip_value; i < n; ++i) {
+      trace[i] = (void*)((std::uintptr_t)trace[i] - 1);
+    }
+
+    std::span<void*> trace_view { &trace[skip_value], &trace[n] };
+
+    std::string command = fmt::format(
+        "addr2line {} -e {} {}", backtrace_addr2line_options,
+        fs::canonical("/proc/self/exe").native(), fmt::join(trace_view, " "));
+    std::system(command.data());
+  }
+}
+
 template <typename... T>
 auto __panic(loc loc, fmt::format_string<T...> fmt, T&&... args) {
   fmt::print(stderr, "panic at {}:{}", loc.file_name(), loc.line());
   fmt::println(stderr, fmt, args...);
+  fmt::println(stderr, "BACKTRACE:");
+  print_backtrace();
   exit(1);
 }
 

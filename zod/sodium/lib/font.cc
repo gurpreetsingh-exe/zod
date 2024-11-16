@@ -4,6 +4,13 @@ namespace zod {
 
 constexpr usize MAX_VERTICES = 64 * 1024;
 
+static Unique<Font> g_font = nullptr;
+
+auto init_font(const fs::path& path) -> void {
+  g_font = unique<Font>();
+  g_font->load_font(path);
+}
+
 struct character_info {
   f32 ax; // advance.x
   f32 ay; // advance.y
@@ -13,6 +20,8 @@ struct character_info {
   f32 bt; // bitmap_top;
   f32 tx; // x offset of glyph in texture coordinates
 } c[128];
+
+auto Font::get() -> Font& { return *g_font; }
 
 Font::Font() {
   if (FT_Init_FreeType(&m_ft)) {
@@ -129,6 +138,10 @@ auto Font::render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void {
 
     m_nvert += 8;
   }
+}
+
+auto Font::render_text_center(const char* text, f32 x, f32 y, f32 s) -> void {
+  render_text(text, x, y - size * s * 0.25, s, s);
 }
 
 auto Font::submit() -> void {

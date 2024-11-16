@@ -1,10 +1,11 @@
 #pragma once
 
+#include "application.hh"
 #include "asset_manager.hh"
 #include "backend.hh"
-#include "imgui_layer.hh"
+#include "event.hh"
+#include "font.hh"
 #include "nodes/node_tree.hh"
-#include "window.hh"
 
 namespace zod {
 
@@ -12,17 +13,13 @@ class Layout;
 
 #define GPU_TIME(name, ...) ZCtxt::get().with_scope(name, [&] __VA_ARGS__);
 
-class ZCtxt {
+class ZCtxt : SApplication {
 public:
   ZCtxt();
   static auto get() -> ZCtxt&;
   static auto create() -> void;
   static auto drop() -> void;
   auto run(fs::path) -> void;
-  auto get_window_size() -> std::tuple<i32, i32> {
-    return m_window->get_size();
-  }
-  auto get_window() -> Window& { return *m_window; }
   auto get_normals() -> Shared<GPUStorageBuffer> { return m_ssbo; }
   auto get_batch() -> Shared<GPUBatch> { return m_batch; }
   auto get_node_tree() -> Shared<NodeTree> { return m_node_tree; }
@@ -45,16 +42,13 @@ private:
   auto on_event(Event&) -> void;
 
 private:
-  Unique<Window> m_window;
   Shared<GPUBatch> m_batch;
   Shared<NodeTree> m_node_tree;
   Shared<GPUStorageBuffer> m_ssbo;
   Shared<GPUStorageBuffer> m_vertex_buffer;
-  Unique<ImGuiLayer> m_imgui_layer;
   std::unordered_map<std::string, Shared<GPUQuery>> m_queries;
   std::unordered_map<std::string, f32> m_times;
   AssetManager m_asset_manager;
-  Unique<Layout> m_layout;
 };
 
 } // namespace zod

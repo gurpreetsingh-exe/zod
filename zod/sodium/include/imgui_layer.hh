@@ -1,6 +1,5 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
@@ -10,7 +9,7 @@ namespace zod {
 
 class ImGuiLayer {
 public:
-  ImGuiLayer(GLFWwindow*);
+  ImGuiLayer(void*);
   ~ImGuiLayer();
 
 public:

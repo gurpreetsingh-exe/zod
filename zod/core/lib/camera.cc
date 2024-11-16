@@ -5,18 +5,6 @@
 
 namespace zod {
 
-auto OrthographicCamera::cursor_wrap(vec2 position) -> void {
-  constexpr f32 padding = 16;
-  if (position.x < m_window_position.x + padding) {
-    auto pos =
-        vec2(m_window_position.x + m_width - padding, Input::get_mouse_pos().y);
-    Input::set_mouse_pos(pos);
-  } else if (position.x > m_window_position.x + m_width - padding) {
-    auto pos = vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
-    Input::set_mouse_pos(pos);
-  }
-}
-
 auto OrthographicCamera::zoom(f32 delta) -> void {
   auto zoom = delta * 0.002f;
   m_zoom *= 1.0f + zoom;
@@ -32,7 +20,7 @@ auto OrthographicCamera::pan(vec2 delta) -> void {
 }
 
 auto OrthographicCamera::update(Event& event) -> bool {
-  vec2 delta = event.mouse - g_last_mouse_pos;
+  vec2 delta = event.mouse - event.last_mouse;
   bool update = false;
   switch (m_mode) {
     case Navigation::Zoom: {
@@ -71,20 +59,8 @@ auto PerspectiveCamera::rotate(vec2 delta) -> void {
   m_direction = normalize(-m_position);
 }
 
-auto PerspectiveCamera::cursor_wrap(vec2 position) -> void {
-  constexpr f32 padding = 16;
-  if (position.x < m_window_position.x + padding) {
-    auto pos =
-        vec2(m_window_position.x + m_width - padding, Input::get_mouse_pos().y);
-    Input::set_mouse_pos(pos);
-  } else if (position.x > m_window_position.x + m_width - padding) {
-    auto pos = vec2(m_window_position.x + padding, Input::get_mouse_pos().y);
-    Input::set_mouse_pos(pos);
-  }
-}
-
 auto PerspectiveCamera::update(Event& event) -> bool {
-  vec2 delta = (event.mouse - g_last_mouse_pos) * 0.28f;
+  vec2 delta = (event.mouse - event.last_mouse) * 0.28f;
   bool update = false;
   switch (m_mode) {
     case Navigation::Zoom: {

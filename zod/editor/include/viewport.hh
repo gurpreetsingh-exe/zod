@@ -5,7 +5,7 @@
 
 namespace zod {
 
-class Viewport : public Panel {
+class Viewport : public SPanel {
 public:
   Viewport();
   auto update(Shared<GPUBatch>) -> void;

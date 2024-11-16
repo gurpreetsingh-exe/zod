@@ -10,7 +10,7 @@ struct NodeLink;
 // TODO: create the operator with an offset input
 class OpNodeTransform : public Operator {
 public:
-  OpNodeTransform(Panel* panel) : Operator(panel) {}
+  OpNodeTransform(SPanel* panel) : Operator(panel) {}
 
 public:
   auto execute(Event& event) -> u8 override;
@@ -18,7 +18,7 @@ public:
 
 class OpNodeLinkCreateNew : public Operator {
 public:
-  OpNodeLinkCreateNew(Panel* panel, Node* from)
+  OpNodeLinkCreateNew(SPanel* panel, Node* from)
       : Operator(panel), m_from(from) {}
 
 public:
@@ -31,7 +31,7 @@ private:
 
 class OpNodeAdd : public Operator {
 public:
-  OpNodeAdd(Panel* panel, Node* from) : Operator(panel) {}
+  OpNodeAdd(SPanel* panel, Node* from) : Operator(panel) {}
 
 public:
   auto execute(Event& event) -> u8 override;

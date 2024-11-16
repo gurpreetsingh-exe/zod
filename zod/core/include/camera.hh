@@ -1,7 +1,6 @@
 #pragma once
 
 #include "event.hh"
-#include "input.hh"
 
 namespace zod {
 
@@ -28,8 +27,9 @@ public:
   auto get_view_projection() const -> const mat4& { return m_view_projection; }
   auto get_direction() const -> const vec3& { return m_direction; }
   auto force_update(bool update) -> void { updating = update; }
-  auto set_pivot_point(vec2 v) -> void { m_pivot_point = screen_to_world(v); }
-  auto set_pivot_at_mouse() -> void { set_pivot_point(Input::get_mouse_pos()); }
+  auto set_pivot_point(vec2 v) -> void {
+    m_pivot_point = screen_to_world({ v.x, m_height - v.y });
+  }
   auto set_navigation(Navigation n) -> void { m_mode = n; }
   auto get_pivot_point() -> vec2 { return m_pivot_point; }
 
@@ -51,7 +51,6 @@ public:
   }
 
   auto screen_to_world(vec2 v) const -> vec4 {
-    v.y = m_height - v.y;
     auto ndc = vec4((v / vec2(m_width, m_height)) * 2.0f - 1.0f, 0.0f, 1.0f);
     return inverse(m_view_projection) * ndc;
   }

@@ -4,7 +4,7 @@
 namespace zod {
 
 Properties::Properties()
-    : Panel("Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
+    : SPanel("Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
 
 auto Properties::update() -> void {
   auto node_tree = ZCtxt::get().get_node_tree();

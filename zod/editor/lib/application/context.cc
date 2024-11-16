@@ -17,14 +17,15 @@ auto ZCtxt::get() -> ZCtxt& { return *g_zcx; }
 auto ZCtxt::create() -> void {
   ZASSERT(not g_zcx);
   g_zcx = new ZCtxt();
+  SApplication::create(g_zcx);
 }
 
 auto ZCtxt::drop() -> void { delete g_zcx; }
 
-ZCtxt::ZCtxt()
-    : m_window(Window::create(1280, 720, "Zod")),
-      m_node_tree(shared<NodeTree>()) {
-  m_imgui_layer = unique<ImGuiLayer>(m_window->get_handle());
+ZCtxt::ZCtxt() : m_node_tree(shared<NodeTree>()) {
+  ZASSERT(not g_zcx);
+  init_window("Zod");
+  init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
   m_layout = unique<Layout>();
   m_window->set_event_callback(std::bind(&ZCtxt::on_event, this, ph::_1));
   m_ssbo = GPUBackend::get().create_storage_buffer();
@@ -32,27 +33,8 @@ ZCtxt::ZCtxt()
 }
 
 auto ZCtxt::on_event(Event& event) -> void {
-  auto pos = m_window->get_mouse_pos();
   if (auto* area = m_layout->active()) {
     area->on_event(event);
-  }
-  switch (event.kind) {
-    case Event::MouseDown: {
-    } break;
-    case Event::MouseMove: {
-    } break;
-    case Event::MouseUp: {
-    } break;
-    case Event::WindowResize: {
-      // auto w = event.size[0];
-      // auto h = event.size[1];
-      // f32 b = border * factor;
-      // f32 pw = w - b * 2;
-      // f32 ph = h - b * 2;
-      // m_framebuffer->resize(w, h);
-    } break;
-    default:
-      break;
   }
 }
 
@@ -83,10 +65,10 @@ auto ZCtxt::run(fs::path path) -> void {
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };
   vec3 surface0 = { 0.15f, 0.16f, 0.17f };
-  m_layout->add_area(unique<Viewport>());
-  m_layout->add_area(unique<NodeEditor>());
-  m_layout->add_area(unique<Properties>());
-  m_layout->add_area(unique<Outliner>());
+  m_layout->add_area(shared<Viewport>());
+  m_layout->add_area(shared<NodeEditor>());
+  m_layout->add_area(shared<Properties>());
+  m_layout->add_area(shared<Outliner>());
   auto g = Geometry();
 
   m_window->is_running([&] {
@@ -98,7 +80,7 @@ auto ZCtxt::run(fs::path path) -> void {
         ImGui::Text("Delta Time: %.3f ms", 1000.0f / io.Framerate);
         static bool vsync = true;
         if (ImGui::Checkbox("V-Sync", &vsync)) {
-          glfwSwapInterval(vsync);
+          m_window->set_vsync(vsync);
         }
 
         static auto offset = vec3(0.0f);

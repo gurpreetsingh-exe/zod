@@ -52,6 +52,6 @@ void main() {
     uint socket_bit = uint(coord.y < 0.0f) + 1;
     uint extra = (uint(1 - visualize_toggle_mask))
                | (uint(1 - socket_mask) << socket_bit);
-    id = (i & (0xffffffff * uint(mask))) | (extra << 24);
+    id = ((i & 0xffffffff) | (extra << 24)) * uint(mask);
 }
 )";

@@ -2,13 +2,12 @@
 
 #include "application/context.hh"
 #include "backend.hh"
-#include "font.hh"
 #include "nodes/node_tree.hh"
 #include "widgets/panel.hh"
 
 namespace zod {
 
-class NodeEditor : public Panel {
+class NodeEditor : public SPanel {
 public:
   NodeEditor();
   auto update() -> void;

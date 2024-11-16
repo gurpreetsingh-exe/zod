@@ -4,7 +4,7 @@
 
 namespace zod {
 
-class Panel;
+class SPanel;
 
 enum OperatorState : u8 {
   OP_RUNNING,
@@ -14,7 +14,7 @@ enum OperatorState : u8 {
 
 class Operator {
 protected:
-  Operator(Panel* panel) : m_panel(panel) {}
+  Operator(SPanel* panel) : m_panel(panel) {}
 
 public:
   virtual ~Operator() = default;
@@ -22,7 +22,7 @@ public:
   auto set_data_ptr(void* data) -> void { m_data = data; }
 
 protected:
-  Panel* m_panel;
+  SPanel* m_panel;
   void* m_data = nullptr;
 };
 

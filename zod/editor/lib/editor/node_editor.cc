@@ -1,4 +1,3 @@
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
 #include "input.hh"
@@ -11,7 +10,7 @@
 namespace zod {
 
 NodeEditor::NodeEditor()
-    : Panel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f), false),
+    : SPanel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f), false),
       m_width(64), m_height(64) {
   m_font = unique<Font>();
   m_font->load_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
@@ -87,8 +86,7 @@ auto NodeEditor::on_event_imp(Event& event) -> void {
       pixel = mouse.x > m_framebuffer->get_width() or
                       mouse.y > m_framebuffer->get_height()
                   ? 0
-                  : m_framebuffer->read_pixel(
-                        1, mouse.x, m_framebuffer->get_height() - mouse.y);
+                  : m_framebuffer->read_pixel(1, mouse.x, mouse.y);
       if (not pixel & 0xffffff) {
         node_tree->set_active_id(0);
         return;
@@ -185,10 +183,10 @@ auto NodeEditor::update() -> void {
 
   for (const auto& node : node_tree->get_nodes()) {
     auto loc = node.type->location;
-    m_font->render_text(node_names[node.type->type], loc.x + 200,
-                        loc.y + 100 - (Font::size >> 2), 1, 1);
+    Font::get().render_text_center(node_names[node.type->type], loc.x + 200,
+                                   loc.y + 100, 1);
   }
-  m_font->submit();
+  Font::get().submit();
   GPUState::get().set_blend(Blend::None);
   m_framebuffer->unbind();
 

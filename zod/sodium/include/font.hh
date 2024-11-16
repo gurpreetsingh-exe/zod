@@ -7,6 +7,8 @@
 
 namespace zod {
 
+auto init_font(const fs::path&) -> void;
+
 class Font {
 public:
   static constexpr usize size = 20;
@@ -16,11 +18,13 @@ public:
   ~Font();
 
 public:
+  static auto get() -> Font&;
   auto load_font(const fs::path&) -> void;
   auto get_texture_atlas() -> void* { return m_texture->get_id(); }
   auto get_width() -> i32 { return m_width; }
   auto get_height() -> i32 { return m_height; }
   auto render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void;
+  auto render_text_center(const char* text, f32 x, f32 y, f32 size) -> void;
   auto submit() -> void;
 
 private:

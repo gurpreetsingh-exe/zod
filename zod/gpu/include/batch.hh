@@ -28,6 +28,8 @@ public:
     return m_vertex_buffers[i];
   }
 
+  auto get_index_buffer() -> Shared<GPUIndexBuffer> { return m_index_buffer; }
+
   auto update_binding(usize index, void* data, usize size) -> void {
     m_vertex_buffers[index]->update_data(data, size);
   }

@@ -19,6 +19,7 @@ set(ZOD_CORE_DIR ${CMAKE_SOURCE_DIR}/zod/core)
 set(ZOD_EDITOR_DIR ${CMAKE_SOURCE_DIR}/zod/editor)
 set(ZOD_COMPILER_DIR ${CMAKE_SOURCE_DIR}/zod/compiler)
 set(ZOD_GPU_DIR ${CMAKE_SOURCE_DIR}/zod/gpu)
+set(SODIUM_DIR ${CMAKE_SOURCE_DIR}/zod/sodium)
 set(ZOD_SHADERS_DIR ${ZOD_GPU_DIR}/shaders)
 set(ZOD_COMPILER_DRIVER ${ZOD_COMPILER_DIR}/lib/driver/zodc.cc)
 set(THIRD_PARTY_DIR ${CMAKE_SOURCE_DIR}/third-party)
@@ -127,6 +128,22 @@ endif()
 target_include_directories(gpu PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(gpu PUBLIC ${ZOD_GPU_DIR}/include)
 target_link_libraries(gpu zodpch stbi)
+target_compile_options(gpu PRIVATE -fsanitize=address)
+target_link_options(gpu PUBLIC -fsanitize=address)
+
+##########################################################################
+# sodium ui
+##########################################################################
+file(GLOB_RECURSE SODIUM_SRC ${SODIUM_DIR}/lib/*.cc)
+add_library(sodium ${SODIUM_SRC})
+if (VULKAN_BACKEND)
+  target_compile_definitions(sodium PRIVATE VULKAN_BACKEND)
+elseif (OPENGL_BACKEND)
+  target_compile_definitions(sodium PRIVATE OPENGL_BACKEND)
+endif()
+target_include_directories(sodium PUBLIC ${ZOD_CORE_DIR}/include)
+target_include_directories(sodium PUBLIC ${SODIUM_DIR}/include)
+target_link_libraries(sodium zodpch zodcore gpu glm::glm glfw imgui freetype pthread ${CMAKE_DL_LIBS})
 
 ##########################################################################
 # zod editor
@@ -141,7 +158,7 @@ endif()
 target_compile_definitions(zod PUBLIC GLFW_INCLUDE_NONE=1)
 target_include_directories(zod PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)
-target_link_libraries(zod zodpch zodcore gpu glm::glm glfw imgui freetype uuid_v4 pthread ${CMAKE_DL_LIBS})
+target_link_libraries(zod zodpch zodcore gpu sodium glm::glm uuid_v4)
 
 ##########################################################################
 # libzc

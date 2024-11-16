@@ -4,7 +4,7 @@
 
 namespace zod {
 
-class Properties : public Panel {
+class Properties : public SPanel {
 public:
   Properties();
   auto update() -> void;

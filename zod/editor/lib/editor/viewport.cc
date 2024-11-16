@@ -9,9 +9,35 @@ namespace zod {
 
 static auto grid = true;
 
+constexpr auto padding = 4.0f;
+constexpr auto inner = 4.0f;
+
+static auto Button(const char* name, bool& enabled) -> void {
+  ImGui::SetNextItemAllowOverlap();
+  auto button_size = ImGui::CalcTextSize(name);
+  auto cursor = ImVec2(ImGui::GetWindowContentRegionMax().x - button_size.x -
+                           padding - inner * 2,
+                       ImGui::GetWindowContentRegionMin().y + padding);
+  ImGui::SetCursorPos(cursor);
+  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(inner, inner));
+  ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.f);
+  if (enabled) {
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0.45f, 0.82f, 1));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0.35f, 0.82f, 1));
+  }
+  ImGui::Button(name);
+  if (enabled) {
+    ImGui::PopStyleColor(2);
+  }
+  if (ImGui::IsItemClicked(0)) {
+    enabled = not enabled;
+  }
+  ImGui::PopStyleVar(2);
+}
+
 Viewport::Viewport()
-    : Panel("Viewport", unique<PerspectiveCamera>(64, 64, 90.0f, 0.01f, 100.0f),
-            false),
+    : SPanel("Viewport",
+             unique<PerspectiveCamera>(64, 64, 90.0f, 0.01f, 100.0f), false),
       m_width(64), m_height(64) {
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(

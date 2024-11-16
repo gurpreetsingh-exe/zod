@@ -4,9 +4,9 @@
 
 namespace zod {
 
-class Outliner : public Panel {
+class Outliner : public SPanel {
 public:
-  Outliner() : Panel("Outliner", unique<OrthographicCamera>(64.0f, 64.0f)) {}
+  Outliner() : SPanel("Outliner", unique<OrthographicCamera>(64.0f, 64.0f)) {}
   auto on_event(Event& event) -> void override;
 
 private:

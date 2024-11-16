@@ -1,14 +1,16 @@
+#include <imgui.h>
+
 #include "widgets/panel.hh"
 
 namespace zod {
 
-Panel::Panel(std::string name, Unique<ICamera> camera, bool padding)
-    : Widget(std::move(name)), m_camera(std::move(camera)), m_padding(padding),
+SPanel::SPanel(std::string name, Unique<ICamera> camera, bool padding)
+    : SWidget(std::move(name)), m_camera(std::move(camera)), m_padding(padding),
       m_uniform_buffer(GPUBackend::get().create_uniform_buffer(
           sizeof(CameraUniformBufferStorage))),
       m_framebuffer(GPUBackend::get().create_framebuffer(64.0f, 64.0f)) {}
 
-auto Panel::on_event(Event& event) -> void {
+auto SPanel::on_event(Event& event) -> void {
   // temporary hack until cursor wrapping isn't fixed
   if (not m_active) {
     return;
@@ -18,7 +20,7 @@ auto Panel::on_event(Event& event) -> void {
     case Event::MouseDown: {
       auto nav = Navigation::None;
       if (event.button == MouseButton::Left) {
-        m_camera->set_pivot_at_mouse();
+        m_camera->set_pivot_point(Input::get_mouse_pos());
         auto any_alt = any_key(Key::LeftAlt, Key::RightAlt);
         if (any_alt and any_key(Key::LeftCtrl, Key::RightCtrl)) {
           nav = Navigation::Zoom;
@@ -50,7 +52,23 @@ auto Panel::on_event(Event& event) -> void {
   on_event_imp(event);
 }
 
-auto Panel::draw(Geometry& g) -> void {
+auto SPanel::bind_window_space_uniform_buffer() -> void {
+  if (not unit_uniform_buffer) {
+    unit_uniform_buffer = GPUBackend::get().create_uniform_buffer(
+        sizeof(CameraUniformBufferStorage));
+    auto storage = CameraUniformBufferStorage {
+      ortho(0.0f, m_size.x, 0.0f, m_size.y, -1.0f, 1.0f),
+      vec4(0.0f),
+    };
+    unit_uniform_buffer->upload_data(&storage,
+                                     sizeof(CameraUniformBufferStorage));
+  }
+  unit_uniform_buffer->bind(1);
+}
+
+auto SPanel::compute_desired_size() -> void {}
+
+auto SPanel::draw(Geometry& g) -> void {
   if (not m_padding) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
   }

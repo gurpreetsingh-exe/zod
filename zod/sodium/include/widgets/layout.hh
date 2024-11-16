@@ -6,16 +6,16 @@ namespace zod {
 
 class Layout {
 public:
-  Layout() : m_areas(std::vector<Unique<Panel>>()) {}
+  Layout() : m_areas(std::vector<Shared<SPanel>>()) {}
 
 public:
-  auto add_area(Unique<Panel>) -> void;
+  auto add_area(Shared<SPanel>) -> void;
   auto on_event(Event&) -> void;
-  auto active() -> Panel*;
+  auto active() -> SPanel*;
   auto draw(Geometry&) -> void;
 
 private:
-  std::vector<Unique<Panel>> m_areas;
+  std::vector<Shared<SPanel>> m_areas;
 };
 
 } // namespace zod
