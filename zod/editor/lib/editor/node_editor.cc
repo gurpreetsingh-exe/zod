@@ -65,6 +65,7 @@ auto NodeEditor::add_node(usize type) -> void {
   auto& node = node_tree->add_node(type, position);
   m_node_ssbo->upload_data(node_tree->get_data(),
                            node_tree->get_size() * sizeof(NodeType));
+  m_active_operator = new OpNodeTransform(this);
 }
 
 auto NodeEditor::on_event_imp(Event& event) -> void {

@@ -14,7 +14,7 @@ auto OpNodeTransform::execute(Event& event) -> u8 {
                     camera.screen_to_world(g_last_mouse_pos));
   delta.y = -delta.y;
   node->type->location += delta;
-  return OP_FINISHED;
+  return OP_RUNNING;
 }
 
 ///////////////////////////////////////////////////////////////
