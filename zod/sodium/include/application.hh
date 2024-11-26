@@ -16,6 +16,7 @@ public:
   static auto get() -> SApplication&;
   auto init_window(std::string) -> void;
   auto active_window() -> SWindow&;
+  auto on_event(Event&) -> void;
 
 protected:
   Unique<Layout> m_layout;

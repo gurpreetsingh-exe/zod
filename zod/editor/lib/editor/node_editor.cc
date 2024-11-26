@@ -2,9 +2,9 @@
 
 #include "input.hh"
 #include "node_editor.hh"
+#include "nodes.hh"
 #include "operators/node.hh"
 #include "widgets/button.hh"
-
 #include "curve.hh"
 
 namespace zod {
@@ -12,8 +12,6 @@ namespace zod {
 NodeEditor::NodeEditor()
     : SPanel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f), false),
       m_width(64), m_height(64) {
-  m_font = unique<Font>();
-  m_font->load_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
       GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, m_width, m_height,
@@ -152,8 +150,7 @@ auto NodeEditor::update() -> void {
   auto node_tree = ZCtxt::get().get_node_tree();
   m_debug_message += fmt::format("\n{}", node_tree->get_links().size());
 
-  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-  ImGui::PopStyleVar();
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
   if (ImGui::BeginPopupContextWindow("Add Menu",
                                      ImGuiPopupFlags_MouseButtonRight)) {
     for (usize i = 1; i < TOTAL_NODES; ++i) {
@@ -164,6 +161,7 @@ auto NodeEditor::update() -> void {
 
     ImGui::EndPopup();
   }
+  ImGui::PopStyleVar();
 
   m_uniform_buffer->bind(1);
   m_framebuffer->bind();

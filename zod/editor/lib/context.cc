@@ -28,7 +28,6 @@ ZCtxt::ZCtxt() : m_node_tree(shared<NodeTree>()) {
   init_window("Zod");
   init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
   m_layout = unique<Layout>();
-  m_window->set_event_callback(std::bind(&ZCtxt::on_event, this, ph::_1));
   m_ssbo = GPUBackend::get().create_storage_buffer();
   m_vertex_buffer = GPUBackend::get().create_storage_buffer();
 }

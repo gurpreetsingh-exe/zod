@@ -7,8 +7,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <cxxabi.h>
-#if __cplusplus > 202002L && _GLIBCXX_HAVE_STACKTRACE
-#endif
 #include <execinfo.h>
 #include <experimental/source_location>
 #include <filesystem>
