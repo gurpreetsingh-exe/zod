@@ -1,10 +1,7 @@
 #pragma once
 
+#include "shaders_generated.hh"
 #include "types.hh"
-
-#define X(name) extern const char* g_##name;
-#include "shaders.def"
-#undef X
 
 namespace zod {
 

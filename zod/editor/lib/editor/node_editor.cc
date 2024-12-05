@@ -1,11 +1,11 @@
 #include <imgui.h>
 
+#include "curve.hh"
 #include "input.hh"
 #include "node_editor.hh"
 #include "nodes.hh"
 #include "operators/node.hh"
 #include "widgets/button.hh"
-#include "curve.hh"
 
 namespace zod {
 
@@ -25,18 +25,18 @@ NodeEditor::NodeEditor()
   m_framebuffer->check();
   m_framebuffer->unbind();
 
-  m_shader =
-      GPUBackend::get().create_shader(GPUShaderCreateInfo("node_editor")
-                                          .vertex_source(g_fullscreen)
-                                          .fragment_source(g_node_editor_frag));
+  m_shader = GPUBackend::get().create_shader(
+      GPUShaderCreateInfo("node_editor")
+          .vertex_source(g_fullscreen_src)
+          .fragment_source(g_node_editor_frag_src));
   m_node_shader =
       GPUBackend::get().create_shader(GPUShaderCreateInfo("node")
-                                          .vertex_source(g_node_vert)
-                                          .fragment_source(g_node_frag));
-  m_line_shader =
-      GPUBackend::get().create_shader(GPUShaderCreateInfo("line")
-                                          .vertex_source(g_vertex2d)
-                                          .fragment_source(g_flat_color_frag));
+                                          .vertex_source(g_node_vert_src)
+                                          .fragment_source(g_node_frag_src));
+  m_line_shader = GPUBackend::get().create_shader(
+      GPUShaderCreateInfo("line")
+          .vertex_source(g_vertex2d_src)
+          .fragment_source(g_flat_color_frag_src));
 
   f32 position[] = { 0, 0, 1, 0, 0, 1, 1, 1 };
   m_batch = GPUBackend::get().create_batch(

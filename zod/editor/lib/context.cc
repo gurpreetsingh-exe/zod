@@ -60,7 +60,7 @@ auto ZCtxt::run(fs::path path) -> void {
   }
 
   auto transform = GPUBackend::get().create_shader(
-      GPUShaderCreateInfo("transform").compute_source(g_transform_comp));
+      GPUShaderCreateInfo("transform").compute_source(g_transform_comp_src));
 
   constexpr vec4 base = { 30. / 255., 30. / 255., 46. / 255., 1.0f };
   constexpr vec4 mantle = { 0.07f, 0.08f, 0.08f, 1.0f };

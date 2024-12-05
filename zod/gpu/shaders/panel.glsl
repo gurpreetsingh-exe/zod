@@ -1,7 +1,6 @@
-const char* g_panel = R"(
 #version 450
 
-layout (packed) uniform UIUbo {
+layout(packed) uniform UIUbo {
   int width;
   int height;
 };
@@ -19,8 +18,8 @@ void main() {
   vec2 aspect = vec2(1.0f, float(height) / float(width));
   vec2 hsize = size * 0.5;
   vec2 center = (uv - 0.5) * size * aspect;
-  float c = length(max((abs(center) - hsize * 0.99 * aspect) + border * aspect, 0));
+  float c =
+      length(max((abs(center) - hsize * 0.99 * aspect) + border * aspect, 0));
   color = vec4(vec3(step(c, border)), 1.0f);
   // color = vec4(center, 0.0f, 1.0f);
 }
-)";

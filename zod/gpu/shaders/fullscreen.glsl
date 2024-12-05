@@ -1,4 +1,3 @@
-const char* g_fullscreen = R"(
 #version 450
 
 out vec2 uv;
@@ -9,4 +8,3 @@ void main(void) {
   uv = .5f * vec2(x, y);
   gl_Position = vec4(x - 1.f, y - 1.f, 0.f, 1.f);
 }
-)";

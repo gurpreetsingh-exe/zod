@@ -1,4 +1,3 @@
-// const char* g_rect_vert = R"(
 // #version 450
 
 // layout (packed) uniform UIUbo {
@@ -29,14 +28,10 @@
 //   }
 //   gl_Position = view_projection_mat * vec4(p, 0.f, 1.f);
 // }
-// )";
 
-const char* g_rect_vert = R"(
 #version 450
 
-layout (packed) uniform UIUbo {
-    mat4 view_projection_mat;
-};
+layout(packed) uniform UIUbo { mat4 view_projection_mat; };
 
 uniform int u_x;
 uniform int u_y;
@@ -65,4 +60,3 @@ void main() {
   }
   gl_Position = view_projection_mat * vec4(p, 0.f, 1.f);
 }
-)";

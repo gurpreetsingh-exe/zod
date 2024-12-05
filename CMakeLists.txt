@@ -127,7 +127,8 @@ endif()
 
 target_include_directories(gpu PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(gpu PUBLIC ${ZOD_GPU_DIR}/include)
-target_link_libraries(gpu zodpch stbi)
+add_subdirectory(${ZOD_GPU_DIR} shaderlib)
+target_link_libraries(gpu shaderlib zodpch stbi)
 target_compile_options(gpu PRIVATE -fsanitize=address)
 target_link_options(gpu PUBLIC -fsanitize=address)
 

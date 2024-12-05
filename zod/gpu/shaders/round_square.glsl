@@ -1,4 +1,3 @@
-const char* g_round_cube = R"(
 #version 450
 
 in vec2 uv;
@@ -12,4 +11,3 @@ void main() {
   c = step(c, 0.4f);
   color = vec4(c, c, c, 1.0f);
 }
-)";

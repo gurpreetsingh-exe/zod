@@ -51,8 +51,8 @@ Viewport::Viewport()
 
   m_shader =
       GPUBackend::get().create_shader(GPUShaderCreateInfo("view_3d")
-                                          .vertex_source(g_view3d_vert)
-                                          .fragment_source(g_view3d_frag));
+                                          .vertex_source(g_view3d_vert_src)
+                                          .fragment_source(g_view3d_frag_src));
 
   f32 position[] = {
     -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1,
@@ -68,15 +68,15 @@ Viewport::Viewport()
 
   m_cubemap_shader =
       GPUBackend::get().create_shader(GPUShaderCreateInfo("cubemap")
-                                          .vertex_source(g_cubemap_vert)
-                                          .fragment_source(g_cubemap_frag));
+                                          .vertex_source(g_cubemap_vert_src)
+                                          .fragment_source(g_cubemap_frag_src));
 
   // Shader taken from
   // https://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/
   m_grid_shader =
       GPUBackend::get().create_shader(GPUShaderCreateInfo("grid")
-                                          .vertex_source(g_grid_vert)
-                                          .fragment_source(g_grid_frag));
+                                          .vertex_source(g_grid_vert_src)
+                                          .fragment_source(g_grid_frag_src));
 }
 
 auto Viewport::draw_cubemap() -> void {

@@ -48,8 +48,8 @@ Font::Font() {
 
   m_text_shader =
       GPUBackend::get().create_shader(GPUShaderCreateInfo("text")
-                                          .vertex_source(g_text_vert)
-                                          .fragment_source(g_text_frag));
+                                          .vertex_source(g_text_vert_src)
+                                          .fragment_source(g_text_frag_src));
 }
 
 auto Font::load_font(const fs::path& path) -> void {
