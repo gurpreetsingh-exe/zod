@@ -2,7 +2,9 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 
+#include "platform.hh"
 #include "property.hh"
+#include "application.hh"
 
 namespace zod {
 
@@ -117,7 +119,7 @@ static auto DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
     ImGui::MarkItemEdited(id);
   }
 
-  char value_buf[64];
+  char value_buf[STRING_PROP_MAX_SIZE];
   const char* value_buf_end =
       value_buf + ImGui::DataTypeFormatString(value_buf,
                                               IM_ARRAYSIZE(value_buf),
@@ -178,10 +180,20 @@ auto draw_property(Property& prop) -> bool {
       ImGui::AlignTextToFramePadding();
       ImGui::Text(prop.name);
       ImGui::SameLine(padding);
-      prop.needs_update = ImGui::InputText("##", prop.s, 64);
       if (prop.subtype == PROP_SUBTYPE_FILEPATH) {
+        ImGui::PushMultiItemsWidths(2, ImGui::CalcItemWidth());
+      }
+      prop.needs_update = ImGui::InputText("##", prop.s, STRING_PROP_MAX_SIZE);
+      if (prop.subtype == PROP_SUBTYPE_FILEPATH) {
+        ImGui::PopItemWidth();
         ImGui::SameLine();
-        ImGui::Button("Open");
+        if (ImGui::Button("Open")) {
+          auto path = open_dialog(SApplication::get().working_directory() / "");
+          ZASSERT(path.size() < STRING_PROP_MAX_SIZE);
+          memcpy(prop.s, path.c_str(), path.size());
+          prop.needs_update = true;
+        }
+        ImGui::PopItemWidth();
       }
       ImGui::EndGroup();
     } break;
@@ -192,7 +204,10 @@ auto draw_property(Property& prop) -> bool {
       prop.needs_update = ImGui::DragFloat(prop.name, &prop.f);
     } break;
     case PROP_VEC3: {
-      prop.needs_update = DragFloat3(prop.name, &prop.v3[0]);
+      prop.needs_update = prop.subtype == PROP_SUBTYPE_COLOR
+                              ? ImGui::ColorEdit3(prop.name, &prop.v3[0],
+                                                  ImGuiColorEditFlags_Float)
+                              : DragFloat3(prop.name, &prop.v3[0]);
     } break;
   }
   return prop.needs_update;

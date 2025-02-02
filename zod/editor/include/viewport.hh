@@ -23,6 +23,7 @@ private:
   f32 m_width;
   f32 m_height;
   Shared<GPUShader> m_shader;
+  Shared<GPUTexture> m_cubemap = nullptr;
   Shared<GPUBatch> m_cubemap_batch;
   Shared<GPUShader> m_cubemap_shader;
   Shared<GPUShader> m_grid_shader;

@@ -95,6 +95,10 @@ auto GLFrameBuffer::clear() -> void {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+auto GLFrameBuffer::clear_color(vec4 color) -> void {
+  glClearColor(color.x, color.y, color.z, color.w);
+}
+
 auto GLFrameBuffer::add_color_attachment(GPUAttachment& attach) -> void {
   auto multisampled = m_samples > 1;
   auto gl_tex = static_pointer_cast<GLTexture>(attach.texture);

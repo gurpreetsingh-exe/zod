@@ -35,6 +35,7 @@ ImGuiLayer::ImGuiLayer(void* win) {
   auto fg = ImVec4 { 0.2f, 0.22f, 0.23f, 1.0f };
   auto hover = ImVec4 { 0.3f, 0.32f, 0.32f, 1.0f };
   auto active = ImVec4 { 0.15f, 0.16f, 0.17f, 1.0f };
+  auto tab_inactive = ImVec4 { 0.1f, 0.12f, 0.13f, 1.0f };
 
   // colors[ImGuiCol_Border] = active;
   colors[ImGuiCol_WindowBg] = bg;
@@ -50,10 +51,10 @@ ImGuiLayer::ImGuiLayer(void* win) {
   colors[ImGuiCol_FrameBgHovered] = fg;
   colors[ImGuiCol_FrameBgActive] = active;
 
-  colors[ImGuiCol_Tab] = pink;
+  colors[ImGuiCol_Tab] = tab_inactive;
   colors[ImGuiCol_TabHovered] = active;
   colors[ImGuiCol_TabActive] = active;
-  colors[ImGuiCol_TabUnfocused] = pink;
+  colors[ImGuiCol_TabUnfocused] = tab_inactive;
   colors[ImGuiCol_TabUnfocusedActive] = active;
 
   colors[ImGuiCol_TitleBg] = bg;

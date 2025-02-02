@@ -10,8 +10,6 @@ namespace zod {
 #define NODE_NONE_PLACEHOLDER [NODE_NONE] = [](Node&) {}
 #define GET_PROP(prop) node.props[prop]
 
-extern auto draw_property(Property&) -> bool;
-
 /// File Node
 enum {
   NODE_FILE_PATH,
@@ -25,8 +23,8 @@ NodeInitFn node_init_functions[TOTAL_NODES] = {
       [](Node& node) {
         node.outputs.push_back(NodeSocket());
 
-        node.props.push_back(
-            Property("Path", new char[64], PROP_SUBTYPE_FILEPATH));
+        node.props.push_back(Property("Path", new char[STRING_PROP_MAX_SIZE],
+                                      PROP_SUBTYPE_FILEPATH));
       },
   [NODE_TRANSFORM] =
       [](Node& node) {
@@ -52,7 +50,7 @@ NodeUpdateFn node_update_functions[TOTAL_NODES] = {
   [NODE_FILE] =
       [](Node& node) {
         const auto& path = GET_PROP(NODE_FILE_PATH);
-        if (strnlen(path.s, 64) == 0) {
+        if (strnlen(path.s, STRING_PROP_MAX_SIZE) == 0) {
           return;
         }
         auto& mgr = ZCtxt::get().get_asset_manager();

@@ -33,6 +33,8 @@ public:
                               bool /* bindless */) -> Shared<GPUTexture> = 0;
   virtual auto create_texture(GPUTextureType, GPUTextureFormat, const fs::path&)
       -> Shared<GPUTexture> = 0;
+  virtual auto create_texture(GPUTextureType, const fs::path&)
+      -> Shared<GPUTexture> = 0;
   virtual auto create_uniform_buffer(usize /* size_in_bytes */)
       -> Shared<GPUUniformBuffer> = 0;
   virtual auto create_vertex_buffer() -> Shared<GPUVertexBuffer> = 0;

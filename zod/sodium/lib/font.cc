@@ -150,7 +150,9 @@ auto Font::submit() -> void {
   m_text_shader->bind();
   m_texture->bind();
   m_text_shader->uniform_int("u_texture", ADDR(0));
+  GPUState::get().set_blend(Blend::Alpha);
   m_batch->draw(m_text_shader, (m_nvert >> 3) * 6);
+  GPUState::get().set_blend(Blend::None);
   m_nvert = 0;
 }
 

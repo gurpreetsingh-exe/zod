@@ -24,6 +24,7 @@ public:
   auto resize(i32, i32) -> void override;
   auto check() -> void override;
   auto clear() -> void override;
+  auto clear_color(vec4) -> void override;
   auto add_color_attachment(GPUAttachment&) -> void override;
   auto add_depth_attachment() -> void override;
 

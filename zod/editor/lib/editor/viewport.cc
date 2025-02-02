@@ -9,6 +9,8 @@
 namespace zod {
 
 static auto grid = true;
+static auto render = false;
+static auto cursor_position = 0.0f;
 
 constexpr auto padding = 4.0f;
 constexpr auto inner = 4.0f;
@@ -16,15 +18,17 @@ constexpr auto inner = 4.0f;
 static auto Button(const char* name, bool& enabled) -> void {
   ImGui::SetNextItemAllowOverlap();
   auto button_size = ImGui::CalcTextSize(name);
-  auto cursor = ImVec2(ImGui::GetWindowContentRegionMax().x - button_size.x -
-                           padding - inner * 2,
-                       ImGui::GetWindowContentRegionMin().y + padding);
+  cursor_position = ImGui::GetWindowContentRegionMax().x - button_size.x -
+                    padding - inner * 2 - cursor_position;
+  auto cursor =
+      ImVec2(cursor_position, ImGui::GetWindowContentRegionMin().y + padding);
+  cursor_position = button_size.x + padding + inner * 2;
   ImGui::SetCursorPos(cursor);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(inner, inner));
   ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 2.f);
   if (enabled) {
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0.45f, 0.82f, 1));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0.35f, 0.82f, 1));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0, 0.45f, 0.82f, 1));
   }
   ImGui::Button(name);
   if (enabled) {
@@ -34,6 +38,14 @@ static auto Button(const char* name, bool& enabled) -> void {
     enabled = not enabled;
   }
   ImGui::PopStyleVar(2);
+}
+
+static auto load_env() -> Shared<GPUTexture> {
+  const auto& env = ZCtxt::get().get_env();
+  const auto path = fs::path(env.hdr.s);
+  return fs::exists(path) ? GPUBackend::get().create_texture(
+                                GPUTextureType::TextureCube, path)
+                          : nullptr;
 }
 
 Viewport::Viewport()
@@ -71,6 +83,8 @@ Viewport::Viewport()
                                           .vertex_source(g_cubemap_vert_src)
                                           .fragment_source(g_cubemap_frag_src));
 
+  m_cubemap = load_env();
+
   // Shader taken from
   // https://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/
   m_grid_shader =
@@ -80,8 +94,14 @@ Viewport::Viewport()
 }
 
 auto Viewport::draw_cubemap() -> void {
+  if (not m_cubemap) {
+    m_framebuffer->clear_color(vec4(1.0f, 0.0f, 1.0f, 1.0f));
+    return;
+  }
   GPUState::get().set_depth_test(Depth::LessEqual);
   m_cubemap_shader->bind();
+  m_cubemap->bind();
+  m_cubemap_shader->uniform_int("u_cubemap", ADDR(0));
   m_cubemap_batch->draw(m_cubemap_shader);
   GPUState::get().set_depth_test(Depth::Less);
 }
@@ -102,27 +122,56 @@ auto Viewport::on_event_imp(Event& event) -> void {
 }
 
 auto Viewport::update(Shared<GPUBatch> batch) -> void {
-  m_framebuffer->bind();
-  m_uniform_buffer->bind();
-  m_framebuffer->clear();
-  GPUState::get().set_depth_test(Depth::Less);
-  GPUState::get().set_blend(Blend::Alpha);
-  GPU_TIME("mesh", {
-    m_shader->bind();
-    batch->draw(m_shader);
-  });
-  GPU_TIME("cubemap", { draw_cubemap(); });
-  if (grid) {
-    GPU_TIME("grid", { draw_grid(); });
+  auto t = ZCtxt::get().get_texture();
+  if (m_size != t->get_size()) {
+    t->resize(m_size.x, m_size.y);
   }
-  GPUState::get().set_depth_test(Depth::None);
-  GPUState::get().set_blend(Blend::None);
-  m_framebuffer->unbind();
+  if (render) {
+    GPU_TIME("compute", {
+      auto shader = ZCtxt::get().get_rd_shader();
+      shader->bind();
+      shader->uniform_uint("u_width", ADDR(u32(m_size.x)));
+      shader->uniform_uint("u_height", ADDR(u32(m_size.y)));
+      t->bind();
+      glBindImageTexture(0, (u32)(intptr_t)t->get_id(), 0, GL_FALSE, 0,
+                         GL_READ_WRITE, GL_RGBA8);
+      shader->uniform_int("u_texture", ADDR(0));
+      shader->dispatch(m_size.x, m_size.y, 1);
+    });
+  } else {
+    m_framebuffer->bind();
+    m_uniform_buffer->bind();
+    m_framebuffer->clear();
+    auto& env = ZCtxt::get().get_env();
+    if (env.mode == LightingMode::SolidColor) {
+      m_framebuffer->clear_color(vec4(env.color.v3, 1.0f));
+    }
+    GPUState::get().set_depth_test(Depth::Less);
+    GPUState::get().set_blend(Blend::Alpha);
+    GPU_TIME("mesh", {
+      m_shader->bind();
+      batch->draw(m_shader);
+    });
+    if (env.mode == LightingMode::Texture) {
+      if (env.hdr.needs_update) {
+        m_cubemap = load_env();
+      }
+      GPU_TIME("cubemap", { draw_cubemap(); });
+    }
+    if (grid) {
+      GPU_TIME("grid", { draw_grid(); });
+    }
+    GPUState::get().set_depth_test(Depth::None);
+    GPUState::get().set_blend(Blend::None);
+    m_framebuffer->unbind();
+  }
 
-  auto& texture = m_framebuffer->get_slot(0).texture;
+  auto& texture = render ? t : m_framebuffer->get_slot(0).texture;
   ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
                ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
   Button("Grid", grid);
+  Button("Render", render);
+  cursor_position = 0.0f;
 }
 
 } // namespace zod

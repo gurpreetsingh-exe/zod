@@ -1,5 +1,6 @@
 #include <stb_image.h>
 
+#include "backend.hh"
 #include "opengl/texture.hh"
 
 namespace zod {
@@ -106,7 +107,114 @@ GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format,
   stbi_image_free(data);
 }
 
-auto GLTexture::blit(f32 x, f32 y, f32 width, f32 height, void* pixels)
+GLTexture::GLTexture(GPUTextureType type, const fs::path& path)
+    : GPUTexture(type, GPUTextureFormat::RGBA32F) {
+  m_target = to_gl(type);
+  glCreateTextures(m_target, 1, &m_id);
+  glBindTexture(m_target, m_id);
+
+  i32 channels = 0;
+  i32 w = 0;
+  i32 h = 0;
+  auto data = stbi_loadf(path.c_str(), &w, &h, &channels, 0);
+  auto fmt = GL_NONE;
+  m_format = GPUTextureFormat::RGBA32F;
+  switch (channels) {
+    case 3: {
+      fmt = GL_RGB;
+      m_format = GPUTextureFormat::RGB32F;
+    } break;
+    case 4: {
+      fmt = GL_RGBA;
+      m_format = GPUTextureFormat::RGBA32F;
+    } break;
+    default: {
+      fmt::println("{}", channels);
+      assert(0);
+    }
+  }
+
+  switch (m_target) {
+    case GL_TEXTURE_2D: {
+      glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexImage2D(m_target, 0, to_gl(m_format), w, h, 0, fmt, GL_FLOAT, data);
+    } break;
+    case GL_TEXTURE_CUBE_MAP: {
+      m_width = 1000;
+      m_height = 1000;
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      for (u32 i = 0; i < 6; ++i) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, to_gl(m_format),
+                     1000, 1000, 0, fmt, GL_FLOAT, nullptr);
+      }
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
+      glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
+
+      if (not data) {
+        fmt::println("data not found");
+        return;
+      }
+
+      glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+      auto shader = GPUBackend::get().create_shader(
+          GPUShaderCreateInfo("panorama_to_cubemap")
+              .vertex_source(g_fullscreen_src)
+              .fragment_source(g_panorama_to_cubemap_frag_src));
+      GLuint hdri;
+      glCreateTextures(GL_TEXTURE_2D, 1, &hdri);
+      glBindTexture(GL_TEXTURE_2D, hdri);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexImage2D(GL_TEXTURE_2D, 0, to_gl(m_format), w, h, 0, fmt, GL_FLOAT,
+                   data);
+
+      u32 fbo;
+      glGenFramebuffers(1, &fbo);
+      glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+      bind();
+      glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                             GL_TEXTURE_CUBE_MAP_POSITIVE_X, m_id, 0);
+      unbind();
+
+      if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        fmt::println("framebuffer status not complete\n");
+      }
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+      for (u32 i = 0; i < 6; ++i) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        u32 side = i;
+        bind();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + side, m_id, 0);
+
+        GLint view[4];
+        glGetIntegerv(GL_VIEWPORT, view);
+        glViewport(0, 0, i32(m_width), i32(m_height));
+
+        glBindTexture(GL_TEXTURE_2D, hdri);
+        shader->bind();
+        shader->uniform_uint("u_panorama", ADDR(0U));
+        shader->uniform_int("u_current_face", (i32*)&i);
+
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(view[0], view[1], view[2], view[3]);
+      }
+      glDeleteFramebuffers(1, &fbo);
+    } break;
+    default:
+      assert(false && "Not implemented");
+  }
+  stbi_image_free(data);
+}
+
+auto GLTexture::blit(f32 x, f32 y, f32 width, f32 height, const void* pixels)
     -> void {
   glTexSubImage2D(m_target, 0, x, y, width, height, gl_format(m_format),
                   GL_UNSIGNED_BYTE, pixels);

@@ -7,6 +7,6 @@ uniform int u_width;
 uniform int u_height;
 
 void main() {
-  vec3 surface0 = vec3(0.15f, 0.16f, 0.17f);
+  vec3 surface0 = vec3(0.07f, 0.08f, 0.08f);
   color = vec4(surface0, 1.0f);
 }

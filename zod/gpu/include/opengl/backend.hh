@@ -61,6 +61,11 @@ public:
     return shared<GLTexture>(type, format, path);
   }
 
+  auto create_texture(GPUTextureType type, const fs::path& path)
+      -> Shared<GPUTexture> override {
+    return shared<GLTexture>(type, path);
+  }
+
   auto create_uniform_buffer(usize size) -> Shared<GPUUniformBuffer> override {
     return shared<GLUniformBuffer>(size);
   }

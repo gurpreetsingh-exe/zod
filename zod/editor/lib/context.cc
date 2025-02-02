@@ -1,5 +1,6 @@
 #include "context.hh"
 
+#include "environment_light.hh"
 #include "io/obj.hh"
 #include "node_editor.hh"
 #include "outliner.hh"
@@ -15,21 +16,27 @@ static ZCtxt* g_zcx = nullptr;
 
 auto ZCtxt::get() -> ZCtxt& { return *g_zcx; }
 
-auto ZCtxt::create() -> void {
+auto ZCtxt::create(fs::path path) -> void {
   ZASSERT(not g_zcx);
-  g_zcx = new ZCtxt();
+  g_zcx = new ZCtxt(std::move(path));
   SApplication::create(g_zcx);
 }
 
 auto ZCtxt::drop() -> void { delete g_zcx; }
 
-ZCtxt::ZCtxt() : m_node_tree(shared<NodeTree>()) {
+ZCtxt::ZCtxt(fs::path path) : m_node_tree(shared<NodeTree>()) {
   ZASSERT(not g_zcx);
+  m_working_directory = std::move(path);
   init_window("Zod");
   init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
   m_layout = unique<Layout>();
   m_ssbo = GPUBackend::get().create_storage_buffer();
   m_vertex_buffer = GPUBackend::get().create_storage_buffer();
+  m_texture = GPUBackend::get().create_texture(
+      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8,
+      i32(m_window->get_size().x), i32(m_window->get_size().y), false);
+  m_rd_shader = GPUBackend::get().create_shader(
+      GPUShaderCreateInfo("rd").compute_source(g_rd_comp_src));
 }
 
 auto ZCtxt::on_event(Event& event) -> void {
@@ -68,6 +75,7 @@ auto ZCtxt::run(fs::path path) -> void {
   m_layout->add_area(shared<Viewport>());
   m_layout->add_area(shared<NodeEditor>());
   m_layout->add_area(shared<Properties>());
+  m_layout->add_area(shared<EnvironmentLight>());
   m_layout->add_area(shared<Outliner>());
   auto g = Geometry();
 

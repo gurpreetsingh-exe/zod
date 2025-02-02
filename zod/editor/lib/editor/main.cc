@@ -13,7 +13,7 @@ auto main(int argc, char** argv) -> int {
   if (fs::is_directory(path)) {
     eprintln("\"{}\" is a directory", path.string());
   }
-  ZCtxt::create();
+  ZCtxt::create(fs::canonical(fs::absolute(argv[0])).parent_path());
   ZCtxt::get().run(std::move(path));
   ZCtxt::drop();
 }

@@ -3,8 +3,6 @@
 
 namespace zod {
 
-extern auto draw_property(Property&) -> bool;
-
 Properties::Properties()
     : SPanel("Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
 
