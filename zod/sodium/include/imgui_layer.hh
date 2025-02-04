@@ -27,8 +27,7 @@ private:
   bool m_opt_fullscreen = true;
   bool m_opt_padding = false;
   ImGuiDockNodeFlags m_dockspace_flags = ImGuiDockNodeFlags_None;
-  ImGuiWindowFlags m_window_flags =
-      ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+  ImGuiWindowFlags m_window_flags = ImGuiWindowFlags_NoDocking;
   vec2 m_dim = { 600, 600 };
 };
 

@@ -41,6 +41,7 @@ public:
   }
 
   auto get_native_handle() -> void* { return m_window; }
+  auto close() -> void;
 
 private:
   GLFWwindow* m_window;

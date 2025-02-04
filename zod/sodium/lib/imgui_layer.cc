@@ -4,7 +4,18 @@
 
 #include "imgui_layer.hh"
 
+#include "application.hh"
+
 namespace zod {
+
+auto pink = ImVec4 { 1.0f, 0.0f, 1.0f, 1.0f };
+auto bg = ImVec4 { 0.07f, 0.08f, 0.08f, 1.0f };
+auto fg = ImVec4 { 0.2f, 0.22f, 0.23f, 1.0f };
+auto active = ImVec4 { 0.15f, 0.16f, 0.17f, 1.0f };
+auto tab_inactive = ImVec4 { 0.1f, 0.12f, 0.13f, 1.0f };
+// #0070e0
+auto blue = ImVec4 { 0.0f, 0.44f, 0.878f, 1.0f };
+auto hover = ImVec4 { 0.3f, 0.32f, 0.32f, 1.0f };
 
 ImGuiLayer::ImGuiLayer(void* win) {
   auto* window = (GLFWwindow*)win;
@@ -29,13 +40,6 @@ ImGuiLayer::ImGuiLayer(void* win) {
   style.ChildRounding = 3.f;
 
   auto& colors = style.Colors;
-  auto pink = ImVec4 { 1.0f, 0.0f, 1.0f, 1.0f };
-
-  auto bg = ImVec4 { 0.07f, 0.08f, 0.08f, 1.0f };
-  auto fg = ImVec4 { 0.2f, 0.22f, 0.23f, 1.0f };
-  auto hover = ImVec4 { 0.3f, 0.32f, 0.32f, 1.0f };
-  auto active = ImVec4 { 0.15f, 0.16f, 0.17f, 1.0f };
-  auto tab_inactive = ImVec4 { 0.1f, 0.12f, 0.13f, 1.0f };
 
   // colors[ImGuiCol_Border] = active;
   colors[ImGuiCol_WindowBg] = bg;
@@ -44,11 +48,11 @@ ImGuiLayer::ImGuiLayer(void* win) {
   colors[ImGuiCol_HeaderActive] = active;
 
   colors[ImGuiCol_Button] = fg;
-  colors[ImGuiCol_ButtonHovered] = hover;
+  colors[ImGuiCol_ButtonHovered] = fg;
   colors[ImGuiCol_ButtonActive] = active;
 
   colors[ImGuiCol_FrameBg] = active;
-  colors[ImGuiCol_FrameBgHovered] = fg;
+  colors[ImGuiCol_FrameBgHovered] = active;
   colors[ImGuiCol_FrameBgActive] = active;
 
   colors[ImGuiCol_Tab] = tab_inactive;
@@ -63,6 +67,9 @@ ImGuiLayer::ImGuiLayer(void* win) {
 
   colors[ImGuiCol_SliderGrab] = hover;
   colors[ImGuiCol_SliderGrabActive] = hover;
+
+  colors[ImGuiCol_MenuBarBg] = fg;
+  colors[ImGuiCol_PopupBg] = fg;
 }
 
 void ImGuiLayer::begin_frame() {
@@ -111,6 +118,31 @@ void ImGuiLayer::begin_frame() {
   }
 
   ImGui::End();
+
+  ImGui::PushStyleColor(ImGuiCol_Border, fg);
+  if (ImGui::BeginMainMenuBar()) {
+    if (ImGui::BeginMenu("File")) {
+      if (ImGui::MenuItem("New")) {
+        TODO();
+      }
+      if (ImGui::BeginMenu("Open")) {
+        ImGui::MenuItem("Recent");
+        // TODO();
+        ImGui::EndMenu();
+      }
+      ImGui::Separator();
+      if (ImGui::MenuItem("Save")) {
+        TODO();
+      }
+      if (ImGui::MenuItem("Exit")) {
+        SApplication::get().active_window().close();
+      }
+      ImGui::EndMenu();
+    }
+
+    ImGui::EndMainMenuBar();
+  }
+  ImGui::PopStyleColor();
 }
 
 void ImGuiLayer::end_frame() {

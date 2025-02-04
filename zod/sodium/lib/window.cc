@@ -126,6 +126,8 @@ auto SWindow::get_size() -> vec2 {
 
 auto SWindow::set_vsync(bool vsync) -> void { glfwSwapInterval(vsync); }
 
+auto SWindow::close() -> void { glfwSetWindowShouldClose(m_window, GLFW_TRUE); }
+
 SWindow::~SWindow() {
   glfwDestroyWindow(m_window);
   glfwTerminate();
