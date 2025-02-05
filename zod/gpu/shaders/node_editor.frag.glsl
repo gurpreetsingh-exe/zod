@@ -1,8 +1,8 @@
 #version 450
 
 in vec2 uv;
-layout (location = 0) out vec4 color;
-layout (location = 1) out uint pixel;
+layout(location = 0) out vec4 color;
+layout(location = 1) out uint pixel;
 
 uniform int u_width;
 uniform int u_height;
