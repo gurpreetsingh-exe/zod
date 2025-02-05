@@ -25,3 +25,6 @@
 [submodule "third-party/glslang"]
 	path = third-party/glslang
 	url = https://github.com/KhronosGroup/glslang.git
+[submodule "third-party/entt"]
+	path = third-party/entt
+	url = https://github.com/skypjack/entt.git

@@ -36,6 +36,7 @@ add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
 add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
 add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
 add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
+add_subdirectory(${THIRD_PARTY_DIR}/entt EnTT)
 
 add_library(imgui
   ${IMGUI_DIR}/imgui.cpp
@@ -67,7 +68,7 @@ target_link_libraries(embed zodpch)
 file(GLOB_RECURSE ZOD_CORE_SRC ${ZOD_CORE_DIR}/lib/*.cc)
 add_library(zodcore ${ZOD_CORE_SRC})
 target_include_directories(zodcore PUBLIC ${ZOD_CORE_DIR}/include)
-target_link_libraries(zodcore zodpch glm::glm tinyobj)
+target_link_libraries(zodcore zodpch glm::glm tinyobj EnTT::EnTT)
 
 ##########################################################################
 # libgpu
