@@ -5,6 +5,7 @@
 #include "node_editor.hh"
 #include "outliner.hh"
 #include "properties.hh"
+#include "runtime.hh"
 #include "timer.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
@@ -22,13 +23,17 @@ auto ZCtxt::create(fs::path path) -> void {
   SApplication::create(g_zcx);
 }
 
-auto ZCtxt::drop() -> void { delete g_zcx; }
+auto ZCtxt::drop() -> void {
+  Runtime::destroy();
+  delete g_zcx;
+}
 
 ZCtxt::ZCtxt(fs::path path) : m_node_tree(shared<NodeTree>()) {
   ZASSERT(not g_zcx);
   m_working_directory = std::move(path);
   init_window("Zod");
   init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
+  Runtime::init();
   m_layout = unique<Layout>();
   m_ssbo = GPUBackend::get().create_storage_buffer();
   m_vertex_buffer = GPUBackend::get().create_storage_buffer();
