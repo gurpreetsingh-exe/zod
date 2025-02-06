@@ -35,17 +35,18 @@ ImGuiLayer::ImGuiLayer(void* win) {
   style.WindowMenuButtonPosition = ImGuiDir_None;
   style.TabBarOverlineSize = 0;
 
-  style.WindowBorderSize = 0.5f;
+  style.WindowBorderSize = 0.0f;
   style.FrameRounding = 3.f;
   style.ChildRounding = 3.f;
+  style.CellPadding = ImVec2(6.0f, 2.0f);
 
   auto& colors = style.Colors;
 
   // colors[ImGuiCol_Border] = active;
   colors[ImGuiCol_WindowBg] = bg;
   colors[ImGuiCol_Header] = fg;
-  colors[ImGuiCol_HeaderHovered] = hover;
-  colors[ImGuiCol_HeaderActive] = active;
+  colors[ImGuiCol_HeaderHovered] = fg;
+  colors[ImGuiCol_HeaderActive] = fg;
 
   colors[ImGuiCol_Button] = fg;
   colors[ImGuiCol_ButtonHovered] = fg;

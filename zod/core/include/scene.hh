@@ -7,7 +7,7 @@
 namespace zod {
 
 class Entity;
-class Editor;
+class Outliner;
 
 class Scene {
 public:
@@ -27,7 +27,7 @@ private:
   entt::registry m_registry;
   usize m_disambiguator = 0;
   friend class Entity;
-  friend class Editor;
+  friend class Outliner;
 };
 
 }; // namespace zod
