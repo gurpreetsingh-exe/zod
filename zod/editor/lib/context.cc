@@ -3,6 +3,7 @@
 #include "environment_light.hh"
 #include "io/obj.hh"
 #include "node_editor.hh"
+#include "node_properties.hh"
 #include "outliner.hh"
 #include "properties.hh"
 #include "runtime.hh"
@@ -80,6 +81,7 @@ auto ZCtxt::run(fs::path path) -> void {
   m_layout->add_area(shared<Viewport>());
   m_layout->add_area(shared<NodeEditor>());
   m_layout->add_area(shared<Properties>());
+  m_layout->add_area(shared<NodeProperties>());
   m_layout->add_area(shared<EnvironmentLight>());
   m_layout->add_area(shared<Outliner>());
   auto g = Geometry();

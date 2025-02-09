@@ -1,8 +1,10 @@
 #pragma once
 
 #define DISALLOW_COPY_AND_ASSIGN(T)                                            \
+  T(T&&) = delete;                                                             \
   T(const T&) = delete;                                                        \
-  void operator=(const T&) = delete
+  T& operator=(const T&) = delete;                                             \
+  T& operator=(T&&) = delete;
 
 #define UNREACHABLE() __builtin_unreachable()
 

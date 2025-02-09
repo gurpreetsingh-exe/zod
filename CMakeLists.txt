@@ -37,6 +37,7 @@ add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
 add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
 add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
 add_subdirectory(${THIRD_PARTY_DIR}/entt EnTT)
+add_subdirectory(${THIRD_PARTY_DIR}/json nlohmann_json)
 
 add_library(imgui
   ${IMGUI_DIR}/imgui.cpp
@@ -145,7 +146,7 @@ elseif (OPENGL_BACKEND)
 endif()
 target_include_directories(sodium PUBLIC ${ZOD_CORE_DIR}/include)
 target_include_directories(sodium PUBLIC ${SODIUM_DIR}/include)
-target_link_libraries(sodium zodpch zodcore gpu glm::glm glfw imgui freetype pthread ${CMAKE_DL_LIBS})
+target_link_libraries(sodium zodpch zodcore gpu glm::glm glfw imgui nlohmann_json::nlohmann_json freetype pthread ${CMAKE_DL_LIBS})
 
 ##########################################################################
 # zod editor

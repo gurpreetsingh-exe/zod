@@ -1,6 +1,6 @@
 #include "context.hh"
+#include "../include/platform.hh"
 #include "backend.hh"
-#include "platform.hh"
 #include "timer.hh"
 
 #ifdef OPENGL_BACKEND

@@ -2,6 +2,6 @@
 
 namespace zod {
 
-auto open_dialog(const fs::path&) -> std::string;
+auto find_config_dir() -> fs::path;
 
 } // namespace zod
