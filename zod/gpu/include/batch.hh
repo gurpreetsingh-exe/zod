@@ -38,6 +38,8 @@ public:
   virtual auto draw(Shared<GPUShader>, usize) -> void = 0;
   virtual auto draw_instanced(Shared<GPUShader>, usize /* instance_count */)
       -> void = 0;
+  virtual auto draw_indirect(Shared<GPUShader>) -> void = 0;
+  virtual auto upload_indirect(const void*, usize) -> void = 0;
   virtual auto draw_lines(Shared<GPUShader>) -> void = 0;
   virtual auto draw_lines(Shared<GPUShader>, usize) -> void = 0;
 };

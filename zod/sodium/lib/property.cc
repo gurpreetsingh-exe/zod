@@ -144,7 +144,7 @@ static auto DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
   return value_changed;
 }
 
-auto DragFloat3(const char* name, f32* value) -> bool {
+auto DragFloat3(const char* name, f32* value, f32 v_speed) -> bool {
   auto needs_update = false;
   ImGui::BeginGroup();
   ImGui::AlignTextToFramePadding();
@@ -154,18 +154,18 @@ auto DragFloat3(const char* name, f32* value) -> bool {
   ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
   ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
   needs_update =
-      DragScalar("##X", ImGuiDataType_Float, &value[0], 1.0f, nullptr, nullptr,
-                 nullptr, 0, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
+      DragScalar("##X", ImGuiDataType_Float, &value[0], v_speed, nullptr,
+                 nullptr, nullptr, 0, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
   ImGui::PopItemWidth();
   ImGui::SameLine();
   needs_update |=
-      DragScalar("##Y", ImGuiDataType_Float, &value[1], 1.0f, nullptr, nullptr,
-                 nullptr, 0, ImVec4(0.1f, 0.8f, 0.1f, 1.0f));
+      DragScalar("##Y", ImGuiDataType_Float, &value[1], v_speed, nullptr,
+                 nullptr, nullptr, 0, ImVec4(0.1f, 0.8f, 0.1f, 1.0f));
   ImGui::PopItemWidth();
   ImGui::SameLine();
   needs_update |=
-      DragScalar("##Z", ImGuiDataType_Float, &value[2], 1.0f, nullptr, nullptr,
-                 nullptr, 0, ImVec4(0.1f, 0.3f, 0.8f, 1.0f));
+      DragScalar("##Z", ImGuiDataType_Float, &value[2], v_speed, nullptr,
+                 nullptr, nullptr, 0, ImVec4(0.1f, 0.3f, 0.8f, 1.0f));
   ImGui::PopItemWidth();
   ImGui::PopStyleVar();
   ImGui::PopID();
@@ -207,7 +207,7 @@ auto draw_property(Property& prop) -> bool {
       prop.needs_update = prop.subtype == PROP_SUBTYPE_COLOR
                               ? ImGui::ColorEdit3(prop.name, &prop.v3[0],
                                                   ImGuiColorEditFlags_Float)
-                              : DragFloat3(prop.name, &prop.v3[0]);
+                              : DragFloat3(prop.name, &prop.v3[0], 0.1f);
     } break;
   }
   return prop.needs_update;

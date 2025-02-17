@@ -1,6 +1,7 @@
 #pragma once
 
 #include "camera.hh"
+#include "mesh/mesh.hh"
 
 namespace zod {
 
@@ -20,6 +21,13 @@ struct TransformComponent {
   TransformComponent() = default;
   TransformComponent(vec3 pos, vec3 rot, vec3 sc)
       : position(pos), rotation(rot), scale(sc) {}
+
+  auto operator*() -> mat4 {
+    auto tmat = translate(mat4(1.0f), position);
+    auto rmat = toMat4(quat(radians(rotation)));
+    auto smat = glm::scale(mat4(1.0f), scale);
+    return tmat * rmat * smat;
+  }
 };
 
 struct CameraComponent {
@@ -27,6 +35,12 @@ struct CameraComponent {
   CameraComponent() = default;
   CameraComponent(PerspectiveCamera& _camera) : camera(_camera) {}
   ~CameraComponent() = default;
+};
+
+struct StaticMeshComponent {
+  Mesh* mesh = nullptr;
+  StaticMeshComponent() = default;
+  StaticMeshComponent(Mesh* _mesh) : mesh(_mesh) {}
 };
 
 }; // namespace zod

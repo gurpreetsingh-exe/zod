@@ -15,7 +15,9 @@ public:
   ~Entity() = default;
 
 public:
-  auto operator==(Entity other) -> bool { return m_handle == other.m_handle; }
+  auto operator==(Entity other) const -> bool {
+    return m_handle == other.m_handle;
+  }
   explicit operator bool() {
     return m_handle != entt::null and m_scene != nullptr;
   }
@@ -45,6 +47,17 @@ public:
 private:
   entt::entity m_handle = entt::null;
   Scene* m_scene = nullptr;
+
+  friend struct std::hash<Entity>;
 };
 
 }; // namespace zod
+
+namespace std {
+template <>
+struct hash<zod::Entity> {
+  auto operator()(zod::Entity entity) const -> zod::usize {
+    return hash<entt::entity>()(entity.m_handle);
+  }
+};
+} // namespace std

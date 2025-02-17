@@ -8,6 +8,7 @@ namespace zod {
 
 class Entity;
 class Outliner;
+class ZCtxt;
 
 class Scene {
 public:
@@ -28,6 +29,7 @@ private:
   usize m_disambiguator = 0;
   friend class Entity;
   friend class Outliner;
+  friend class ZCtxt;
 };
 
 }; // namespace zod

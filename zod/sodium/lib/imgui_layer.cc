@@ -123,8 +123,11 @@ void ImGuiLayer::begin_frame() {
 
   ImGui::End();
 
+  auto& theme = Theme::get();
   ImGui::PushStyleColor(ImGuiCol_Border,
-                        *reinterpret_cast<ImVec4*>(&Theme::get().highlight));
+                        *reinterpret_cast<ImVec4*>(&theme.highlight));
+  ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
+                        *reinterpret_cast<ImVec4*>(&theme.primary));
   if (ImGui::BeginMainMenuBar()) {
     if (ImGui::BeginMenu("File")) {
       if (ImGui::MenuItem("New")) {
@@ -154,14 +157,13 @@ void ImGuiLayer::begin_frame() {
 
     ImGui::EndMainMenuBar();
   }
-  ImGui::PopStyleColor();
+  ImGui::PopStyleColor(2);
 
   if (preferences) {
     ImGui::Begin("Preferences", &preferences,
                  ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse);
     ImGui::SeparatorText("Theme");
     bool update = false;
-    auto& theme = Theme::get();
     update |= ImGui::ColorEdit3("Background", &theme.background.x,
                                 ImGuiColorEditFlags_Float);
     update |= ImGui::ColorEdit3("Highlights", &theme.highlight.x,

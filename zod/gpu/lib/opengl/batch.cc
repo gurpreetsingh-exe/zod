@@ -69,6 +69,21 @@ auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
   glBindVertexArray(0);
 }
 
+auto GLBatch::draw_indirect(Shared<GPUShader> shader) -> void {
+  glBindVertexArray(m_id);
+  glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect);
+  glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, 0, m_indirect_size,
+                              0);
+  glBindVertexArray(0);
+}
+
+auto GLBatch::upload_indirect(const void* buffer, usize size) -> void {
+  glCreateBuffers(1, &m_indirect);
+  glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect);
+  glBufferData(GL_DRAW_INDIRECT_BUFFER, size, buffer, GL_DYNAMIC_DRAW);
+  m_indirect_size = size / 20;
+}
+
 auto GLBatch::draw_lines(Shared<GPUShader> shader) -> void {
   glBindVertexArray(m_id);
   glDrawArrays(GL_LINES, 0, m_elements);

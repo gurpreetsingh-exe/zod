@@ -151,7 +151,7 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
     GPUState::get().set_blend(Blend::Alpha);
     GPU_TIME("mesh", {
       m_shader->bind();
-      batch->draw(m_shader);
+      batch->draw_indirect(m_shader);
     });
     if (env.mode == LightingMode::Texture) {
       if (env.hdr.needs_update) {

@@ -1,25 +1,11 @@
 #include <imgui.h>
 
 #include "components.hh"
+#include "context.hh"
 #include "outliner.hh"
 #include "runtime.hh"
 
 namespace zod {
-
-auto Outliner::draw_entity(Entity entity) -> void {
-  auto flags = ((m_selection == entity) ? ImGuiTreeNodeFlags_Selected : 0) |
-               ImGuiTreeNodeFlags_FramePadding |
-               ImGuiTreeNodeFlags_SpanAvailWidth;
-  auto& component = entity.get_component<IdentifierComponent>();
-  auto open = ImGui::TreeNodeEx(component.identifier, flags, "%s",
-                                component.identifier);
-  if (ImGui::IsItemClicked()) {
-    m_selection = entity;
-  }
-  if (open) {
-    ImGui::TreePop();
-  }
-}
 
 template <bool First = false>
 auto draw_column(const char* text, usize index, bool highlight) -> bool {
@@ -50,19 +36,27 @@ static auto draw_row(const char* name, const char* type, bool selected)
 }
 
 auto Outliner::draw_imp(Geometry&) -> void {
+  auto& C = ZCtxt::get();
   auto& scene = Runtime::get().scene();
-  ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 4.0f));
   if (ImGui::BeginPopupContextWindow("Add Menu",
                                      ImGuiPopupFlags_MouseButtonRight)) {
     if (ImGui::MenuItem("Empty")) {
-      m_selection = scene.create();
+      C.set_active_object(scene.create());
+    }
+    if (ImGui::MenuItem("Cube")) {
+      auto cube = scene.create();
+      cube.add_component<StaticMeshComponent>(C.mesh());
+      C.set_active_object(cube);
+      C.recompute_batch();
     }
 
     ImGui::EndPopup();
   }
+  ImGui::PopStyleVar();
 
-  auto flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersV;
-  if (ImGui::BeginTable("asd", 2, flags)) {
+  if (ImGui::BeginTable("OutlinerTable", 2,
+                        ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersV)) {
     ImGui::TableSetupColumn("Name");
     ImGui::TableSetupColumn("Type");
     ImGui::TableHeadersRow();
@@ -71,13 +65,13 @@ auto Outliner::draw_imp(Geometry&) -> void {
       ImGui::TableNextRow();
       auto entity = Entity(entity_id, std::addressof(scene));
       auto& component = entity.get_component<IdentifierComponent>();
-      if (draw_row(component.identifier, "Object", m_selection == entity)) {
-        m_selection = entity;
+      if (draw_row(component.identifier, "Object",
+                   C.active_object() == entity)) {
+        C.set_active_object(entity);
       }
     }
     ImGui::EndTable();
   }
-  ImGui::PopStyleVar();
 }
 
 auto Outliner::on_event(Event& event) -> void {}
