@@ -1,14 +1,14 @@
 #include "context.hh"
 
-#include "components.hh"
+#include "core/components.hh"
+#include "core/io/obj.hh"
+#include "core/runtime.hh"
 #include "environment_light.hh"
-#include "io/obj.hh"
+#include "gpu/timer.hh"
 #include "node_editor.hh"
 #include "node_properties.hh"
 #include "outliner.hh"
 #include "properties.hh"
-#include "runtime.hh"
-#include "timer.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
 

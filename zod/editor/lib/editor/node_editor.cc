@@ -35,7 +35,7 @@ NodeEditor::NodeEditor()
                                           .fragment_source(g_node_frag_src));
   m_line_shader = GPUBackend::get().create_shader(
       GPUShaderCreateInfo("line")
-          .vertex_source(g_vertex2d_src)
+          .vertex_source(g_view2d_vert_src)
           .fragment_source(g_flat_color_frag_src));
 
   f32 position[] = { 0, 0, 1, 0, 0, 1, 1, 1 };

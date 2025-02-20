@@ -1,9 +1,9 @@
 #include <imgui.h>
 
-#include "components.hh"
 #include "context.hh"
+#include "core/components.hh"
+#include "core/runtime.hh"
 #include "outliner.hh"
-#include "runtime.hh"
 
 namespace zod {
 

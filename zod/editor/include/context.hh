@@ -2,12 +2,12 @@
 
 #include "application.hh"
 #include "asset_manager.hh"
-#include "backend.hh"
-#include "entity.hh"
-#include "environment.hh"
-#include "event.hh"
+#include "core/entity.hh"
+#include "core/environment.hh"
+#include "core/event.hh"
+#include "core/node_types.hh"
 #include "font.hh"
-#include "node_types.hh"
+#include "gpu/backend.hh"
 
 namespace zod {
 

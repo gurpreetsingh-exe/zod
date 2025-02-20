@@ -2,7 +2,7 @@
 #include <imgui.h>
 
 #include "context.hh"
-#include "node_types.hh"
+#include "core/node_types.hh"
 #include "nodes.hh"
 
 namespace zod {

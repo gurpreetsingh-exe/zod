@@ -1,5 +1,5 @@
 #include "widgets/layout.hh"
-#include "timer.hh"
+#include "gpu/timer.hh"
 
 namespace zod {
 

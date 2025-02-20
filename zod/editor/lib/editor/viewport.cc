@@ -1,9 +1,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include <glad/glad.h>
 #include <imgui.h>
 
 #include "context.hh"
-#include "timer.hh"
+#include "gpu/timer.hh"
 #include "viewport.hh"
 #include "widgets/button.hh"
 
@@ -43,7 +42,8 @@ static auto Button(const char* name, bool& enabled) -> void {
 
 static auto load_env() -> Shared<GPUTexture> {
   const auto& env = ZCtxt::get().get_env();
-  const auto path = fs::path(env.hdr.s);
+  // const auto path = fs::path(env.hdr.s);
+  const auto path = fs::path("./industrial_sunset_puresky_2k.hdr");
   return fs::exists(path) ? GPUBackend::get().create_texture(
                                 GPUTextureType::TextureCube, path)
                           : nullptr;
@@ -134,8 +134,8 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
       shader->uniform_uint("u_width", ADDR(u32(m_size.x)));
       shader->uniform_uint("u_height", ADDR(u32(m_size.y)));
       t->bind();
-      glBindImageTexture(0, (u32)(intptr_t)t->get_id(), 0, GL_FALSE, 0,
-                         GL_READ_WRITE, GL_RGBA8);
+      // glBindImageTexture(0, (u32)(intptr_t)t->get_id(), 0, GL_FALSE, 0,
+      //                    GL_READ_WRITE, GL_RGBA8);
       shader->uniform_int("u_texture", ADDR(0));
       shader->dispatch(m_size.x, m_size.y, 1);
     });

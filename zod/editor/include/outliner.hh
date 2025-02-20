@@ -1,6 +1,6 @@
 #pragma once
 
-#include "entity.hh"
+#include "core/entity.hh"
 #include "widgets/panel.hh"
 
 namespace zod {

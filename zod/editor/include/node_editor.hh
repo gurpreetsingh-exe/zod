@@ -1,8 +1,8 @@
 #pragma once
 
-#include "backend.hh"
 #include "context.hh"
-#include "node_types.hh"
+#include "core/node_types.hh"
+#include "gpu/backend.hh"
 #include "widgets/panel.hh"
 
 namespace zod {

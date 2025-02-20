@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base/math.hh"
-#include "event.hh"
+#include "core/base/math.hh"
+#include "core/event.hh"
 
 namespace zod {
 

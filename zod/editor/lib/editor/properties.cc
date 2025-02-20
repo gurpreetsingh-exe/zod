@@ -1,7 +1,7 @@
 #include <imgui.h>
 
-#include "components.hh"
 #include "context.hh"
+#include "core/components.hh"
 #include "properties.hh"
 
 namespace zod {

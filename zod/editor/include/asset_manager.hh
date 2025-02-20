@@ -1,16 +1,9 @@
 #pragma once
 
-#include <uuid_v4.h>
-
-#include "io/obj.hh"
+#include "core/io/obj.hh"
+#include "core/uuid.hh"
 
 namespace zod {
-
-using uuid = UUIDv4::UUID;
-
-constexpr u8 uuid_null_init[16] = { 0 };
-
-inline auto uuid0() -> uuid { return uuid(uuid_null_init); }
 
 class AssetManager {
 public:

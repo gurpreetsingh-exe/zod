@@ -3,8 +3,8 @@
 #include <imgui_internal.h>
 
 #include "application.hh"
-#include "platform.hh"
-#include "property.hh"
+#include "core/platform.hh"
+#include "core/property.hh"
 
 namespace zod {
 

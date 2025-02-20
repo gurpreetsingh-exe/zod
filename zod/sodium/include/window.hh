@@ -1,6 +1,6 @@
 #pragma once
 
-#include "context.hh"
+#include "gpu/context.hh"
 #include "widget.hh"
 #include <GLFW/glfw3.h>
 

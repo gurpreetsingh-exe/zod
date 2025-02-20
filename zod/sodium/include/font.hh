@@ -3,7 +3,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "backend.hh"
+#include "gpu/backend.hh"
 
 namespace zod {
 

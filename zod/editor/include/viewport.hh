@@ -1,6 +1,6 @@
 #pragma once
 
-#include "backend.hh"
+#include "gpu/backend.hh"
 #include "widgets/panel.hh"
 
 namespace zod {
