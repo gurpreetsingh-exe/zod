@@ -1,7 +1,7 @@
 #pragma once
 
-#include "context.hh"
 #include "core/node_types.hh"
+#include "editor.hh"
 #include "gpu/backend.hh"
 #include "widgets/panel.hh"
 
@@ -21,7 +21,7 @@ private:
 
   template <typename UpdateFn>
   auto update_node(UpdateFn fn) -> void {
-    auto node_tree = ZCtxt::get().get_node_tree();
+    auto node_tree = Editor::get().get_node_tree();
     m_links.clear();
     auto& links = node_tree->get_links();
     for (const auto& link : links) {

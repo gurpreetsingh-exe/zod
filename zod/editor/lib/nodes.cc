@@ -1,8 +1,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
-#include "context.hh"
 #include "core/node_types.hh"
+#include "editor.hh"
 #include "nodes.hh"
 
 namespace zod {
@@ -53,7 +53,7 @@ NodeUpdateFn node_update_functions[TOTAL_NODES] = {
         if (strnlen(path.s, STRING_PROP_MAX_SIZE) == 0) {
           return;
         }
-        auto& mgr = ZCtxt::get().get_asset_manager();
+        auto& mgr = Editor::get().get_asset_manager();
         auto id = mgr.load(path.s);
         if (id == uuid0()) {
           return;

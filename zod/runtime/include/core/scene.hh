@@ -2,13 +2,12 @@
 
 #include <entt/entt.hpp>
 
-#include "event.hh"
+#include "application/event.hh"
 
 namespace zod {
 
 class Entity;
 class Outliner;
-class ZCtxt;
 
 class Scene {
 public:
@@ -20,6 +19,7 @@ public:
   auto create(const std::string&) -> Entity;
   auto remove(Entity) -> void;
   auto update(Event&) -> void;
+  auto operator->() const -> const entt::registry* { return &m_registry; }
 
 private:
   auto next_id() -> usize { return m_disambiguator++; }

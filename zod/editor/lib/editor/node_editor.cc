@@ -1,7 +1,8 @@
 #include <imgui.h>
 
+#include "application/input.hh"
 #include "curve.hh"
-#include "input.hh"
+#include "engine/font.hh"
 #include "node_editor.hh"
 #include "nodes.hh"
 #include "operators/node.hh"
@@ -44,7 +45,7 @@ NodeEditor::NodeEditor()
   m_curves = GPUBackend::get().create_batch(
       { { GPUDataType::Float, m_links.data(), 2, 0 } });
 
-  auto node_tree = ZCtxt::get().get_node_tree();
+  auto node_tree = Editor::get().get_node_tree();
   for (usize i = 0; i < 5; ++i) {
     node_tree->add_node<NODE_TRANSFORM>(vec2(-100, (f32(i) * 150) - 400));
   }
@@ -59,7 +60,7 @@ NodeEditor::NodeEditor()
 
 auto NodeEditor::add_node(usize type) -> void {
   auto position = region_space_mouse_position() - vec2(NODE_SIZE);
-  auto node_tree = ZCtxt::get().get_node_tree();
+  auto node_tree = Editor::get().get_node_tree();
   auto& node = node_tree->add_node(type, position);
   m_node_ssbo->upload_data(node_tree->get_data(),
                            node_tree->get_size() * sizeof(NodeType));
@@ -79,7 +80,7 @@ auto NodeEditor::on_event_imp(Event& event) -> void {
 
   switch (event.kind) {
     case Event::MouseDown: {
-      auto node_tree = ZCtxt::get().get_node_tree();
+      auto node_tree = Editor::get().get_node_tree();
       auto mouse = relative_mouse_position();
       auto pixel = 0u;
       pixel = mouse.x > m_framebuffer->get_width() or
@@ -147,7 +148,7 @@ auto NodeEditor::on_event_imp(Event& event) -> void {
 
 auto NodeEditor::update() -> void {
   m_debug_message = m_active_operator ? "Operator" : "";
-  auto node_tree = ZCtxt::get().get_node_tree();
+  auto node_tree = Editor::get().get_node_tree();
   m_debug_message += fmt::format("\n{}", node_tree->get_links().size());
 
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));

@@ -1,7 +1,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
-#include "context.hh"
+#include "editor.hh"
 #include "gpu/timer.hh"
 #include "viewport.hh"
 #include "widgets/button.hh"
@@ -41,7 +41,7 @@ static auto Button(const char* name, bool& enabled) -> void {
 }
 
 static auto load_env() -> Shared<GPUTexture> {
-  const auto& env = ZCtxt::get().get_env();
+  const auto& env = Editor::get().get_env();
   // const auto path = fs::path(env.hdr.s);
   const auto path = fs::path("./industrial_sunset_puresky_2k.hdr");
   return fs::exists(path) ? GPUBackend::get().create_texture(
@@ -123,13 +123,13 @@ auto Viewport::on_event_imp(Event& event) -> void {
 }
 
 auto Viewport::update(Shared<GPUBatch> batch) -> void {
-  auto t = ZCtxt::get().get_texture();
+  auto t = Editor::get().get_texture();
   if (m_size != t->get_size()) {
     t->resize(m_size.x, m_size.y);
   }
   if (render) {
     GPU_TIME("compute", {
-      auto shader = ZCtxt::get().get_rd_shader();
+      auto shader = Editor::get().get_rd_shader();
       shader->bind();
       shader->uniform_uint("u_width", ADDR(u32(m_size.x)));
       shader->uniform_uint("u_height", ADDR(u32(m_size.y)));
@@ -143,7 +143,7 @@ auto Viewport::update(Shared<GPUBatch> batch) -> void {
     m_framebuffer->bind();
     m_uniform_buffer->bind();
     m_framebuffer->clear();
-    auto& env = ZCtxt::get().get_env();
+    auto& env = Editor::get().get_env();
     if (env.mode == LightingMode::SolidColor) {
       m_framebuffer->clear_color(vec4(env.color.v3, 1.0f));
     }

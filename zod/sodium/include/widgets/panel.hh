@@ -1,8 +1,8 @@
 #pragma once
 
+#include "application/input.hh"
 #include "core/camera.hh"
 #include "gpu/backend.hh"
-#include "input.hh"
 #include "widget.hh"
 
 namespace zod {

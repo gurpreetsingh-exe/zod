@@ -2,7 +2,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include "application.hh"
+#include "application/application.hh"
 #include "imgui_layer.hh"
 #include "theme.hh"
 
@@ -142,8 +142,10 @@ void ImGuiLayer::begin_frame() {
       if (ImGui::MenuItem("Save")) {
         TODO();
       }
-      if (ImGui::MenuItem("Exit")) {
-        SApplication::get().active_window().close();
+      ImGui::Separator();
+      if (ImGui::MenuItem("Quit")) {
+        Event event = { .kind = Event::WindowClose };
+        Application::get().on_event(event);
       }
       ImGui::EndMenu();
     }

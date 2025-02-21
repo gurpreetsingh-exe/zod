@@ -1,7 +1,7 @@
 #include <imgui.h>
 
-#include "context.hh"
 #include "core/components.hh"
+#include "editor.hh"
 #include "properties.hh"
 
 namespace zod {
@@ -40,7 +40,7 @@ auto draw_component(const std::string& name, Entity entity, DrawFunc draw)
 extern auto DragFloat3(const char*, f32*, f32) -> bool;
 
 auto Properties::update() -> void {
-  auto& C = ZCtxt::get();
+  auto& C = Editor::get();
   auto entity = C.active_object();
   if (not entity) {
     return;

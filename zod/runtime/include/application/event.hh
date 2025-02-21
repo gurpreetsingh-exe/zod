@@ -149,6 +149,7 @@ struct Event {
     KeyRepeat,
 
     WindowResize,
+    WindowClose,
   } kind = None;
 
   MouseButton button = MouseButton::None;
@@ -157,6 +158,7 @@ struct Event {
   bool shift = false;
   bool ctrl = false;
   bool alt = false;
+  bool hanging = true;
 
   union {
     vec2 mouse;

@@ -35,9 +35,7 @@ endif()
 add_compile_options(-msse3 -ggdb3)
 
 add_subdirectory(${ZOD_RUNTIME_DIR} zrt)
-add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
 add_subdirectory(${THIRD_PARTY_DIR}/json nlohmann_json)
-add_subdirectory(${THIRD_PARTY_DIR}/glfw glfw)
 
 add_library(imgui
   ${IMGUI_DIR}/imgui.cpp
@@ -55,18 +53,11 @@ target_include_directories(imgui PUBLIC "${IMGUI_DIR}/backends")
 ##########################################################################
 file(GLOB_RECURSE SODIUM_SRC ${SODIUM_DIR}/lib/*.cc)
 add_library(sodium ${SODIUM_SRC})
-if (VULKAN_BACKEND)
-  target_compile_definitions(sodium PRIVATE VULKAN_BACKEND)
-elseif (OPENGL_BACKEND)
-  target_compile_definitions(sodium PRIVATE OPENGL_BACKEND)
-endif()
 target_include_directories(sodium PUBLIC ${ZOD_RUNTIME_DIR}/include)
 target_include_directories(sodium PUBLIC ${SODIUM_DIR}/include)
 target_link_libraries(sodium
   zodpch
   zrt
-  glfw
-  freetype
   nlohmann_json::nlohmann_json
   imgui
   pthread
@@ -77,11 +68,6 @@ target_link_libraries(sodium
 ##########################################################################
 file(GLOB_RECURSE ZOD_EDITOR_SRC ${ZOD_EDITOR_DIR}/lib/*.cc)
 add_executable(zod ${ZOD_EDITOR_SRC})
-if (VULKAN_BACKEND)
-  target_compile_definitions(zod PRIVATE VULKAN_BACKEND)
-elseif (OPENGL_BACKEND)
-  target_compile_definitions(zod PRIVATE OPENGL_BACKEND)
-endif()
 target_compile_definitions(zod PUBLIC GLFW_INCLUDE_NONE=1)
 target_include_directories(zod PUBLIC ${ZOD_RUNTIME_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)

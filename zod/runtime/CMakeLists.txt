@@ -1,12 +1,14 @@
 set(INC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(LIB ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 
-add_subdirectory(${THIRD_PARTY_DIR}/fmt fmt)
-add_subdirectory(${THIRD_PARTY_DIR}/glm glm)
-add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
-add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
-add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
 add_subdirectory(${THIRD_PARTY_DIR}/entt EnTT)
+add_subdirectory(${THIRD_PARTY_DIR}/fmt fmt)
+add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
+add_subdirectory(${THIRD_PARTY_DIR}/glfw glfw)
+add_subdirectory(${THIRD_PARTY_DIR}/glm glm)
+add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
+add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
+add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shaders shaderlib)
 
@@ -61,14 +63,22 @@ elseif (OPENGL_BACKEND)
   target_link_libraries(gpu OpenGL::GL glad)
 endif()
 
-# core
-file(GLOB_RECURSE CORE_LIB ${LIB}/core/*.cc)
+file(GLOB_RECURSE GPU_LIB2 ${LIB}/gpu/*.cc)
+file(GLOB_RECURSE RUNTIME_LIB ${LIB}/*.cc)
+list(REMOVE_ITEM RUNTIME_LIB ${GPU_LIB2})
 
-add_library(zrt ${CORE_LIB})
+add_library(zrt ${RUNTIME_LIB})
+if (VULKAN_BACKEND)
+  target_compile_definitions(zrt PRIVATE VULKAN_BACKEND)
+elseif (OPENGL_BACKEND)
+  target_compile_definitions(zrt PRIVATE OPENGL_BACKEND)
+endif()
 target_include_directories(zrt PUBLIC ${INC})
 target_link_libraries(zrt
   zodpch
+  EnTT::EnTT
+  freetype
+  glfw
   gpu
   tinyobj
-  EnTT::EnTT
   uuid_v4)

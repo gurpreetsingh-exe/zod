@@ -1,5 +1,5 @@
 #include "node_properties.hh"
-#include "context.hh"
+#include "editor.hh"
 
 namespace zod {
 
@@ -7,7 +7,7 @@ NodeProperties::NodeProperties()
     : SPanel("Node Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
 
 auto NodeProperties::update() -> void {
-  auto node_tree = ZCtxt::get().get_node_tree();
+  auto node_tree = Editor::get().get_node_tree();
   if (not node_tree->get_active_id()) {
     return;
   }

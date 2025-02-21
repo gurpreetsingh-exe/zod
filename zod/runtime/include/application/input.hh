@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/event.hh"
+#include "application/event.hh"
 
 namespace zod {
 

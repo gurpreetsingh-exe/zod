@@ -1,8 +1,8 @@
 #include <imgui.h>
 
-#include "context.hh"
 #include "core/components.hh"
 #include "core/runtime.hh"
+#include "editor.hh"
 #include "outliner.hh"
 
 namespace zod {
@@ -36,7 +36,7 @@ static auto draw_row(const char* name, const char* type, bool selected)
 }
 
 auto Outliner::draw_imp(Geometry&) -> void {
-  auto& C = ZCtxt::get();
+  auto& C = Editor::get();
   auto& scene = Runtime::get().scene();
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 4.0f));
   if (ImGui::BeginPopupContextWindow("Add Menu",
@@ -61,7 +61,7 @@ auto Outliner::draw_imp(Geometry&) -> void {
     ImGui::TableSetupColumn("Type");
     ImGui::TableHeadersRow();
     usize i = 1;
-    for (auto& entity_id : scene.m_registry.view<IdentifierComponent>()) {
+    for (auto& entity_id : scene->view<IdentifierComponent>()) {
       ImGui::TableNextRow();
       auto entity = Entity(entity_id, std::addressof(scene));
       auto& component = entity.get_component<IdentifierComponent>();

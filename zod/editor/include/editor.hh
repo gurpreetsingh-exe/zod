@@ -1,25 +1,23 @@
 #pragma once
 
-#include "application.hh"
+#include "application/application.hh"
+#include "application/event.hh"
 #include "asset_manager.hh"
 #include "core/entity.hh"
 #include "core/environment.hh"
-#include "core/event.hh"
 #include "core/node_types.hh"
-#include "font.hh"
 #include "gpu/backend.hh"
+#include "imgui_layer.hh"
+#include "widgets/layout.hh"
 
 namespace zod {
 
 class Layout;
 
-class ZCtxt : SApplication {
+class Editor : public ILayer {
 public:
-  ZCtxt(fs::path);
-  static auto get() -> ZCtxt&;
-  static auto create(fs::path) -> void;
-  static auto drop() -> void;
-  auto run(fs::path) -> void;
+  Editor();
+  static auto get() -> Editor&;
   auto get_normals() -> Shared<GPUStorageBuffer> { return m_ssbo; }
   auto get_batch() -> Shared<GPUBatch> { return m_batch; }
   auto get_node_tree() -> Shared<NodeTree> { return m_node_tree; }
@@ -34,9 +32,13 @@ public:
   auto update_matrix(Entity, const mat4&) -> void;
 
 private:
-  auto on_event(Event&) -> void;
+  auto setup() -> void override;
+  auto on_event(Event&) -> void override;
+  auto update() -> void override;
 
 private:
+  Unique<ImGuiLayer> m_imgui_layer;
+  Unique<Layout> m_layout;
   Shared<GPUBatch> m_batch;
   Shared<NodeTree> m_node_tree;
   Shared<GPUStorageBuffer> m_ssbo;

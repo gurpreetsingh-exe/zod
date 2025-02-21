@@ -1,11 +1,11 @@
 #include "operators/node.hh"
-#include "context.hh"
+#include "editor.hh"
 #include "widgets/panel.hh"
 
 namespace zod {
 
 auto OpNodeTransform::execute(Event& event) -> u8 {
-  auto* node = ZCtxt::get().get_node_tree()->get_active();
+  auto* node = Editor::get().get_node_tree()->get_active();
   if (not node) {
     return OP_CANCELLED;
   }
@@ -20,7 +20,7 @@ auto OpNodeTransform::execute(Event& event) -> u8 {
 ///////////////////////////////////////////////////////////////
 
 auto OpNodeLinkCreateNew::execute(Event& event) -> u8 {
-  auto node_tree = ZCtxt::get().get_node_tree();
+  auto node_tree = Editor::get().get_node_tree();
   if (event.is_key_down(Key::Escape) or
       event.is_mouse_down(MouseButton::Right)) {
     node_tree->remove_link(m_link);

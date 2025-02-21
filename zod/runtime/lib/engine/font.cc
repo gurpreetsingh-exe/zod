@@ -1,4 +1,4 @@
-#include "font.hh"
+#include "engine/font.hh"
 
 namespace zod {
 
@@ -12,13 +12,20 @@ auto init_font(const fs::path& path) -> void {
 }
 
 struct character_info {
-  f32 ax; // advance.x
-  f32 ay; // advance.y
-  f32 bw; // bitmap.width;
-  f32 bh; // bitmap.rows;
-  f32 bl; // bitmap_left;
-  f32 bt; // bitmap_top;
-  f32 tx; // x offset of glyph in texture coordinates
+  // advance.x
+  f32 ax;
+  // advance.y
+  f32 ay;
+  // bitmap.width;
+  f32 bw;
+  // bitmap.rows;
+  f32 bh;
+  // bitmap_left;
+  f32 bl;
+  // bitmap_top;
+  f32 bt;
+  // x offset of glyph in texture coordinates
+  f32 tx;
 } c[128];
 
 auto Font::get() -> Font& { return *g_font; }
