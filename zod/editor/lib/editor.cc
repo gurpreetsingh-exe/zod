@@ -1,12 +1,12 @@
 #include "editor.hh"
 
-#include "core/components.hh"
-#include "core/io/obj.hh"
-#include "core/runtime.hh"
+#include "engine/components.hh"
+#include "engine/runtime.hh"
 #include "environment_light.hh"
 #include "gpu/timer.hh"
 #include "node_editor.hh"
 #include "node_properties.hh"
+#include "obj.hh"
 #include "outliner.hh"
 #include "properties.hh"
 #include "viewport.hh"
@@ -68,7 +68,7 @@ auto Editor::setup() -> void {
 
   u32 points = mesh->points.size();
   {
-    auto indices = std::vector<u32>();
+    auto indices = Vector<u32>();
     for (const auto& prim : mesh->prims) {
       for (auto i : prim.points) { indices.push_back(i); }
     }
@@ -120,8 +120,8 @@ auto Editor::recompute_batch() -> void {
   delete[] matrix;
 
   auto offset = usize(0);
-  auto indices = std::vector<u32>();
-  auto indirect = std::vector<DrawElementsIndirectCommand>();
+  auto indices = Vector<u32>();
+  auto indirect = Vector<DrawElementsIndirectCommand>();
   i = usize(0);
   for (auto entity_id : view) {
     auto entity = Entity(entity_id, std::addressof(scene));

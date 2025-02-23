@@ -1,7 +1,7 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-#include "core/config.hh"
+#include "config.hh"
 #include "theme.hh"
 
 namespace zod {

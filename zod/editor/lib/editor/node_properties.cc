@@ -1,5 +1,6 @@
 #include "node_properties.hh"
 #include "editor.hh"
+#include "engine/camera.hh"
 
 namespace zod {
 

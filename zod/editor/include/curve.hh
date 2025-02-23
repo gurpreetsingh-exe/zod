@@ -26,8 +26,8 @@ public:
       : m_p1(p1), m_p2(p2), m_rounding(rounding) {}
 
 public:
-  auto get() -> std::vector<vec2> {
-    auto points = std::vector<vec2>();
+  auto get() -> Vector<vec2> {
+    auto points = Vector<vec2>();
     auto midpoint = (m_p1 + m_p2) * 0.5f;
     points.push_back(m_p1);
     points.push_back(vec2(m_p1.x, midpoint.y - m_rounding));

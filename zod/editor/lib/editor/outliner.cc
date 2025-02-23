@@ -1,8 +1,8 @@
 #include <imgui.h>
 
-#include "core/components.hh"
-#include "core/runtime.hh"
 #include "editor.hh"
+#include "engine/components.hh"
+#include "engine/runtime.hh"
 #include "outliner.hh"
 
 namespace zod {

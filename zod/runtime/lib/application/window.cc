@@ -7,7 +7,7 @@ static auto error_callback(int error, const char* description) -> void {
   fmt::println("{}: {}", error, description);
 }
 
-Window::Window(const std::string& name) {
+Window::Window(const String& name) {
   if (not glfwInit()) {
     eprintln("GLFW initialization failed");
   }

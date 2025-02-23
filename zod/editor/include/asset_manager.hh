@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/io/obj.hh"
 #include "core/uuid.hh"
+#include "obj.hh"
 
 namespace zod {
 

@@ -7,7 +7,7 @@ namespace zod {
 
 class SButton : public SWidget {
 public:
-  SButton(std::string n) : SWidget(std::move(n)) {}
+  SButton(String n) : SWidget(std::move(n)) {}
 
 public:
   auto on_event(Event&) -> void override;

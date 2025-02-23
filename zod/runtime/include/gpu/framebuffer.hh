@@ -22,14 +22,14 @@ constexpr int GPU_FB_MAX_COLOR_ATTACHMENT =
     int(GPUAttachmentType::ColorMax) - int(GPUAttachmentType::Color0);
 
 struct GPUAttachment {
-  Shared<GPUTexture> texture;
+  SharedPtr<GPUTexture> texture;
 };
 
 class GPUFrameBuffer {
 protected:
   i32 m_width = 0;
   i32 m_height = 0;
-  std::vector<GPUAttachment> m_color_attachments;
+  Vector<GPUAttachment> m_color_attachments;
   i32 m_samples = 1;
   // i32 m_viewport[4] = { 0 };
   // i32 m_scissor[4] = { 0 };

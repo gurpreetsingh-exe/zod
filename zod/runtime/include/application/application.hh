@@ -9,12 +9,11 @@ namespace zod {
 class ILayer;
 
 struct ApplicationCreateInfo {
-  std::string name;
-  std::vector<std::string> cmd_args = {};
+  String name;
+  Vector<String> cmd_args = {};
   fs::path working_directory = {};
 
-  ApplicationCreateInfo(std::string /* name */, int /* argc */,
-                        char** /* argv */);
+  ApplicationCreateInfo(String /* name */, int /* argc */, char** /* argv */);
 };
 
 class Application {
@@ -28,7 +27,7 @@ public:
   auto active_window() const -> Window&;
   auto on_event(Event&) -> void;
   auto working_directory() const -> const fs::path&;
-  auto args() const -> const std::vector<std::string>&;
+  auto args() const -> const Vector<String>&;
   auto push_layer(ILayer*) -> void;
 
 private:
@@ -36,10 +35,10 @@ private:
 
 protected:
   ApplicationCreateInfo m_info;
-  Unique<Window> m_window;
+  UniquePtr<Window> m_window;
   bool m_running;
 
-  std::vector<ILayer*> m_layers;
+  Vector<ILayer*> m_layers;
 
   friend auto ::main(int argc, char** argv) -> int;
 };

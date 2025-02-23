@@ -1,9 +1,13 @@
 #include <imgui.h>
 
 #include "editor.hh"
+#include "engine/camera.hh"
 #include "environment_light.hh"
 
 namespace zod {
+
+EnvironmentLight::EnvironmentLight()
+    : SPanel("Environment Light", unique<OrthographicCamera>(64.0f, 64.0f)) {}
 
 auto EnvironmentLight::draw_imp(Geometry&) -> void {
   auto& env = Editor::get().get_env();

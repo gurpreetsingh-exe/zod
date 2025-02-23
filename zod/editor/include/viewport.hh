@@ -8,7 +8,7 @@ namespace zod {
 class Viewport : public SPanel {
 public:
   Viewport();
-  auto update(Shared<GPUBatch>) -> void;
+  auto update(SharedPtr<GPUBatch>) -> void;
 
 private:
   auto draw_imp(Geometry&) -> void override {
@@ -22,11 +22,11 @@ private:
 private:
   f32 m_width;
   f32 m_height;
-  Shared<GPUShader> m_shader;
-  Shared<GPUTexture> m_cubemap = nullptr;
-  Shared<GPUBatch> m_cubemap_batch;
-  Shared<GPUShader> m_cubemap_shader;
-  Shared<GPUShader> m_grid_shader;
+  SharedPtr<GPUShader> m_shader;
+  SharedPtr<GPUTexture> m_cubemap = nullptr;
+  SharedPtr<GPUBatch> m_cubemap_batch;
+  SharedPtr<GPUShader> m_cubemap_shader;
+  SharedPtr<GPUShader> m_grid_shader;
 };
 
 } // namespace zod

@@ -1,40 +1,31 @@
-#ifdef _WIN32
-#include <windows.h>
+#ifdef PLATFORM_WINDOWS
+#  include <windows.h>
 #else
-#include <limits.h>
-#include <unistd.h>
+#  include <limits.h>
+#  include <unistd.h>
 #endif
 
-#include "core/platform.hh"
+#include "core/platform/platform.hh"
 
 namespace zod {
 
-auto open_dialog(const fs::path& default_path) -> std::string {
-  char buf[128] = {};
-#if defined(_WIN32) || defined(_WIN64)
-#error "not implemented"
+constexpr auto get_platform() -> Platform {
+#ifdef PLATFORM_WINDOWS
+  return Platform::Windows;
 #else
-  auto* f = popen(
-      fmt::format(
-          "zenity --title=\"Select File\" --file-selection --filename=\"{}\"",
-          default_path.string())
-          .c_str(),
-      "r");
-  fgets(buf, 128, f);
-  buf[strlen(buf) - 1] = '\0';
+  return Platform::Linux;
 #endif
-  return buf;
 }
 
 auto get_exe_path() -> fs::path {
-#ifdef _WIN32
+#ifdef PLATFORM_WINDOWS
   wchar_t path[MAX_PATH] = { 0 };
   GetModuleFileNameW(NULL, path, MAX_PATH);
   return path;
 #else
   char result[PATH_MAX] = {};
   auto count = readlink("/proc/self/exe", result, PATH_MAX);
-  return std::string(result, (count > 0) ? count : 0);
+  return String(result, (count > 0) ? count : 0);
 #endif
 }
 

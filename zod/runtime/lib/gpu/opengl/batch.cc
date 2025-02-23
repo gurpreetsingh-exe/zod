@@ -13,8 +13,8 @@ static auto to_gl(GPUDataType type) -> GLenum {
   UNREACHABLE();
 }
 
-GLBatch::GLBatch(const std::vector<GPUBufferLayout>& layouts,
-                 const std::vector<u32>& indices) {
+GLBatch::GLBatch(const Vector<GPUBufferLayout>& layouts,
+                 const Vector<u32>& indices) {
   m_elements =
       indices.size() ? indices.size() : layouts[0].length / layouts[0].size;
   glCreateVertexArrays(1, &m_id);
@@ -49,19 +49,19 @@ GLBatch::GLBatch(const std::vector<GPUBufferLayout>& layouts,
 
 GLBatch::~GLBatch() { glDeleteVertexArrays(1, &m_id); }
 
-auto GLBatch::draw(Shared<GPUShader> shader) -> void {
+auto GLBatch::draw(SharedPtr<GPUShader> shader) -> void {
   glBindVertexArray(m_id);
   glDrawElements(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr);
   glBindVertexArray(0);
 }
 
-auto GLBatch::draw(Shared<GPUShader> shader, usize n) -> void {
+auto GLBatch::draw(SharedPtr<GPUShader> shader, usize n) -> void {
   glBindVertexArray(m_id);
   glDrawElements(GL_TRIANGLES, n, GL_UNSIGNED_INT, nullptr);
   glBindVertexArray(0);
 }
 
-auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
+auto GLBatch::draw_instanced(SharedPtr<GPUShader> shader, usize instance_count)
     -> void {
   glBindVertexArray(m_id);
   glDrawElementsInstanced(GL_TRIANGLES, m_elements, GL_UNSIGNED_INT, nullptr,
@@ -69,7 +69,7 @@ auto GLBatch::draw_instanced(Shared<GPUShader> shader, usize instance_count)
   glBindVertexArray(0);
 }
 
-auto GLBatch::draw_indirect(Shared<GPUShader> shader) -> void {
+auto GLBatch::draw_indirect(SharedPtr<GPUShader> shader) -> void {
   glBindVertexArray(m_id);
   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect);
   glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, 0, m_indirect_size,
@@ -84,13 +84,13 @@ auto GLBatch::upload_indirect(const void* buffer, usize size) -> void {
   m_indirect_size = size / 20;
 }
 
-auto GLBatch::draw_lines(Shared<GPUShader> shader) -> void {
+auto GLBatch::draw_lines(SharedPtr<GPUShader> shader) -> void {
   glBindVertexArray(m_id);
   glDrawArrays(GL_LINES, 0, m_elements);
   glBindVertexArray(0);
 }
 
-auto GLBatch::draw_lines(Shared<GPUShader> shader, usize n) -> void {
+auto GLBatch::draw_lines(SharedPtr<GPUShader> shader, usize n) -> void {
   glBindVertexArray(m_id);
   glDrawArrays(GL_LINES, 0, n);
   glBindVertexArray(0);

@@ -7,14 +7,14 @@ namespace zod {
 class GPUPlatform {
 public:
   bool initialized = false;
-  std::string vendor;
-  std::string version;
-  std::string renderer;
+  String vendor;
+  String version;
+  String renderer;
   GPUBackendType backend = GPUBackendType::None;
   GPUDeviceType device = GPUDeviceType::None;
 
-  auto init(GPUBackendType, GPUDeviceType, std::string /* vendor */,
-            std::string /* version */, std::string /* renderer */) -> void;
+  auto init(GPUBackendType, GPUDeviceType, String /* vendor */,
+            String /* version */, String /* renderer */) -> void;
 };
 
 extern GPUPlatform g_platform;

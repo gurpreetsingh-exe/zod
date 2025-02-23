@@ -15,8 +15,8 @@ public:
   auto init(void* /* glfw_window */) -> void;
   auto is_initialized() const -> bool { return m_device != VK_NULL_HANDLE; }
   auto device_type() const -> GPUDeviceType;
-  auto vendor_name() const -> std::string;
-  auto driver_version() const -> std::string;
+  auto vendor_name() const -> String;
+  auto driver_version() const -> String;
 
   auto get_physical_device_properties() const
       -> const VkPhysicalDeviceProperties& {
@@ -41,8 +41,8 @@ private:
 
   VkSwapchainKHR m_swapchain = VK_NULL_HANDLE;
   VkFormat m_swapchain_image_format = VK_FORMAT_UNDEFINED;
-  std::vector<VkImage> m_swapchain_images = {};
-  std::vector<VkImageView> m_swapchain_image_views = {};
+  Vector<VkImage> m_swapchain_images = {};
+  Vector<VkImageView> m_swapchain_image_views = {};
   VkExtent2D m_swapchain_extent = {};
 
   VmaAllocator m_allocator;

@@ -7,16 +7,15 @@ namespace zod {
 
 class VKBatch : public GPUBatch {
 public:
-  VKBatch(const std::vector<GPUBufferLayout>&,
-          const std::vector<u32>& indices = {});
+  VKBatch(const Vector<GPUBufferLayout>&, const Vector<u32>& indices = {});
   ~VKBatch();
 
 public:
-  auto draw(Shared<GPUShader>) -> void override;
-  auto draw(Shared<GPUShader>, usize) -> void override;
-  auto draw_instanced(Shared<GPUShader>, usize /* instance_count */)
+  auto draw(SharedPtr<GPUShader>) -> void override;
+  auto draw(SharedPtr<GPUShader>, usize) -> void override;
+  auto draw_instanced(SharedPtr<GPUShader>, usize /* instance_count */)
       -> void override;
-  auto draw_lines(Shared<GPUShader>) -> void;
+  auto draw_lines(SharedPtr<GPUShader>) -> void;
 
 private:
   usize m_elements;

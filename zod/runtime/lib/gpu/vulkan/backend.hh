@@ -11,7 +11,7 @@ namespace zod {
 
 class VKBackend : public GPUBackend {
   friend class VKDevice;
-  static std::string version;
+  static String version;
 
 public:
   VKDevice device;
@@ -23,55 +23,58 @@ public:
     return static_cast<VKBackend&>(GPUBackend::get());
   }
 
-  auto create_batch(const std::vector<GPUBufferLayout>&,
-                    const std::vector<u32>& indices = {})
-      -> Shared<GPUBatch> override {
+  auto create_batch(const Vector<GPUBufferLayout>&,
+                    const Vector<u32>& indices = {})
+      -> SharedPtr<GPUBatch> override {
     TODO();
   }
 
-  auto create_context(void* glfw_window) -> Shared<GPUContext> override;
+  auto create_context(void* glfw_window) -> SharedPtr<GPUContext> override;
 
-  auto create_framebuffer(int, int) -> Shared<GPUFrameBuffer> override {
+  auto create_framebuffer(int, int) -> SharedPtr<GPUFrameBuffer> override {
     TODO();
   }
 
-  auto create_pipeline(PipelineSpec spec) -> Shared<GPUPipeline> override {
+  auto create_pipeline(PipelineSpec spec) -> SharedPtr<GPUPipeline> override {
     return shared<VKPipeline>(spec);
   }
 
-  auto create_query() -> Shared<GPUQuery> override { TODO(); }
+  auto create_query() -> SharedPtr<GPUQuery> override { TODO(); }
 
-  auto create_shader(GPUShaderCreateInfo info) -> Shared<GPUShader> override {
+  auto create_shader(GPUShaderCreateInfo info)
+      -> SharedPtr<GPUShader> override {
     return shared<VKShader>(info);
   }
 
-  auto create_state() -> Shared<GPUState> override { return shared<VKState>(); }
+  auto create_state() -> SharedPtr<GPUState> override {
+    return shared<VKState>();
+  }
 
-  auto create_storage_buffer() -> Shared<GPUStorageBuffer> override {
+  auto create_storage_buffer() -> SharedPtr<GPUStorageBuffer> override {
     return shared<VKStorageBuffer>(1);
   }
 
   auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,
-                      bool /* bindless */) -> Shared<GPUTexture> override {
+                      bool /* bindless */) -> SharedPtr<GPUTexture> override {
     TODO();
   }
 
   auto create_texture(GPUTextureType, GPUTextureFormat, const fs::path&)
-      -> Shared<GPUTexture> override {
+      -> SharedPtr<GPUTexture> override {
     TODO();
   }
 
   auto create_texture(GPUTextureType, const fs::path&)
-      -> Shared<GPUTexture> override {
+      -> SharedPtr<GPUTexture> override {
     TODO();
   }
 
   auto create_uniform_buffer(usize size_in_bytes)
-      -> Shared<GPUUniformBuffer> override {
+      -> SharedPtr<GPUUniformBuffer> override {
     return shared<VKUniformBuffer>(size_in_bytes);
   }
 
-  auto create_vertex_buffer() -> Shared<GPUVertexBuffer> override { TODO(); }
+  auto create_vertex_buffer() -> SharedPtr<GPUVertexBuffer> override { TODO(); }
 
 private:
   static auto platform_init() -> void;

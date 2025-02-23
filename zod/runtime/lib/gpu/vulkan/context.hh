@@ -10,7 +10,7 @@ public:
   ~VKContext();
 
 public:
-  static auto get() -> Shared<VKContext> {
+  static auto get() -> SharedPtr<VKContext> {
     return static_pointer_cast<VKContext>(GPUContext::get());
   }
 };

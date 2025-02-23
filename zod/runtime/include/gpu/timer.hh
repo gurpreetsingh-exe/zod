@@ -14,7 +14,7 @@ public:
   static auto get() -> GPUTimer&;
 
   template <typename Callback>
-  auto with_scope(const std::string& name, Callback cb) -> void {
+  auto with_scope(const String& name, Callback cb) -> void {
     if (not m_queries.contains(name)) {
       m_queries[name] = GPUBackend::get().create_query();
     }
@@ -25,13 +25,13 @@ public:
     m_times[name] = query->get_time();
   }
 
-  auto timings() const -> const std::unordered_map<std::string, f32>& {
+  auto timings() const -> const std::unordered_map<String, f32>& {
     return m_times;
   }
 
 private:
-  std::unordered_map<std::string, Shared<GPUQuery>> m_queries;
-  std::unordered_map<std::string, f32> m_times;
+  std::unordered_map<String, SharedPtr<GPUQuery>> m_queries;
+  std::unordered_map<String, f32> m_times;
 };
 
 } // namespace zod

@@ -2,6 +2,7 @@
 #include <imgui.h>
 
 #include "editor.hh"
+#include "engine/camera.hh"
 #include "gpu/timer.hh"
 #include "viewport.hh"
 #include "widgets/button.hh"
@@ -40,7 +41,7 @@ static auto Button(const char* name, bool& enabled) -> void {
   ImGui::PopStyleVar(2);
 }
 
-static auto load_env() -> Shared<GPUTexture> {
+static auto load_env() -> SharedPtr<GPUTexture> {
   const auto& env = Editor::get().get_env();
   // const auto path = fs::path(env.hdr.s);
   const auto path = fs::path("./industrial_sunset_puresky_2k.hdr");
@@ -72,7 +73,7 @@ Viewport::Viewport()
     -1, -1, 1,  1, -1, 1,  1, 1, 1,  -1, 1, 1,
   };
 
-  auto format = std::vector<GPUBufferLayout> {
+  auto format = Vector<GPUBufferLayout> {
     { GPUDataType::Float, position, 3, 24 },
   };
   m_cubemap_batch = GPUBackend::get().create_batch(
@@ -122,7 +123,7 @@ auto Viewport::on_event_imp(Event& event) -> void {
   }
 }
 
-auto Viewport::update(Shared<GPUBatch> batch) -> void {
+auto Viewport::update(SharedPtr<GPUBatch> batch) -> void {
   auto t = Editor::get().get_texture();
   if (m_size != t->get_size()) {
     t->resize(m_size.x, m_size.y);

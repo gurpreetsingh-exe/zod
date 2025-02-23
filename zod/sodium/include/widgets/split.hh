@@ -22,11 +22,10 @@ enum class SplitKind {
 
 class Split : public Widget {
 public:
-  Split(SplitKind kind)
-      : m_kind(kind), m_nodes(std::vector<Unique<Widget>>()) {}
+  Split(SplitKind kind) : m_kind(kind), m_nodes(Vector<UniquePtr<Widget>>()) {}
 
 public:
-  auto add_node(Unique<Widget> widget, f32 size) -> void {
+  auto add_node(UniquePtr<Widget> widget, f32 size) -> void {
     m_nodes.push_back(std::move(widget));
     m_size_coefficients.push_back(size);
   }
@@ -41,8 +40,8 @@ public:
 
 private:
   SplitKind m_kind;
-  std::vector<Unique<Widget>> m_nodes;
-  std::vector<f32> m_size_coefficients;
+  Vector<UniquePtr<Widget>> m_nodes;
+  Vector<f32> m_size_coefficients;
 };
 
 } // namespace zod

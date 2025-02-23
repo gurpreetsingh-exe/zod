@@ -1,5 +1,6 @@
 #include "operators/node.hh"
 #include "editor.hh"
+#include "engine/camera.hh"
 #include "widgets/panel.hh"
 
 namespace zod {

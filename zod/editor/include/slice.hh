@@ -27,13 +27,13 @@ public:
     m_framebuffer->unbind();
   }
 
-  auto get_texture() -> Shared<GPUTexture> {
+  auto get_texture() -> SharedPtr<GPUTexture> {
     return m_framebuffer->get_slot(0).texture;
   }
 
 private:
-  Shared<GPUFrameBuffer> m_framebuffer;
-  Shared<GPUShader> m_shader;
+  SharedPtr<GPUFrameBuffer> m_framebuffer;
+  SharedPtr<GPUShader> m_shader;
 };
 
 } // namespace zod

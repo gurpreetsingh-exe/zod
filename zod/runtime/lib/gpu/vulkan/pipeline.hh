@@ -18,7 +18,7 @@ private:
   auto set_multisampling_none() -> void;
 
 private:
-  std::vector<VkPipelineShaderStageCreateInfo> m_shader_stages;
+  Vector<VkPipelineShaderStageCreateInfo> m_shader_stages;
 
   VkPipelineInputAssemblyStateCreateInfo m_input_assembly;
   VkPipelineRasterizationStateCreateInfo m_rasterizer;

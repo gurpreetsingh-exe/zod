@@ -10,7 +10,7 @@ public:
   ~GLContext();
 
 public:
-  static auto get() -> Shared<GLContext> {
+  static auto get() -> SharedPtr<GLContext> {
     return static_pointer_cast<GLContext>(GPUContext::get());
   }
 };

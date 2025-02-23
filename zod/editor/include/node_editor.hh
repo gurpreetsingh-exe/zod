@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/node_types.hh"
 #include "editor.hh"
+#include "engine/node_types.hh"
 #include "gpu/backend.hh"
 #include "widgets/panel.hh"
 
@@ -48,13 +48,13 @@ private:
 private:
   f32 m_width;
   f32 m_height;
-  Shared<GPUShader> m_shader;
-  Shared<GPUStorageBuffer> m_node_ssbo;
-  Shared<GPUShader> m_node_shader;
-  Shared<GPUBatch> m_batch;
-  Shared<GPUShader> m_line_shader;
-  Shared<GPUBatch> m_curves;
-  std::vector<vec2> m_links = {};
+  SharedPtr<GPUShader> m_shader;
+  SharedPtr<GPUStorageBuffer> m_node_ssbo;
+  SharedPtr<GPUShader> m_node_shader;
+  SharedPtr<GPUBatch> m_batch;
+  SharedPtr<GPUShader> m_line_shader;
+  SharedPtr<GPUBatch> m_curves;
+  Vector<vec2> m_links = {};
 
   /// Debug
   bool m_framebuffer_bit = 0;

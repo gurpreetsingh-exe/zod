@@ -5,9 +5,9 @@
 namespace zod {
 
 // Function to generate vertices for a round square
-// std::vector<float> generateRoundSquareVertices(float L, float R,
+// Vector<float> generateRoundSquareVertices(float L, float R,
 //                                                int numSegments) {
-//   std::vector<float> vertices;
+//   Vector<float> vertices;
 
 //   float halfL = L / 2.0f;
 //   float cornerAngleStep = M_PI / 2.0f / numSegments;

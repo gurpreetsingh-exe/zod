@@ -1,14 +1,29 @@
 #include <imgui.h>
 
+#include "engine/camera.hh"
 #include "widgets/panel.hh"
 
 namespace zod {
 
-SPanel::SPanel(std::string name, Unique<ICamera> camera, bool padding)
+SPanel::SPanel(String name, UniquePtr<ICamera> camera, bool padding)
     : SWidget(std::move(name)), m_camera(std::move(camera)), m_padding(padding),
       m_uniform_buffer(GPUBackend::get().create_uniform_buffer(
           sizeof(CameraUniformBufferStorage))),
       m_framebuffer(GPUBackend::get().create_framebuffer(64.0f, 64.0f)) {}
+
+auto SPanel::get_active() const -> bool { return m_active; }
+
+auto SPanel::camera() const -> const ICamera& { return *m_camera; }
+
+auto SPanel::relative_mouse_position() const -> vec2 {
+  auto position = Input::get_mouse_pos() - m_position + vec2(0, 43);
+  position.y = m_size.y - position.y;
+  return position;
+}
+
+auto SPanel::region_space_mouse_position() const -> vec2 {
+  return vec2(m_camera->screen_to_world(relative_mouse_position()));
+}
 
 auto SPanel::on_event(Event& event) -> void {
   // temporary hack until cursor wrapping isn't fixed

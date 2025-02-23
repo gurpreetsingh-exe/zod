@@ -32,9 +32,9 @@ private:
   FT_Face m_face;
   i32 m_width;
   i32 m_height;
-  Shared<GPUTexture> m_texture;
-  Shared<GPUBatch> m_batch;
-  Shared<GPUShader> m_text_shader;
+  SharedPtr<GPUTexture> m_texture;
+  SharedPtr<GPUBatch> m_batch;
+  SharedPtr<GPUShader> m_text_shader;
   f32* m_position = nullptr;
   f32* m_uv = nullptr;
   usize m_coord_count = 0;

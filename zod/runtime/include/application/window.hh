@@ -10,7 +10,7 @@ class Window {
 public:
   using EventCallbackFn = std::function<void(Event&)>;
 
-  Window(const std::string& /* name */);
+  Window(const String& /* name */);
   ~Window();
 
 public:
@@ -29,7 +29,7 @@ public:
 
 private:
   GLFWwindow* m_window;
-  Shared<GPUContext> m_gcx;
+  SharedPtr<GPUContext> m_gcx;
   EventCallbackFn m_event_callback;
   vec<2, i32> m_size;
 };

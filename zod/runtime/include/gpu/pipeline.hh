@@ -27,7 +27,7 @@ enum class GPUCullMode {
 };
 
 struct PipelineSpec {
-  Shared<GPUShader> shader;
+  SharedPtr<GPUShader> shader;
   GPUPrimitive primitive = GPUPrimitive::Triangles;
   GPUPrimitiveDrawMode draw_mode = GPUPrimitiveDrawMode::Fill;
   GPUCullMode cull_mode = GPUCullMode::None;
@@ -41,7 +41,7 @@ public:
   virtual ~GPUPipeline() = default;
 
 protected:
-  Shared<GPUShader> m_shader;
+  SharedPtr<GPUShader> m_shader;
 };
 
 } // namespace zod

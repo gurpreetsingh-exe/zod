@@ -86,7 +86,7 @@ IncludeIsMainSourceRegex: ''
 IndentCaseLabels: true
 IndentCaseBlocks: false
 IndentGotoLabels: true
-IndentPPDirectives: None
+IndentPPDirectives: AfterHash
 IndentExternBlock: NoIndent
 IndentWidth:     2
 IndentWrappedFunctionNames: false

@@ -4,7 +4,7 @@ namespace zod {
 
 constexpr usize MAX_VERTICES = 64 * 1024;
 
-static Unique<Font> g_font = nullptr;
+static UniquePtr<Font> g_font = nullptr;
 
 auto init_font(const fs::path& path) -> void {
   g_font = unique<Font>();
@@ -37,11 +37,11 @@ Font::Font() {
 
   m_position = new f32[MAX_VERTICES * 2];
   m_uv = new f32[MAX_VERTICES * 2];
-  auto format = std::vector<GPUBufferLayout> {
+  auto format = Vector<GPUBufferLayout> {
     { GPUDataType::Float, m_position, 2, MAX_VERTICES * 2 },
     { GPUDataType::Float, m_uv, 2, MAX_VERTICES * 2 },
   };
-  auto indices = std::vector<u32>();
+  auto indices = Vector<u32>();
   for (usize i = 0; i < MAX_VERTICES; i += 4) {
     indices.push_back(i);
     indices.push_back(i + 1);

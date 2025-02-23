@@ -39,7 +39,7 @@ auto GPUShaderCreateInfo::compute_source(const char* src)
   return *this;
 }
 
-auto ShaderLibrary::add(const std::string& name, Shared<GPUShader> shader)
+auto ShaderLibrary::add(const String& name, SharedPtr<GPUShader> shader)
     -> void {
   if (m_shaders.contains(name)) {
     fmt::println("shader `{}` already present", name);
@@ -47,7 +47,7 @@ auto ShaderLibrary::add(const std::string& name, Shared<GPUShader> shader)
   m_shaders.insert({ name, shader });
 }
 
-auto ShaderLibrary::get(const std::string& name) -> Shared<GPUShader> {
+auto ShaderLibrary::get(const String& name) -> SharedPtr<GPUShader> {
   ZASSERT(m_shaders.contains(name), "shader `{}` not found", name);
   return m_shaders[name];
 }

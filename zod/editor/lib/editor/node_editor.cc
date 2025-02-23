@@ -2,6 +2,7 @@
 
 #include "application/input.hh"
 #include "curve.hh"
+#include "engine/camera.hh"
 #include "engine/font.hh"
 #include "node_editor.hh"
 #include "nodes.hh"

@@ -27,7 +27,7 @@ static auto glslang_get_shader_stage(ShaderStage stage) -> glslang_stage_t {
 }
 
 auto compile_glsl_to_spirv(ShaderStage stage0, const char* source)
-    -> std::vector<u32> {
+    -> Vector<u32> {
   const auto stage = glslang_get_shader_stage(stage0);
   const auto input = glslang_input_t {
     .language = GLSLANG_SOURCE_GLSL,
@@ -70,7 +70,7 @@ auto compile_glsl_to_spirv(ShaderStage stage0, const char* source)
 
   glslang_program_SPIRV_generate(program, stage);
   auto size = glslang_program_SPIRV_get_size(program);
-  auto binary = std::vector<u32>(size);
+  auto binary = Vector<u32>(size);
   glslang_program_SPIRV_get(program, binary.data());
   if (auto messages = glslang_program_SPIRV_get_messages(program)) {
     fmt::println("{}", messages);
@@ -117,11 +117,11 @@ auto VKShader::compile(GPUShaderCreateInfo info) -> void {
 auto VKShader::bind() -> void {}
 auto VKShader::unbind() -> void {}
 auto VKShader::dispatch(u32 /* x */, u32 /* y */, u32 /* z */) -> void {}
-auto VKShader::uniform_float(const std::string&, const f32*, usize /* size */)
+auto VKShader::uniform_float(const String&, const f32*, usize /* size */)
     -> void {}
-auto VKShader::uniform_uint(const std::string&, const u32*, usize /* size */)
+auto VKShader::uniform_uint(const String&, const u32*, usize /* size */)
     -> void {}
-auto VKShader::uniform_int(const std::string&, const i32*, usize /* size */)
+auto VKShader::uniform_int(const String&, const i32*, usize /* size */)
     -> void {}
 
 auto VKShader::create_shader_module(ShaderStage stage, const char* source)

@@ -18,7 +18,7 @@ auto VKBackend::platform_init(const VKDevice& device) -> void {
                   std::move(version), properties.deviceName);
 }
 
-auto VKBackend::create_context(void* glfw_window) -> Shared<GPUContext> {
+auto VKBackend::create_context(void* glfw_window) -> SharedPtr<GPUContext> {
   if (not device.is_initialized()) {
     device.init(glfw_window);
   }

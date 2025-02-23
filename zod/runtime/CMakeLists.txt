@@ -14,7 +14,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shaders shaderlib)
 
 # precompiled header
 add_library(zodpch INTERFACE)
-target_precompile_headers(zodpch INTERFACE ${INC}/core/base/base.hh)
+target_precompile_headers(zodpch INTERFACE ${INC}/core/types.hh)
+target_include_directories(zodpch INTERFACE ${INC})
 target_link_libraries(zodpch INTERFACE fmt glm::glm)
 
 # embed

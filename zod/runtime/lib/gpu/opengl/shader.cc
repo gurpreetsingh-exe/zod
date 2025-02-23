@@ -18,7 +18,7 @@ auto GLShader::create_shader(GLuint type, const char* source) -> GLuint {
   if (result == GL_FALSE) {
     int length;
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-    auto info_log = std::vector<char>(usize(length));
+    auto info_log = Vector<char>(usize(length));
     glGetShaderInfoLog(shader, length, &length, &info_log[0]);
     glDeleteShader(shader);
     eprintln("{}", info_log.data());
@@ -47,7 +47,7 @@ auto GLShader::compile(GPUShaderCreateInfo info) -> void {
     if (is_linked == GL_FALSE) {
       int length;
       glGetProgramiv(m_id, GL_INFO_LOG_LENGTH, &length);
-      auto info_log = std::vector<char>(usize(length));
+      auto info_log = Vector<char>(usize(length));
       glGetProgramInfoLog(m_id, length, &length, &info_log[0]);
       glDeleteProgram(m_id);
       eprintln("{}", info_log.data());
@@ -84,14 +84,14 @@ auto GLShader::dispatch(u32 x, u32 y, u32 z) -> void {
   glDispatchCompute(x, y, z);
 }
 
-auto GLShader::get_uniform_location(const std::string& name) -> GLuint {
+auto GLShader::get_uniform_location(const String& name) -> GLuint {
   if (not m_uniforms.contains(name)) {
     m_uniforms[name] = glGetUniformLocation(m_id, name.c_str());
   }
   return m_uniforms[name];
 }
 
-auto GLShader::uniform_uint(const std::string& name, const u32* n, usize size)
+auto GLShader::uniform_uint(const String& name, const u32* n, usize size)
     -> void {
   switch (size) {
     case 1: {
@@ -102,7 +102,7 @@ auto GLShader::uniform_uint(const std::string& name, const u32* n, usize size)
   }
 }
 
-auto GLShader::uniform_int(const std::string& name, const i32* n, usize size)
+auto GLShader::uniform_int(const String& name, const i32* n, usize size)
     -> void {
   switch (size) {
     case 1: {
@@ -113,7 +113,7 @@ auto GLShader::uniform_int(const std::string& name, const i32* n, usize size)
   }
 }
 
-auto GLShader::uniform_float(const std::string& name, const f32* v, usize size)
+auto GLShader::uniform_float(const String& name, const f32* v, usize size)
     -> void {
   switch (size) {
     case 2: {

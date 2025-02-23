@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/operator.hh"
+#include "engine/operator.hh"
 
 namespace zod {
 

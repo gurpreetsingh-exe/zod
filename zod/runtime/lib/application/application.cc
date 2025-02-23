@@ -1,13 +1,13 @@
 #include "application/application.hh"
-#include "core/runtime.hh"
 #include "engine/font.hh"
+#include "engine/runtime.hh"
 
 namespace zod {
 
-ApplicationCreateInfo::ApplicationCreateInfo(std::string name_, int argc,
+ApplicationCreateInfo::ApplicationCreateInfo(String name_, int argc,
                                              char** argv)
     : name(name_) {
-  for (int i = 0; i < argc; ++i) { cmd_args.push_back(std::string(argv[i])); }
+  for (int i = 0; i < argc; ++i) { cmd_args.push_back(String(argv[i])); }
 }
 
 static Application* g_instance = nullptr;
@@ -42,7 +42,7 @@ auto Application::working_directory() const -> const fs::path& {
   return m_info.working_directory;
 }
 
-auto Application::args() const -> const std::vector<std::string>& {
+auto Application::args() const -> const Vector<String>& {
   return m_info.cmd_args;
 }
 

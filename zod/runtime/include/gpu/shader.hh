@@ -20,21 +20,21 @@ public:
     GPUDataType type;
     const char* name;
   };
-  std::vector<VertexIn> inputs = {};
+  Vector<VertexIn> inputs = {};
 
   struct FragmentOut {
     u32 index;
     GPUDataType type;
     const char* name;
   };
-  std::vector<FragmentOut> outputs = {};
+  Vector<FragmentOut> outputs = {};
 
   struct Varying {
     u32 index;
     GPUDataType type;
     const char* name;
   };
-  std::vector<Varying> varyings = {};
+  Vector<Varying> varyings = {};
 
   GPUShaderCreateInfo(const char* name_) : name(name_) {}
   auto vertex_in(VertexIn) -> GPUShaderCreateInfo&;
@@ -57,7 +57,7 @@ private:
 
 class GPUShader {
 public:
-  std::string name;
+  String name;
 
 public:
   GPUShader(GPUShaderCreateInfo info) : name(info.name) {}
@@ -65,11 +65,11 @@ public:
   virtual auto bind() -> void = 0;
   virtual auto unbind() -> void = 0;
   virtual auto dispatch(u32 /* x */, u32 /* y */, u32 /* z */) -> void = 0;
-  virtual auto uniform_float(const std::string&, const f32*,
-                             usize /* size */ = 1) -> void = 0;
-  virtual auto uniform_uint(const std::string&, const u32*,
-                            usize /* size */ = 1) -> void = 0;
-  virtual auto uniform_int(const std::string&, const i32*, usize /* size */ = 1)
+  virtual auto uniform_float(const String&, const f32*, usize /* size */ = 1)
+      -> void = 0;
+  virtual auto uniform_uint(const String&, const u32*, usize /* size */ = 1)
+      -> void = 0;
+  virtual auto uniform_int(const String&, const i32*, usize /* size */ = 1)
       -> void = 0;
 
 private:
@@ -86,11 +86,11 @@ public:
   ShaderLibrary() = default;
 
 public:
-  auto add(const std::string& /* name */, Shared<GPUShader>) -> void;
-  auto get(const std::string& /* name */) -> Shared<GPUShader>;
+  auto add(const String& /* name */, SharedPtr<GPUShader>) -> void;
+  auto get(const String& /* name */) -> SharedPtr<GPUShader>;
 
 private:
-  std::unordered_map<std::string, Shared<GPUShader>> m_shaders;
+  std::unordered_map<String, SharedPtr<GPUShader>> m_shaders;
 };
 
 } // namespace zod

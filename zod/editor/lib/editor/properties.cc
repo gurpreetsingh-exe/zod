@@ -1,7 +1,7 @@
 #include <imgui.h>
 
-#include "core/components.hh"
 #include "editor.hh"
+#include "engine/components.hh"
 #include "properties.hh"
 
 namespace zod {
@@ -10,8 +10,7 @@ Properties::Properties()
     : SPanel("Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
 
 template <typename T, typename DrawFunc>
-auto draw_component(const std::string& name, Entity entity, DrawFunc draw)
-    -> void {
+auto draw_component(const String& name, Entity entity, DrawFunc draw) -> void {
   if (not entity) {
     return;
   }

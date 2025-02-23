@@ -6,7 +6,7 @@ namespace zod {
 
 class GPUContext {
 public:
-  Unique<GPUFrameBuffer> active_fb;
+  UniquePtr<GPUFrameBuffer> active_fb;
 
 protected:
   bool m_active;
@@ -16,11 +16,11 @@ public:
   GPUContext();
   virtual ~GPUContext() = default;
 
-  static auto get() -> Shared<GPUContext>;
+  static auto get() -> SharedPtr<GPUContext>;
 };
 
-auto gpu_context_create(void* glfw_window) -> Shared<GPUContext>;
-auto gpu_context_active_set(Shared<GPUContext>) -> void;
-auto gpu_context_active_get() -> Shared<GPUContext>;
+auto gpu_context_create(void* glfw_window) -> SharedPtr<GPUContext>;
+auto gpu_context_active_set(SharedPtr<GPUContext>) -> void;
+auto gpu_context_active_get() -> SharedPtr<GPUContext>;
 
 } // namespace zod

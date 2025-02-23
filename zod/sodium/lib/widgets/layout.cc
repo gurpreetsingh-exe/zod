@@ -3,7 +3,7 @@
 
 namespace zod {
 
-auto Layout::add_area(Shared<SPanel> panel) -> void {
+auto Layout::add_area(SharedPtr<SPanel> panel) -> void {
   m_areas.push_back(std::move(panel));
 }
 

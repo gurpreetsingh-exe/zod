@@ -142,7 +142,7 @@ auto VKDevice::device_type() const -> GPUDeviceType {
   }
 }
 
-auto VKDevice::vendor_name() const -> std::string {
+auto VKDevice::vendor_name() const -> String {
   // Below 0x10000 are the PCI vendor IDs
   // https://pcisig.com/membership/member-companies
   switch (m_physical_device_properties.vendorID) {
@@ -157,7 +157,7 @@ auto VKDevice::vendor_name() const -> std::string {
   }
 }
 
-auto VKDevice::driver_version() const -> std::string {
+auto VKDevice::driver_version() const -> String {
   const u32 driver_version = m_physical_device_properties.driverVersion;
   switch (m_physical_device_properties.vendorID) {
     case PCI::Nvidia:

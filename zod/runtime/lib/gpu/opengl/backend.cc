@@ -23,9 +23,9 @@ static void GLAPIENTRY message_callback(GLenum source, GLenum type, GLuint id,
 
 auto GLBackend::platform_init() -> void {
   gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-  auto vendor = std::string((const char*)glGetString(GL_VENDOR));
-  auto version = std::string((const char*)glGetString(GL_VERSION));
-  auto renderer = std::string((const char*)glGetString(GL_RENDERER));
+  auto vendor = String((const char*)glGetString(GL_VENDOR));
+  auto version = String((const char*)glGetString(GL_VERSION));
+  auto renderer = String((const char*)glGetString(GL_RENDERER));
   auto device = GPUDeviceType::None;
   if (vendor.contains("Intel")) {
     device = GPUDeviceType::Intel;

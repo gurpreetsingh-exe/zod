@@ -1,16 +1,15 @@
 #pragma once
 
 #include "application/event.hh"
-#include "core/base/math.hh"
 
 namespace zod {
 
 inline usize widget_id = 0;
 
 struct Geometry {
-  std::vector<vec2> points;
-  std::vector<vec4> colors;
-  std::vector<u32> indices;
+  Vector<vec2> points;
+  Vector<vec4> colors;
+  Vector<u32> indices;
 
   auto clear() -> void {
     points.clear();
@@ -22,7 +21,7 @@ struct Geometry {
 class SWidget {
 public:
   usize id;
-  std::string name;
+  String name;
 
 protected:
   bool m_needs_update = true;
@@ -31,7 +30,7 @@ protected:
   SWidget* m_parent = nullptr;
 
 public:
-  SWidget(std::string n) : id(widget_id++), name(std::move(n)) {}
+  SWidget(String n) : id(widget_id++), name(std::move(n)) {}
   virtual ~SWidget() = default;
   virtual auto on_event(Event& event) -> void = 0;
   virtual auto compute_desired_size() -> void = 0;

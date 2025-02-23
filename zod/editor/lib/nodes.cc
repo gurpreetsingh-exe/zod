@@ -1,8 +1,8 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui.h>
 
-#include "core/node_types.hh"
 #include "editor.hh"
+#include "engine/node_types.hh"
 #include "nodes.hh"
 
 namespace zod {
