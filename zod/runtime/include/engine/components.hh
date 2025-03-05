@@ -1,6 +1,8 @@
 #pragma once
 
+#include "core/uuid.hh"
 #include "engine/camera.hh"
+#include "engine/environment.hh"
 #include "engine/mesh.hh"
 
 namespace zod {
@@ -11,6 +13,12 @@ struct IdentifierComponent {
     auto sz = name.size() >= 64L ? 64L : name.size();
     std::memcpy(&identifier, name.c_str(), sz);
   }
+};
+
+struct UUIDComponent {
+  UUID id;
+  UUIDComponent() = delete;
+  UUIDComponent(const UUID& uuid) : id(uuid) {}
 };
 
 struct TransformComponent {
@@ -31,16 +39,21 @@ struct TransformComponent {
 };
 
 struct CameraComponent {
-  PerspectiveCamera camera { 600.0f, 400.0f, 90.0f, 0.01f, 100.0f };
-  CameraComponent() = default;
-  CameraComponent(PerspectiveCamera& _camera) : camera(_camera) {}
-  ~CameraComponent() = default;
+  SharedPtr<ICamera> camera;
+  CameraComponent() = delete;
+  CameraComponent(SharedPtr<ICamera> _camera) : camera(_camera) {}
 };
 
 struct StaticMeshComponent {
-  Mesh* mesh = nullptr;
+  SharedPtr<Mesh> mesh = nullptr;
   StaticMeshComponent() = default;
-  StaticMeshComponent(Mesh* _mesh) : mesh(_mesh) {}
+  StaticMeshComponent(SharedPtr<Mesh> _mesh) : mesh(_mesh) {}
+};
+
+struct SkyboxComponent {
+  Environment env = {};
+  SkyboxComponent() = default;
+  SkyboxComponent(Environment _env) : env(std::move(_env)) {}
 };
 
 }; // namespace zod

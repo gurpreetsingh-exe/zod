@@ -32,8 +32,9 @@ public:
     return shared<GLFrameBuffer>(w, h);
   }
 
-  auto create_pipeline(PipelineSpec spec) -> SharedPtr<GPUPipeline> override {
-    return shared<GLPipeline>(spec);
+  auto create_pipeline(GPUPipelineCreateInfo info)
+      -> SharedPtr<GPUPipeline> override {
+    return shared<GLPipeline>(info);
   }
 
   auto create_query() -> SharedPtr<GPUQuery> override {

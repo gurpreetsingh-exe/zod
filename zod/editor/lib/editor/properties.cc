@@ -7,7 +7,7 @@
 namespace zod {
 
 Properties::Properties()
-    : SPanel("Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
+    : SPanel("Properties", shared<OrthographicCamera>(64.0f, 64.0f)) {}
 
 template <typename T, typename DrawFunc>
 auto draw_component(const String& name, Entity entity, DrawFunc draw) -> void {
@@ -29,7 +29,9 @@ auto draw_component(const String& name, Entity entity, DrawFunc draw) -> void {
   ImGui::PopStyleVar();
 
   if (open) {
-    draw(component);
+    if (draw(component)) {
+      entity.update_internal<T>();
+    }
     ImGui::TreePop();
   }
 
@@ -37,6 +39,16 @@ auto draw_component(const String& name, Entity entity, DrawFunc draw) -> void {
 }
 
 extern auto DragFloat3(const char*, f32*, f32) -> bool;
+
+template <typename T>
+static auto draw_add_component(Entity entity, const String& name) -> void {
+  if (not entity.has_component<T>()) {
+    if (ImGui::MenuItem(name.c_str())) {
+      entity.add_component<T>();
+      ImGui::CloseCurrentPopup();
+    }
+  }
+}
 
 auto Properties::update() -> void {
   auto& C = Editor::get();
@@ -47,17 +59,51 @@ auto Properties::update() -> void {
 
   auto& name = entity.get_component<IdentifierComponent>().identifier;
   ImGui::SeparatorText(name);
-  if (ImGui::Button("Add")) {}
+  auto& uuid = entity.get_component<UUIDComponent>().id;
+  ImGui::Text("%s", uuid.to_string().c_str());
+  ImGui::Separator();
 
   draw_component<TransformComponent>("Transform", entity, [&](auto& component) {
     auto needs_update =
         DragFloat3("Location", (float*)&component.position, 0.1f);
     needs_update |= DragFloat3("Rotation", (float*)&component.rotation, 1.0f);
     needs_update |= DragFloat3("Scale", (float*)&component.scale, 0.1f);
-    if (needs_update) {
-      C.update_matrix(entity, *component);
-    }
+    return needs_update;
   });
+
+  draw_component<SkyboxComponent>("Skybox", entity, [&](auto& component) {
+    auto& env = component.env;
+    ImGui::Combo("Mode", (int*)&env.mode, "Solid Color\0Texture\0\0");
+    auto needs_update = false;
+    switch (env.mode) {
+      case LightingMode::SolidColor: {
+        needs_update |= draw_property(env.color);
+      } break;
+      case LightingMode::Texture: {
+        needs_update |= draw_property(env.hdr);
+      } break;
+    }
+    return needs_update;
+  });
+
+  ImGui::PushItemWidth(-1);
+
+  float spcx = ImGui::GetStyle().ItemSpacing.x;
+  float maxWidth = ImGui::GetContentRegionAvail().x;
+  float mrw = maxWidth - spcx;
+  if (ImGui::Button("Add Component", ImVec2(mrw, 30.0f))) {
+    ImGui::OpenPopup("AddComponent");
+  }
+
+  if (ImGui::BeginPopup("AddComponent")) {
+    // draw_add_component<CameraComponent>(entity, "Camera");
+    draw_add_component<StaticMeshComponent>(entity, "Static Mesh");
+    draw_add_component<SkyboxComponent>(entity, "Skybox");
+
+    ImGui::EndPopup();
+  }
+
+  ImGui::PopItemWidth();
 }
 
 } // namespace zod

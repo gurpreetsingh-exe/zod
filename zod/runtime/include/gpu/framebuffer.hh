@@ -1,6 +1,6 @@
 #pragma once
 
-#include "texture.hh"
+#include "gpu/texture.hh"
 
 namespace zod {
 

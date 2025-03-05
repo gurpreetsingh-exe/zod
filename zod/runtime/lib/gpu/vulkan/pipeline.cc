@@ -44,13 +44,13 @@ static auto to_vk(GPUCullMode mode) -> VkCullModeFlags {
   }
 }
 
-VKPipeline::VKPipeline(PipelineSpec spec) : GPUPipeline(spec) {
+VKPipeline::VKPipeline(GPUPipelineCreateInfo info) : GPUPipeline(info) {
   clear();
   m_shader_stages =
       static_pointer_cast<VKShader>(m_shader)->get_shader_stages();
-  set_input_topology(to_vk(spec.primitive));
-  set_polygon_mode(to_vk(spec.draw_mode));
-  set_cull_mode(to_vk(spec.cull_mode));
+  set_input_topology(to_vk(info.primitive));
+  set_polygon_mode(to_vk(info.draw_mode));
+  set_cull_mode(to_vk(info.cull_mode));
   set_multisampling_none();
 
   // TODO: remove

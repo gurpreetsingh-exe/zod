@@ -8,7 +8,7 @@ namespace zod {
 class Outliner : public SPanel {
 public:
   Outliner()
-      : SPanel("Outliner", unique<OrthographicCamera>(64.0f, 64.0f), false) {}
+      : SPanel("Outliner", shared<OrthographicCamera>(64.0f, 64.0f), false) {}
   auto on_event(Event& event) -> void override;
 
 private:

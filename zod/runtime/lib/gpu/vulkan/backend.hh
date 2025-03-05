@@ -35,8 +35,9 @@ public:
     TODO();
   }
 
-  auto create_pipeline(PipelineSpec spec) -> SharedPtr<GPUPipeline> override {
-    return shared<VKPipeline>(spec);
+  auto create_pipeline(GPUPipelineCreateInfo info)
+      -> SharedPtr<GPUPipeline> override {
+    return shared<VKPipeline>(info);
   }
 
   auto create_query() -> SharedPtr<GPUQuery> override { TODO(); }

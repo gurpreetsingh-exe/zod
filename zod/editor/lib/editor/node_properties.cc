@@ -5,7 +5,7 @@
 namespace zod {
 
 NodeProperties::NodeProperties()
-    : SPanel("Node Properties", unique<OrthographicCamera>(64.0f, 64.0f)) {}
+    : SPanel("Node Properties", shared<OrthographicCamera>(64.0f, 64.0f)) {}
 
 auto NodeProperties::update() -> void {
   auto node_tree = Editor::get().get_node_tree();

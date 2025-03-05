@@ -5,8 +5,8 @@
 
 namespace zod {
 
-auto load_obj(const fs::path& filepath) -> Mesh* {
-  auto me = new Mesh();
+auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
+  auto me = shared<Mesh>();
   tinyobj::ObjReader reader;
   tinyobj::ObjReaderConfig config;
   reader.ParseFromFile(filepath, config);

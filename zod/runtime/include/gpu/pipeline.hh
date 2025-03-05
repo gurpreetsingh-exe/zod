@@ -1,6 +1,6 @@
 #pragma once
 
-#include "shader.hh"
+#include "gpu/shader.hh"
 
 namespace zod {
 
@@ -26,7 +26,7 @@ enum class GPUCullMode {
   FrontAndBack,
 };
 
-struct PipelineSpec {
+struct GPUPipelineCreateInfo {
   SharedPtr<GPUShader> shader;
   GPUPrimitive primitive = GPUPrimitive::Triangles;
   GPUPrimitiveDrawMode draw_mode = GPUPrimitiveDrawMode::Fill;
@@ -35,7 +35,7 @@ struct PipelineSpec {
 
 class GPUPipeline {
 protected:
-  GPUPipeline(PipelineSpec spec) : m_shader(spec.shader) {}
+  GPUPipeline(GPUPipelineCreateInfo info) : m_shader(info.shader) {}
 
 public:
   virtual ~GPUPipeline() = default;

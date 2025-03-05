@@ -1,8 +1,8 @@
 #pragma once
 
-#include "buffer.hh"
-#include "shader.hh"
-#include "types.hh"
+#include "gpu/buffer.hh"
+#include "gpu/shader.hh"
+#include "gpu/types.hh"
 
 namespace zod {
 

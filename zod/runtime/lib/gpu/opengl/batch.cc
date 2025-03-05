@@ -15,8 +15,9 @@ static auto to_gl(GPUDataType type) -> GLenum {
 
 GLBatch::GLBatch(const Vector<GPUBufferLayout>& layouts,
                  const Vector<u32>& indices) {
-  m_elements =
-      indices.size() ? indices.size() : layouts[0].length / layouts[0].size;
+  m_elements = indices.size()   ? indices.size()
+               : layouts.size() ? layouts[0].length / layouts[0].size
+                                : 0;
   glCreateVertexArrays(1, &m_id);
   glBindVertexArray(m_id);
 

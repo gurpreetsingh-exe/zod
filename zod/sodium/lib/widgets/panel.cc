@@ -5,15 +5,15 @@
 
 namespace zod {
 
-SPanel::SPanel(String name, UniquePtr<ICamera> camera, bool padding)
-    : SWidget(std::move(name)), m_camera(std::move(camera)), m_padding(padding),
+SPanel::SPanel(String name, SharedPtr<ICamera> camera, bool padding)
+    : SWidget(std::move(name)), m_camera(camera), m_padding(padding),
       m_uniform_buffer(GPUBackend::get().create_uniform_buffer(
           sizeof(CameraUniformBufferStorage))),
       m_framebuffer(GPUBackend::get().create_framebuffer(64.0f, 64.0f)) {}
 
 auto SPanel::get_active() const -> bool { return m_active; }
 
-auto SPanel::camera() const -> const ICamera& { return *m_camera; }
+auto SPanel::camera() const -> SharedPtr<ICamera> { return m_camera; }
 
 auto SPanel::relative_mouse_position() const -> vec2 {
   auto position = Input::get_mouse_pos() - m_position + vec2(0, 43);
@@ -59,26 +59,11 @@ auto SPanel::on_event(Event& event) -> void {
         };
         m_uniform_buffer->upload_data(&storage,
                                       sizeof(CameraUniformBufferStorage));
-        return;
       }
     }
   }
 
   on_event_imp(event);
-}
-
-auto SPanel::bind_window_space_uniform_buffer() -> void {
-  if (not unit_uniform_buffer) {
-    unit_uniform_buffer = GPUBackend::get().create_uniform_buffer(
-        sizeof(CameraUniformBufferStorage));
-    auto storage = CameraUniformBufferStorage {
-      ortho(0.0f, m_size.x, 0.0f, m_size.y, -1.0f, 1.0f),
-      vec4(0.0f),
-    };
-    unit_uniform_buffer->upload_data(&storage,
-                                     sizeof(CameraUniformBufferStorage));
-  }
-  unit_uniform_buffer->bind(1);
 }
 
 auto SPanel::compute_desired_size() -> void {}
@@ -92,7 +77,6 @@ auto SPanel::draw(Geometry& g) -> void {
   m_position = vec2(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y);
   auto size =
       vec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
-  // TODO: create a resize event
   if (size != m_size) {
     m_size = size;
     m_framebuffer->resize(size.x, size.y);

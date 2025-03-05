@@ -9,6 +9,7 @@ add_subdirectory(${THIRD_PARTY_DIR}/glm glm)
 add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
 add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
 add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
+add_subdirectory(${THIRD_PARTY_DIR}/yaml-cpp yaml-cpp)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shaders shaderlib)
 
@@ -82,4 +83,5 @@ target_link_libraries(zrt
   glfw
   gpu
   tinyobj
-  uuid_v4)
+  uuid_v4
+  yaml-cpp::yaml-cpp)

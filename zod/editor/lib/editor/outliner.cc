@@ -46,9 +46,8 @@ auto Outliner::draw_imp(Geometry&) -> void {
     }
     if (ImGui::MenuItem("Cube")) {
       auto cube = scene.create();
-      cube.add_component<StaticMeshComponent>(C.mesh());
+      cube.add_component<StaticMeshComponent>(Mesh::cube());
       C.set_active_object(cube);
-      C.recompute_batch();
     }
 
     ImGui::EndPopup();

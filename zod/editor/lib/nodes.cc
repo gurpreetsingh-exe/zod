@@ -55,7 +55,7 @@ NodeUpdateFn node_update_functions[TOTAL_NODES] = {
         }
         auto& mgr = Editor::get().get_asset_manager();
         auto id = mgr.load(path.s);
-        if (id == uuid0()) {
+        if (id == UUID::null()) {
           return;
         }
         ZASSERT(node.parent);

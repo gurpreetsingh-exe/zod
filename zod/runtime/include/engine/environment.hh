@@ -1,6 +1,7 @@
 #pragma once
 
-#include "property.hh"
+#include "core/uuid.hh"
+#include "engine/property.hh"
 
 namespace zod {
 

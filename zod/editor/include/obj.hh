@@ -4,6 +4,6 @@ namespace zod {
 
 struct Mesh;
 
-auto load_obj(const fs::path& filepath) -> Mesh*;
+auto load_obj(const fs::path&) -> SharedPtr<Mesh>;
 
 } // namespace zod

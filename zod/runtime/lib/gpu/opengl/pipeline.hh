@@ -6,7 +6,7 @@ namespace zod {
 
 class GLPipeline : public GPUPipeline {
 public:
-  GLPipeline(PipelineSpec spec) : GPUPipeline(spec) {}
+  GLPipeline(GPUPipelineCreateInfo info) : GPUPipeline(info) {}
 };
 
 } // namespace zod

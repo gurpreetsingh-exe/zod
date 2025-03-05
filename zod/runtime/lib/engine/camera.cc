@@ -21,15 +21,14 @@ auto OrthographicCamera::pan(vec2 delta) -> void {
 
 auto OrthographicCamera::update(Event& event) -> bool {
   vec2 delta = event.mouse - event.last_mouse;
-  bool update = false;
   switch (m_mode) {
     case Navigation::Zoom: {
       zoom(delta.x);
-      update = true;
+      is_dirty = true;
     } break;
     case Navigation::Pan: {
       pan(delta);
-      update = true;
+      is_dirty = true;
     } break;
     case Navigation::None:
     case Navigation::Rotate:
@@ -38,7 +37,7 @@ auto OrthographicCamera::update(Event& event) -> bool {
   }
   update_projection();
   m_view_projection = m_projection * m_view;
-  return update;
+  return is_dirty;
 }
 
 auto PerspectiveCamera::zoom(f32 delta) -> void {
@@ -61,19 +60,18 @@ auto PerspectiveCamera::rotate(vec2 delta) -> void {
 
 auto PerspectiveCamera::update(Event& event) -> bool {
   vec2 delta = (event.mouse - event.last_mouse) * 0.28f;
-  bool update = false;
   switch (m_mode) {
     case Navigation::Zoom: {
       zoom(delta.x);
-      update = true;
+      is_dirty = true;
     } break;
     case Navigation::Pan: {
       pan(delta);
-      update = true;
+      is_dirty = true;
     } break;
     case Navigation::Rotate: {
       rotate(delta);
-      update = true;
+      is_dirty = true;
     } break;
     case Navigation::None:
     default:
@@ -81,7 +79,7 @@ auto PerspectiveCamera::update(Event& event) -> bool {
   }
   m_right = cross(up, m_direction);
   update_matrix();
-  return update;
+  return is_dirty;
 }
 
 }; // namespace zod

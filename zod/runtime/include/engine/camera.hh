@@ -15,7 +15,7 @@ enum Navigation {
 
 class ICamera {
 public:
-  bool updating = false;
+  bool is_dirty = false;
 
 public:
   ICamera(f32 width, f32 height) : m_width(width), m_height(m_height) {}
@@ -26,7 +26,6 @@ public:
   auto get_projection() const -> const mat4& { return m_projection; }
   auto get_view_projection() const -> const mat4& { return m_view_projection; }
   auto get_direction() const -> const vec3& { return m_direction; }
-  auto force_update(bool update) -> void { updating = update; }
   auto set_pivot_point(vec2 v) -> void {
     m_pivot_point = screen_to_world({ v.x, m_height - v.y });
   }
@@ -43,7 +42,7 @@ public:
   auto resize(f32 width, f32 height) -> void {
     m_width = width;
     m_height = height;
-    m_needs_update = true;
+    is_dirty = true;
   }
 
   auto set_window_position(vec2 position) -> void {
@@ -66,7 +65,6 @@ protected:
   f32 m_width = 0.0f;
   f32 m_height = 0.0f;
   vec2 m_window_position = vec2(0.0f);
-  bool m_needs_update = false;
   Navigation m_mode = Navigation::None;
   vec3 m_position = vec3(0.0f, 0.0f, 1.0f);
   vec3 m_direction = normalize(-m_position);
@@ -130,13 +128,13 @@ public:
 
   auto set_fov(f32 fov) -> void {
     m_fov = fov;
-    m_needs_update = true;
+    is_dirty = true;
   }
 
   auto set_clipping(f32 near, f32 far) -> void {
     m_clip_near = near;
     m_clip_far = far;
-    m_needs_update = true;
+    is_dirty = true;
   }
 
 private:

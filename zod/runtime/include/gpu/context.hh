@@ -1,6 +1,6 @@
 #pragma once
 
-#include "framebuffer.hh"
+#include "gpu/framebuffer.hh"
 
 namespace zod {
 

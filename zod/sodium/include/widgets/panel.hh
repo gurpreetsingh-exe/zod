@@ -19,21 +19,20 @@ inline SharedPtr<GPUUniformBuffer> unit_uniform_buffer = nullptr;
 
 class SPanel : public SWidget {
 public:
-  SPanel(String /* name */, UniquePtr<ICamera>, bool /* padding */ = true);
+  SPanel(String /* name */, SharedPtr<ICamera>, bool /* padding */ = true);
   auto on_event(Event&) -> void override;
   auto compute_desired_size() -> void override;
   virtual auto on_event_imp(Event&) -> void {};
   auto draw(Geometry&) -> void;
   auto get_active() const -> bool;
-  auto camera() const -> const ICamera&;
+  auto camera() const -> SharedPtr<ICamera>;
   auto relative_mouse_position() const -> vec2;
   auto region_space_mouse_position() const -> vec2;
-  auto bind_window_space_uniform_buffer() -> void;
 
 protected:
   bool m_padding = true;
   bool m_active = false;
-  UniquePtr<ICamera> m_camera;
+  SharedPtr<ICamera> m_camera;
   SharedPtr<GPUUniformBuffer> m_uniform_buffer;
   SharedPtr<GPUFrameBuffer> m_framebuffer;
   std::unordered_map<KeyCode, std::function<void()>> m_keymaps = {};

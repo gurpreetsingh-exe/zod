@@ -12,7 +12,7 @@
 namespace zod {
 
 NodeEditor::NodeEditor()
-    : SPanel("Node Editor", unique<OrthographicCamera>(64.0f, 64.0f), false),
+    : SPanel("Node Editor", shared<OrthographicCamera>(64.0f, 64.0f), false),
       m_width(64), m_height(64) {
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(

@@ -6,6 +6,8 @@
 #include "imgui_layer.hh"
 #include "theme.hh"
 
+#include "engine/runtime.hh"
+
 namespace zod {
 
 auto active = ImVec4 { 0.15f, 0.16f, 0.17f, 1.0f };
@@ -140,7 +142,8 @@ void ImGuiLayer::begin_frame() {
       }
       ImGui::Separator();
       if (ImGui::MenuItem("Save")) {
-        TODO();
+        Runtime::get().scene().serialize();
+        // TODO();
       }
       ImGui::Separator();
       if (ImGui::MenuItem("Quit")) {
