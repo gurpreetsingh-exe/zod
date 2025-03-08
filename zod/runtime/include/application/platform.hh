@@ -2,6 +2,17 @@
 
 namespace zod {
 
-auto open_dialog(const fs::path&) -> String;
+enum class DialogMode {
+  Save,
+  Open,
+};
+
+enum class SelectionMode {
+  File,
+  Directory,
+};
+
+auto open_dialog(DialogMode = DialogMode::Open,
+                 SelectionMode = SelectionMode::File) -> String;
 
 } // namespace zod

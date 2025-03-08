@@ -30,13 +30,15 @@ public:
   auto active_camera() -> Entity;
   auto set_active_camera(Entity) -> void;
   auto operator->() const -> const entt::registry* { return &m_registry; }
-  auto serialize() -> void;
+  auto serialize(const fs::path&) -> void;
   auto on_component_added(Entity, auto&) -> void;
+  auto name() const -> const String& { return m_name; }
 
 private:
   auto next_id() -> usize { return m_disambiguator++; }
 
 private:
+  String m_name = "Default";
   entt::registry m_registry;
   usize m_disambiguator = 0;
   entt::entity m_camera = entt::null;

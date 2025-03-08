@@ -26,6 +26,7 @@ public:
   static auto get() -> Application&;
   auto active_window() const -> Window&;
   auto on_event(Event&) -> void;
+  auto set_working_directory(fs::path) -> void;
   auto working_directory() const -> const fs::path&;
   auto args() const -> const Vector<String>&;
   auto push_layer(ILayer*) -> void;

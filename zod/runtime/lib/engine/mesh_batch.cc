@@ -100,8 +100,7 @@ auto GPUMeshBatch::update_matrix(Entity entity, const mat4& mat) -> void {
   m_matrix_buffer->update_data(ADDROF(mat), sizeof(mat4), offset);
 }
 
-auto GPUMeshBatch::load_env(Environment& env)
-    -> SharedPtr<GPUTexture> {
+auto GPUMeshBatch::load_env(Environment& env) -> SharedPtr<GPUTexture> {
   const auto path = fs::path(env.hdr.s);
   return fs::exists(path) ? GPUBackend::get().create_texture(
                                 GPUTextureType::TextureCube, path)

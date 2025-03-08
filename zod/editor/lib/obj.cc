@@ -26,7 +26,9 @@ auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
     const auto& mesh = shape.mesh;
     usize i = 0;
     for (auto count : mesh.num_face_vertices) {
+      ZASSERT(count == 3, "unexpected vertex count in faces");
       auto prim = Prim();
+      usize vertex_index = 0;
       for (usize idx = i; idx < i + count; ++idx) {
         auto index = mesh.indices[idx];
         auto point = Point();
@@ -39,7 +41,7 @@ auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
           unique_vertices[point] = u32(me->points.size());
           me->points.push_back(point);
         }
-        prim.points.push_back(unique_vertices[point]);
+        prim.points[vertex_index++] = unique_vertices[point];
       }
       auto index_ = mesh.indices[i];
       vec3 normal = {
@@ -48,7 +50,7 @@ auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
         n[3 * index_.normal_index + 2],
       };
       me->normals.push_back(normal);
-      me->prims.push_back(std::move(prim));
+      me->prims.push_back(prim);
       i += count;
     }
   }

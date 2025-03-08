@@ -134,7 +134,7 @@ static auto write_field(YAML::Emitter& out, const String& key, const T& value)
   out << YAML::Key << key << YAML::Value << value;
 }
 
-auto Scene::serialize() -> void {
+auto Scene::serialize(const fs::path& path) -> void {
   auto out = YAML::Emitter();
   out << YAML::BeginMap;
   out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
@@ -147,14 +147,13 @@ auto Scene::serialize() -> void {
     out << YAML::BeginMap;
     write_field(out, "Entity",
                 entity.get_component<UUIDComponent>().id.to_string());
-    if (entity.has_component<IdentifierComponent>()) {
-      out << YAML::Key << "IdentifierComponent";
-      out << YAML::BeginMap;
-      write_field(
-          out, "Identifier",
-          String(entity.get_component<IdentifierComponent>().identifier));
-      out << YAML::EndMap;
-    }
+
+    out << YAML::Key << "IdentifierComponent";
+    out << YAML::BeginMap;
+    const auto name =
+        String(entity.get_component<IdentifierComponent>().identifier);
+    write_field(out, "Identifier", name);
+    out << YAML::EndMap;
 
     if (entity.has_component<TransformComponent>()) {
       out << YAML::Key << "TransformComponent";
@@ -169,7 +168,28 @@ auto Scene::serialize() -> void {
     if (entity.has_component<StaticMeshComponent>()) {
       out << YAML::Key << "StaticMeshComponent";
       out << YAML::BeginMap;
-      const auto& mesh = entity.get_component<StaticMeshComponent>();
+      const auto mesh = entity.get_component<StaticMeshComponent>().mesh;
+      auto binary_path = fs::path("Meshes") / fmt::format("{}.zmesh", name);
+      write_field(out, "Mesh", binary_path.string());
+      auto ar = Archive();
+      mesh->write(ar);
+      ar.save(path / binary_path);
+      out << YAML::EndMap;
+    }
+
+    if (entity.has_component<SkyboxComponent>()) {
+      out << YAML::Key << "SkyboxComponent";
+      out << YAML::BeginMap;
+      const auto& env = entity.get_component<SkyboxComponent>().env;
+      if (env.mode == LightingMode::SolidColor) {
+        write_field(out, "LightingMode", "SolidColor");
+        write_field(out, "Color", env.color.v3);
+      } else if (env.mode == LightingMode::Texture) {
+        write_field(out, "LightingMode", "Texture");
+        write_field(out, "HDRI", env.hdr.s);
+      } else {
+        UNREACHABLE();
+      }
       out << YAML::EndMap;
     }
 
@@ -178,7 +198,9 @@ auto Scene::serialize() -> void {
   out << YAML::EndSeq;
   out << YAML::EndMap;
 
-  fmt::println("{}", out.c_str());
+  auto ar = Archive();
+  ar.copy((u8*)out.c_str(), out.size());
+  ar.save(path / "Scenes" / m_name, ".zscene");
 }
 
 template <class T>

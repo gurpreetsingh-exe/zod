@@ -11,4 +11,6 @@ struct Theme {
   static auto get() -> Theme&;
 };
 
+auto init_theme() -> void;
+
 } // namespace zod

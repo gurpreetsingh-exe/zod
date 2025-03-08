@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/serialize/archive.hh"
+
 namespace zod {
 
 struct Point {
@@ -8,7 +10,7 @@ struct Point {
 };
 
 struct Prim {
-  Vector<u32> points;
+  u32 points[3];
 };
 
 struct Mesh {
@@ -16,53 +18,8 @@ struct Mesh {
   Vector<vec3> normals;
   Vector<Prim> prims;
 
-  static auto cube() -> SharedPtr<Mesh> {
-    auto mesh = shared<Mesh>();
-    *mesh = {
-      .points =
-          Vector<Point> {
-              { .P = { -1.0f, 1.0f, 1.0f } },
-              { .P = { -1.0f, -1.0f, 1.0f } },
-              { .P = { 1.0f, 1.0f, 1.0f } },
-              { .P = { 1.0f, -1.0f, 1.0f } },
-              { .P = { 1.0f, 1.0f, -1.0f } },
-              { .P = { 1.0f, -1.0f, -1.0f } },
-              { .P = { -1.0f, -1.0f, -1.0f } },
-              { .P = { -1.0f, 1.0f, -1.0f } },
-          },
-      .normals =
-          Vector<vec3> {
-              { 0.0f, 0.0f, 1.0f },
-              { 0.0f, 0.0f, 1.0f },
-              { 1.0f, 0.0f, 0.0f },
-              { 1.0f, 0.0f, 0.0f },
-              { 0.0f, -1.0f, 0.0f },
-              { 0.0f, -1.0f, 0.0f },
-              { 0.0f, 0.0f, -1.0f },
-              { 0.0f, 0.0f, -1.0f },
-              { 0.0f, 1.0f, 0.0f },
-              { 0.0f, 1.0f, 0.0f },
-              { -1.0f, 0.0f, 0.0f },
-              { -1.0f, 0.0f, 0.0f },
-          },
-      .prims =
-          Vector<Prim> {
-              { .points = { 0, 1, 2 } },
-              { .points = { 1, 3, 2 } },
-              { .points = { 4, 2, 5 } },
-              { .points = { 2, 3, 5 } },
-              { .points = { 5, 3, 6 } },
-              { .points = { 3, 1, 6 } },
-              { .points = { 6, 7, 5 } },
-              { .points = { 7, 4, 5 } },
-              { .points = { 7, 0, 4 } },
-              { .points = { 0, 2, 4 } },
-              { .points = { 6, 1, 7 } },
-              { .points = { 1, 0, 7 } },
-          },
-    };
-    return mesh;
-  }
+  static auto cube() -> SharedPtr<Mesh>;
+  auto write(Archive&) -> void;
 };
 
 } // namespace zod
@@ -76,5 +33,5 @@ struct hash<zod::Point> {
 };
 } // namespace std
 
-FMT(zod::Prim, "[{}]", fmt::join(v.points, ", "));
+FMT(zod::Prim, "[{}, {}, {}]", v.points[0], v.points[1], v.points[2]);
 FMT(zod::Point, "{}", v.P);

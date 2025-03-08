@@ -188,7 +188,7 @@ auto draw_property(Property& prop) -> bool {
         ImGui::PopItemWidth();
         ImGui::SameLine();
         if (ImGui::Button("Open")) {
-          auto path = open_dialog(Application::get().working_directory() / "");
+          auto path = open_dialog();
           ZASSERT(path.size() < STRING_PROP_MAX_SIZE);
           memcpy(prop.s, path.c_str(), path.size());
           prop.needs_update = true;

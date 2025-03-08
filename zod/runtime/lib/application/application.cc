@@ -17,8 +17,8 @@ Application::Application(const ApplicationCreateInfo& info)
   ZASSERT(not g_instance);
   g_instance = this;
 
-  if (not m_info.working_directory.empty()) {
-    fs::current_path(m_info.working_directory);
+  if (m_info.working_directory.empty()) {
+    set_working_directory(fs::current_path());
   }
 
   m_window->set_event_callback(std::bind(&Application::on_event, this, ph::_1));
@@ -40,6 +40,10 @@ auto Application::active_window() const -> Window& {
 
 auto Application::working_directory() const -> const fs::path& {
   return m_info.working_directory;
+}
+
+auto Application::set_working_directory(fs::path dir) -> void {
+  m_info.working_directory = std::move(dir);
 }
 
 auto Application::args() const -> const Vector<String>& {

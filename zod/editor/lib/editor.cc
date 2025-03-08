@@ -1,5 +1,6 @@
 #include "editor.hh"
 
+#include "application/platform.hh"
 #include "engine/components.hh"
 #include "engine/runtime.hh"
 #include "gpu/timer.hh"
@@ -8,12 +9,16 @@
 #include "obj.hh"
 #include "outliner.hh"
 #include "properties.hh"
+#include "theme.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
 
 namespace zod {
 
 Editor* g_editor;
+
+static constexpr usize MAX_PATH = 256;
+static auto preferences = false;
 
 auto Editor::get() -> Editor& { return *g_editor; }
 
@@ -66,6 +71,138 @@ auto Editor::update() -> void {
 
   GPU_TIME("main-loop", {
     m_imgui_layer->begin_frame();
+
+    auto& theme = Theme::get();
+    ImGui::PushStyleColor(ImGuiCol_Border,
+                          *reinterpret_cast<ImVec4*>(&theme.highlight));
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
+                          *reinterpret_cast<ImVec4*>(&theme.primary));
+    static auto open_save_modal = false;
+    if (ImGui::BeginMainMenuBar()) {
+      if (ImGui::BeginMenu("File")) {
+        if (ImGui::MenuItem("New")) {
+          TODO();
+        }
+        if (ImGui::BeginMenu("Open")) {
+          ImGui::MenuItem("Recent");
+          // TODO();
+          ImGui::EndMenu();
+        }
+        ImGui::Separator();
+        if (ImGui::MenuItem("Save")) {
+          if (m_project) {
+            m_project->save();
+          } else {
+            open_save_modal = true;
+          }
+        }
+
+        ImGui::Separator();
+        if (ImGui::MenuItem("Quit")) {
+          Event event = { .kind = Event::WindowClose };
+          Application::get().on_event(event);
+        }
+        ImGui::EndMenu();
+      }
+
+      if (ImGui::BeginMenu("Edit")) {
+        if (ImGui::MenuItem("Preferences")) {
+          preferences = true;
+        }
+        ImGui::EndMenu();
+      }
+
+      ImGui::EndMainMenuBar();
+    }
+    ImGui::PopStyleColor(2);
+
+    if (open_save_modal) {
+      ImGui::OpenPopup("Save Project");
+    }
+
+    auto center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::BeginPopupModal("Save Project", NULL,
+                               ImGuiWindowFlags_AlwaysAutoResize)) {
+      const char* name_l = "Project Name";
+      const char* loc_l = "Project Location";
+      const auto padding = ImGui::CalcTextSize(loc_l, NULL, true).x + 20;
+
+      // Project Name
+      ImGui::BeginGroup();
+      ImGui::AlignTextToFramePadding();
+      ImGui::Text(name_l);
+      ImGui::SameLine(padding);
+      static char nbuf[MAX_PATH] = {};
+      ImGui::InputText("##Name", nbuf, MAX_PATH);
+      ImGui::EndGroup();
+
+      // Project Location
+      ImGui::BeginGroup();
+      ImGui::AlignTextToFramePadding();
+      ImGui::Text(loc_l);
+      ImGui::SameLine(padding);
+      static char buf[MAX_PATH] = {};
+      ImGui::InputText("##Location", buf, MAX_PATH);
+      ImGui::SameLine();
+      if (ImGui::Button("...")) {
+        auto path = open_dialog(DialogMode::Open, SelectionMode::Directory);
+        ZASSERT(path.size() < MAX_PATH);
+        memcpy(buf, path.c_str(), path.size());
+      }
+      ImGui::EndGroup();
+
+      auto align = [](float width, float alignment = 0.5f) {
+        auto avail = ImGui::GetContentRegionAvail().x;
+        auto off = (avail - width) * alignment;
+        if (off > 0.0f) {
+          ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+        }
+      };
+
+      auto& style = ImGui::GetStyle();
+      const auto s = ImVec2(120, 0);
+      f32 width = 0.0f;
+      width += s.x * 2.0f;
+      width += style.ItemSpacing.x;
+      align(width);
+
+      if (ImGui::Button("Save", s)) {
+        m_project = new Project(nbuf, buf);
+        m_project->init();
+        m_project->save();
+
+        open_save_modal = false;
+        ImGui::CloseCurrentPopup();
+      }
+
+      ImGui::SameLine();
+      if (ImGui::Button("Cancel", s)) {
+        memset(buf, 0, MAX_PATH);
+        memset(nbuf, 0, MAX_PATH);
+        open_save_modal = false;
+        ImGui::CloseCurrentPopup();
+      }
+
+      ImGui::EndPopup();
+    }
+
+    if (preferences) {
+      ImGui::Begin("Preferences", &preferences,
+                   ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse);
+      ImGui::SeparatorText("Theme");
+      bool update = false;
+      update |= ImGui::ColorEdit3("Background", &theme.background.x,
+                                  ImGuiColorEditFlags_Float);
+      update |= ImGui::ColorEdit3("Highlights", &theme.highlight.x,
+                                  ImGuiColorEditFlags_Float);
+      if (update) {
+        init_theme();
+      }
+      ImGui::End();
+    }
+
     m_imgui_layer->update([&] {
       ImGui::Begin("DebugEditor");
       ImGuiIO& io = ImGui::GetIO();
