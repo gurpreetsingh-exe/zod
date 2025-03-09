@@ -11,5 +11,6 @@ enum class Platform {
 
 constexpr auto get_platform() -> Platform;
 auto get_exe_path() -> fs::path;
+auto memory_map(const fs::path&) -> void*;
 
 } // namespace zod

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/serialize/archive.hh"
+#include "core/span.hh"
 
 namespace zod {
 
@@ -14,9 +15,9 @@ struct Prim {
 };
 
 struct Mesh {
-  Vector<Point> points;
-  Vector<vec3> normals;
-  Vector<Prim> prims;
+  Span<Point> points;
+  Span<vec3> normals;
+  Span<Prim> prims;
 
   static auto cube() -> SharedPtr<Mesh>;
   auto write(Archive&) -> void;
