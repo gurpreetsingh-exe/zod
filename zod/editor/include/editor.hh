@@ -33,6 +33,7 @@ private:
   auto setup() -> void override;
   auto on_event(Event&) -> void override;
   auto update() -> void override;
+  auto update_viewport_camera() -> void;
 
 private:
   Renderer* m_renderer;

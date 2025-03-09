@@ -26,11 +26,13 @@ public:
   auto create() -> Entity;
   auto create(const String&) -> Entity;
   auto remove(Entity) -> void;
+  auto clear() -> void;
   auto update() -> void;
   auto active_camera() -> Entity;
   auto set_active_camera(Entity) -> void;
   auto operator->() const -> const entt::registry* { return &m_registry; }
   auto serialize(const fs::path&) -> void;
+  auto deserialize(const fs::path&) -> void;
   auto on_component_added(Entity, auto&) -> void;
   auto name() const -> const String& { return m_name; }
 

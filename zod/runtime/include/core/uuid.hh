@@ -7,6 +7,7 @@ namespace zod {
 class UUID {
 public:
   explicit UUID(u8 hash[16]) : m_inner(hash) {}
+  explicit UUID(const String& id) : m_inner(UUIDv4::UUID::fromStrFactory(id)) {}
   UUID() : m_inner(s_generator.getUUID()) {}
 
   static auto null() -> UUID {

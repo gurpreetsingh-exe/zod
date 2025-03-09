@@ -15,6 +15,10 @@ auto SPanel::get_active() const -> bool { return m_active; }
 
 auto SPanel::camera() const -> SharedPtr<ICamera> { return m_camera; }
 
+auto SPanel::set_camera(SharedPtr<ICamera> camera) -> void {
+  m_camera = camera;
+}
+
 auto SPanel::relative_mouse_position() const -> vec2 {
   auto position = Input::get_mouse_pos() - m_position + vec2(0, 43);
   position.y = m_size.y - position.y;

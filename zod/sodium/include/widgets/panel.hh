@@ -26,6 +26,7 @@ public:
   auto draw(Geometry&) -> void;
   auto get_active() const -> bool;
   auto camera() const -> SharedPtr<ICamera>;
+  auto set_camera(SharedPtr<ICamera>) -> void;
   auto relative_mouse_position() const -> vec2;
   auto region_space_mouse_position() const -> vec2;
 

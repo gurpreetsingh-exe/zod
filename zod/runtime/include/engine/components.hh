@@ -39,9 +39,10 @@ struct TransformComponent {
 };
 
 struct CameraComponent {
-  SharedPtr<ICamera> camera;
-  CameraComponent() = delete;
-  CameraComponent(SharedPtr<ICamera> _camera) : camera(_camera) {}
+  SharedPtr<PerspectiveCamera> camera =
+      shared<PerspectiveCamera>(600.0f, 400.0f, 90.0f, 0.01f, 100.0f);
+  CameraComponent() = default;
+  CameraComponent(SharedPtr<PerspectiveCamera> _camera) : camera(_camera) {}
 };
 
 struct StaticMeshComponent {

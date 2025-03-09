@@ -12,7 +12,12 @@ enum class SelectionMode {
   Directory,
 };
 
-auto open_dialog(DialogMode = DialogMode::Open,
-                 SelectionMode = SelectionMode::File) -> String;
+struct DialogOptions {
+  DialogMode dialog_mode = DialogMode::Open;
+  SelectionMode selection_mode = SelectionMode::File;
+  String filter = "*";
+};
+
+auto open_dialog(DialogOptions = DialogOptions()) -> String;
 
 } // namespace zod

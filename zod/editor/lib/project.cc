@@ -13,7 +13,7 @@ auto Project::init() -> void {
 }
 
 auto Project::exists() const -> bool {
-  auto config = directory / name / fmt::format("{}.zproj", name);
+  auto config = directory / fmt::format("{}.zproj", name);
   return fs::exists(config);
 }
 
@@ -29,11 +29,24 @@ auto Project::save() const -> void {
       << fs::path("Scenes") / fmt::format("{}.zscene", scene.name());
   out << YAML::EndMap;
   ar.copy((u8*)out.c_str(), out.size());
-  ar.save(directory / name / name, ".zproj");
+  ar.save(directory / name, ".zproj");
+}
+
+auto Project::load(const fs::path& path) -> Project* {
+  auto config = YAML::LoadFile(path);
+  const auto name = config["Name"].as<String>();
+  const auto directory = path.parent_path();
+  const auto assets = config["AssetsDirectory"].as<String>();
+  const auto start_scene = config["StartScene"].as<String>();
+  auto* project = new Project(name, directory, assets);
+  auto& scene = Runtime::get().scene();
+  scene.clear();
+  scene.deserialize(project->assets_directory() / start_scene);
+  return project;
 }
 
 auto Project::assets_directory() const -> fs::path {
-  return directory / name / assets;
+  return directory / assets;
 }
 
 } // namespace zod

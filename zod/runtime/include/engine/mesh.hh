@@ -20,6 +20,7 @@ struct Mesh {
 
   static auto cube() -> SharedPtr<Mesh>;
   auto write(Archive&) -> void;
+  auto read(const fs::path&) -> void;
 };
 
 } // namespace zod

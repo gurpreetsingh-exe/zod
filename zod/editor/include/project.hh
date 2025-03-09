@@ -10,6 +10,7 @@ struct Project {
   auto init() -> void;
   auto exists() const -> bool;
   auto save() const -> void;
+  static auto load(const fs::path&) -> Project*;
   auto assets_directory() const -> fs::path;
 };
 

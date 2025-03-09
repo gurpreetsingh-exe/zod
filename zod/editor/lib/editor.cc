@@ -45,25 +45,32 @@ auto Editor::setup() -> void {
     eprintln("\"{}\" is a directory", path.string());
   }
 
-  auto v = shared<Viewport>();
-  m_layout->add_area(v);
+  m_project = Project::load(path);
+
+  m_layout->add_area(shared<Viewport>());
   m_layout->add_area(shared<NodeEditor>());
   m_layout->add_area(shared<Properties>());
   m_layout->add_area(shared<NodeProperties>());
   m_layout->add_area(shared<Outliner>());
 
-  auto& scene = Runtime::get().scene();
-  auto entity = scene.create();
-  scene.set_active_camera(entity);
-  entity.add_component<CameraComponent>(v->camera());
-
-  scene.create("Cube").add_component<StaticMeshComponent>(Mesh::cube());
+  update_viewport_camera();
 }
 
 auto Editor::on_event(Event& event) -> void {
   if (auto* area = m_layout->active()) {
     area->on_event(event);
   }
+}
+
+auto Editor::update_viewport_camera() -> void {
+  auto viewport = m_layout->area("Viewport");
+  auto& scene = Runtime::get().scene();
+  auto entity = scene.active_camera();
+  auto camera = entity.get_component<CameraComponent>().camera;
+  auto size = viewport->get_size();
+  camera->resize(size.x, size.y);
+  camera->update_matrix();
+  viewport->set_camera(camera);
 }
 
 auto Editor::update() -> void {
@@ -83,10 +90,13 @@ auto Editor::update() -> void {
         if (ImGui::MenuItem("New")) {
           TODO();
         }
-        if (ImGui::BeginMenu("Open")) {
-          ImGui::MenuItem("Recent");
-          // TODO();
-          ImGui::EndMenu();
+        if (ImGui::MenuItem("Open")) {
+          auto config_path = open_dialog({ .filter = "*.zproj" });
+          if (m_project) {
+            delete m_project;
+          }
+          m_project = Project::load(config_path);
+          update_viewport_camera();
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Save")) {
@@ -147,7 +157,7 @@ auto Editor::update() -> void {
       ImGui::InputText("##Location", buf, MAX_PATH);
       ImGui::SameLine();
       if (ImGui::Button("...")) {
-        auto path = open_dialog(DialogMode::Open, SelectionMode::Directory);
+        auto path = open_dialog({ .selection_mode = SelectionMode::Directory });
         ZASSERT(path.size() < MAX_PATH);
         memcpy(buf, path.c_str(), path.size());
       }

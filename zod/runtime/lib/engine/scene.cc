@@ -111,7 +111,16 @@ auto Scene::create(const String& name) -> Entity {
 
 auto Scene::remove(Entity entity) -> void { entity.remove(); }
 
+auto Scene::clear() -> void {
+  m_camera = entt::null;
+  m_env = entt::null;
+  m_registry.clear();
+}
+
 auto Scene::update() -> void {
+  if (m_camera == entt::null) {
+    return;
+  }
   auto entity = Entity(m_camera, this);
   auto camera = entity.get_component<CameraComponent>().camera;
   if (camera->is_dirty) {
@@ -137,6 +146,10 @@ static auto write_field(YAML::Emitter& out, const String& key, const T& value)
 auto Scene::serialize(const fs::path& path) -> void {
   auto out = YAML::Emitter();
   out << YAML::BeginMap;
+  out << YAML::Key << "Name" << YAML::Value << m_name;
+  auto camera = Entity(m_camera, this).get_component<UUIDComponent>();
+  auto camera_id = camera.id.to_string();
+  out << YAML::Key << "CameraEntity" << YAML::Value << camera_id;
   out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
   m_registry.view<entt::entity>().each([&](auto entity_id) {
     auto entity = Entity(entity_id, this);
@@ -193,6 +206,19 @@ auto Scene::serialize(const fs::path& path) -> void {
       out << YAML::EndMap;
     }
 
+    if (entity.has_component<CameraComponent>()) {
+      out << YAML::Key << "CameraComponent";
+      out << YAML::BeginMap;
+      out << YAML::Key << "PerspectiveCamera" << YAML::Value << YAML::BeginMap;
+      const auto camera = entity.get_component<CameraComponent>().camera;
+      write_field(out, "Fov", camera->get_fov());
+      auto [near, far] = camera->get_clipping();
+      write_field(out, "ClipNear", near);
+      write_field(out, "ClipFar", far);
+      out << YAML::EndMap;
+      out << YAML::EndMap;
+    }
+
     out << YAML::EndMap;
   });
   out << YAML::EndSeq;
@@ -201,6 +227,51 @@ auto Scene::serialize(const fs::path& path) -> void {
   auto ar = Archive();
   ar.copy((u8*)out.c_str(), out.size());
   ar.save(path / "Scenes" / m_name, ".zscene");
+}
+
+auto Scene::deserialize(const fs::path& path) -> void {
+  auto config = YAML::LoadFile(path);
+  m_name = config["Name"].as<String>();
+  auto camera_id = UUID(config["CameraEntity"].as<String>());
+  const auto& entities = config["Entities"];
+  ZASSERT(entities.IsSequence());
+  for (const auto& node : entities) {
+    ZASSERT(node["Entity"] and node["IdentifierComponent"]);
+    auto entity = Entity(m_registry.create(), this);
+    auto id = UUID(node["Entity"].as<String>());
+    if (id == camera_id) {
+      m_camera = entity.m_inner;
+    }
+    entity.add_component<UUIDComponent>(id);
+    auto name = node["IdentifierComponent"]["Identifier"].as<String>();
+    entity.add_component<IdentifierComponent>(name);
+
+    if (node["TransformComponent"]) {
+      auto tnode = node["TransformComponent"];
+      auto& transform = entity.add_component<TransformComponent>();
+      transform.position = tnode["Position"].as<vec3>();
+      transform.rotation = tnode["Rotation"].as<vec3>();
+      transform.scale = tnode["Scale"].as<vec3>();
+    }
+
+    if (node["CameraComponent"]) {
+      const auto& cnode = node["CameraComponent"]["PerspectiveCamera"];
+      auto& component = entity.add_component<CameraComponent>();
+      auto& camera = component.camera;
+      camera->set_fov(cnode["Fov"].as<f32>());
+      camera->set_clipping(cnode["ClipNear"].as<f32>(),
+                           cnode["ClipFar"].as<f32>());
+      camera->update_matrix();
+    }
+
+    if (node["StaticMeshComponent"]) {
+      auto mesh_path = node["StaticMeshComponent"]["Mesh"].as<String>();
+      auto mesh = shared<Mesh>();
+      auto root = path.parent_path().parent_path();
+      mesh->read(root / mesh_path);
+      entity.add_component<StaticMeshComponent>(mesh);
+    }
+  }
 }
 
 template <class T>
