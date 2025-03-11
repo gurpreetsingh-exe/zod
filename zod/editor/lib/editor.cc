@@ -6,7 +6,7 @@
 #include "gpu/timer.hh"
 #include "node_editor.hh"
 #include "node_properties.hh"
-#include "obj.hh"
+#include "loaders.hh"
 #include "outliner.hh"
 #include "properties.hh"
 #include "theme.hh"

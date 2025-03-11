@@ -7,7 +7,6 @@ add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
 add_subdirectory(${THIRD_PARTY_DIR}/glfw glfw)
 add_subdirectory(${THIRD_PARTY_DIR}/glm glm)
 add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
-add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
 add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
 add_subdirectory(${THIRD_PARTY_DIR}/yaml-cpp yaml-cpp)
 
@@ -82,6 +81,5 @@ target_link_libraries(zrt
   freetype
   glfw
   gpu
-  tinyobj
   uuid_v4
   yaml-cpp::yaml-cpp)

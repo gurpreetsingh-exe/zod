@@ -36,6 +36,8 @@ add_compile_options(-msse3 -ggdb3)
 
 add_subdirectory(${ZOD_RUNTIME_DIR} zrt)
 add_subdirectory(${THIRD_PARTY_DIR}/json nlohmann_json)
+add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
+add_subdirectory(${THIRD_PARTY_DIR}/tinygltf tinygltf)
 
 add_library(imgui
   ${IMGUI_DIR}/imgui.cpp
@@ -71,4 +73,4 @@ add_executable(zod ${ZOD_EDITOR_SRC})
 target_compile_definitions(zod PUBLIC GLFW_INCLUDE_NONE=1)
 target_include_directories(zod PUBLIC ${ZOD_RUNTIME_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)
-target_link_libraries(zod zodpch zrt sodium)
+target_link_libraries(zod zodpch zrt sodium tinyobj tinygltf)

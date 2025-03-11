@@ -18,6 +18,11 @@ public:
   auto begin() const -> const T* { return m_inner; }
   auto end() const -> const T* { return m_inner + m_size; }
 
+  auto operator[](usize idx) const -> T {
+    ZASSERT(idx < m_size);
+    return m_inner[idx];
+  }
+
 private:
   T* m_inner = nullptr;
   usize m_size = 0;

@@ -2,7 +2,7 @@
 
 #include "core/uuid.hh"
 #include "engine/registry.hh"
-#include "obj.hh"
+#include "loaders.hh"
 
 namespace zod {
 
