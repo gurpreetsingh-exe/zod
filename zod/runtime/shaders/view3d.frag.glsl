@@ -4,14 +4,13 @@
 // https://projects.blender.org/blender/blender/src/commit/30038f17105a4c3d2839b9f166995ae91ec12d35/source/blender/draw/engines/workbench/shaders/workbench_world_light_lib.glsl
 
 in vec3 P;
+in vec3 N;
 out vec4 color;
 
 layout(std140) uniform Camera {
   mat4 view_projection;
   vec4 direction;
 };
-
-layout(std430, binding = 0) buffer vertexNormals { float N[]; };
 
 struct Light {
   vec3 direction;
@@ -37,8 +36,7 @@ vec4 wrapped_lighting(vec4 NL, vec4 w) {
 }
 
 void main(void) {
-  int id = gl_PrimitiveID * 3;
-  vec3 n = vec3(N[id], N[id + 1], N[id + 2]);
+  vec3 n = N;
   float fresnel = dot(direction.xyz, n) * 0.5 + 0.5;
 
   vec3 ambient = vec3(0);

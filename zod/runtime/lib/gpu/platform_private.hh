@@ -15,6 +15,7 @@ public:
 
   auto init(GPUBackendType, GPUDeviceType, String /* vendor */,
             String /* version */, String /* renderer */) -> void;
+  auto to_string() const -> String;
 };
 
 extern GPUPlatform g_platform;

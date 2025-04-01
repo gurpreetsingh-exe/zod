@@ -1,12 +1,13 @@
 #include "editor.hh"
 
 #include "application/platform.hh"
+#include "content_browser.hh"
 #include "engine/components.hh"
 #include "engine/runtime.hh"
 #include "gpu/timer.hh"
+#include "loaders.hh"
 #include "node_editor.hh"
 #include "node_properties.hh"
-#include "loaders.hh"
 #include "outliner.hh"
 #include "properties.hh"
 #include "theme.hh"
@@ -52,6 +53,7 @@ auto Editor::setup() -> void {
   m_layout->add_area(shared<Properties>());
   m_layout->add_area(shared<NodeProperties>());
   m_layout->add_area(shared<Outliner>());
+  m_layout->add_area(shared<ContentBrowser>());
 
   update_viewport_camera();
 }
@@ -108,6 +110,13 @@ auto Editor::update() -> void {
         }
 
         ImGui::Separator();
+        if (ImGui::BeginMenu("Import")) {
+          if (ImGui::MenuItem("GLTF")) {
+            auto gltf_path = open_dialog({ .filter = "*.gltf *.glb" });
+            loadGLTF(m_project->assets_directory(), gltf_path);
+          }
+          ImGui::EndMenu();
+        }
         if (ImGui::MenuItem("Quit")) {
           Event event = { .kind = Event::WindowClose };
           Application::get().on_event(event);

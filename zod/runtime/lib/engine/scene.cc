@@ -1,7 +1,9 @@
 #include "engine/scene.hh"
 #include "./mesh_batch.hh"
+#include "core/platform/platform.hh"
 #include "engine/components.hh"
 #include "engine/entity.hh"
+#include "engine/registry.hh"
 
 #include <fstream>
 
@@ -126,7 +128,8 @@ auto Scene::update() -> void {
   if (camera->is_dirty) {
     camera->is_dirty = false;
     auto storage = SceneData { camera->get_view_projection(),
-                               vec4(camera->get_direction(), 0.0f) };
+                               vec4(camera->get_direction(), 0.0f),
+                               vec4(camera->get_position(), 0.0f) };
     m_uniform_buffer->upload_data(&storage, sizeof(SceneData));
   }
 }
@@ -272,6 +275,39 @@ auto Scene::deserialize(const fs::path& path) -> void {
       entity.add_component<StaticMeshComponent>(mesh);
     }
   }
+
+  const auto texconf =
+      YAML::LoadFile(path.parent_path().parent_path() / "Textures.meta");
+  const auto& textures = texconf["Textures"];
+  auto offset = vec2();
+  auto max_height = 0.0f;
+  auto mega_texture = m_mesh_batch->mega_texture();
+  mega_texture->bind();
+  auto texture_info = Vector<TextureInfo>();
+  for (const auto& node : textures) {
+    const auto id = UUID(node["UUID"].as<String>());
+    const auto texture_path = node["Path"].as<String>();
+    auto mapping = memory_map(texture_path);
+    auto size = vec2(*(usize*)mapping[0], *(usize*)mapping[sizeof(usize)]);
+    auto span =
+        Span(mapping[sizeof(usize) * 3], *(usize*)mapping[sizeof(usize) * 2]);
+    if (offset.x + size.x > 12 * 1024) {
+      offset.x = 0.0f;
+      offset.y += max_height;
+      max_height = 0.0f;
+    }
+    mega_texture->blit(offset.x, offset.y, size.x, size.y, span.data());
+    auto info = TextureInfo { offset, size };
+    texture_info.push_back(info);
+    AssetRegistry::reg(id, info);
+    offset.x += size.x;
+    max_height = fmaxf(max_height, size.y);
+    memory_unmap(mapping);
+  }
+  mega_texture->generate_mipmap();
+
+  m_mesh_batch->texture_info()->update_data(
+      texture_info.data(), texture_info.size() * sizeof(TextureInfo));
 }
 
 template <class T>

@@ -25,6 +25,7 @@ public:
   auto get_view() const -> const mat4& { return m_view; }
   auto get_projection() const -> const mat4& { return m_projection; }
   auto get_view_projection() const -> const mat4& { return m_view_projection; }
+  auto get_position() const -> const vec3& { return m_position; }
   auto get_direction() const -> const vec3& { return m_direction; }
   auto set_pivot_point(vec2 v) -> void {
     m_pivot_point = screen_to_world({ v.x, m_height - v.y });

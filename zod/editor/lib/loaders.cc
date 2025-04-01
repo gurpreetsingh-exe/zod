@@ -1,8 +1,12 @@
 #include <tiny_gltf.h>
 #include <tiny_obj_loader.h>
+#include <yaml-cpp/yaml.h>
 
+#include "core/uuid.hh"
 #include "engine/mesh.hh"
 #include "loaders.hh"
+
+#include "gpu/backend.hh"
 
 namespace zod {
 
@@ -59,76 +63,123 @@ auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
   return me;
 }
 
-auto process_nodes(const tinygltf::Model& model, const tinygltf::Node& node)
-    -> void {
+struct ParseCtxt {
+  std::unordered_map<String, std::tuple<UUID, usize>> img_map;
+  std::unordered_map<String, Material> materials;
+};
+
+auto process_nodes(const fs::path& save_dir, const tinygltf::Model& model,
+                   const tinygltf::Node& node, ParseCtxt& pcx) -> void {
   const auto& me = model.meshes[node.mesh];
+  auto points = Vector<Point>();
+  auto normals = Vector<vec3>();
+  auto uvs = Vector<vec2>();
+  auto prims = Vector<u32>();
+  auto submeshes = Vector<SubMesh>();
+
   for (auto primitive : me.primitives) {
-    auto mesh = Mesh();
+    auto& submesh = submeshes.emplace_back();
     // index buffer
-    auto prims = Vector<Prim>();
-    auto face_normals = Vector<vec3>();
     {
       auto idx_accessor = model.accessors[primitive.indices];
       const auto& bufferView = model.bufferViews[idx_accessor.bufferView];
       const auto& buffer = model.buffers[bufferView.buffer];
-      const auto* bytes = &buffer.data.data()[bufferView.byteOffset];
+      const auto* bytes =
+          &buffer.data[bufferView.byteOffset + idx_accessor.byteOffset];
+      u32 size = points.size();
       switch (idx_accessor.componentType) {
         case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
-          auto indices = Span((u8*)bytes, bufferView.byteLength / sizeof(u8));
-          for (int i = 0; i < indices.size(); i += 3) {
-            prims.push_back(
-                { .points = { indices[i], indices[i + 1], indices[i + 2] } });
+          submesh.offset = prims.size();
+          submesh.size = idx_accessor.count;
+          auto indices = Span((u8*)bytes, idx_accessor.count);
+          for (int i = 0; i < indices.size(); i++) {
+            prims.push_back(indices[i] + size);
           }
         } break;
         case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
-          auto indices = Span((u16*)bytes, bufferView.byteLength / sizeof(u16));
-          for (int i = 0; i < indices.size(); i += 3) {
-            prims.push_back(
-                { .points = { indices[i], indices[i + 1], indices[i + 2] } });
+          submesh.offset = prims.size();
+          submesh.size = idx_accessor.count;
+          auto indices = Span((u16*)bytes, idx_accessor.count);
+          for (int i = 0; i < indices.size(); i++) {
+            prims.push_back(indices[i] + size);
           }
         } break;
         case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
-          prims = Vector<Prim>((Prim*)bytes,
-                               (Prim*)bytes +
-                                   (bufferView.byteLength / sizeof(Prim)));
+          submesh.offset = prims.size();
+          submesh.size = idx_accessor.count;
+          auto indices = Span((u32*)bytes, idx_accessor.count);
+          for (int i = 0; i < indices.size(); i++) {
+            prims.push_back(indices[i] + size);
+          }
         } break;
       }
-      mesh.prims = Span((Prim*)prims.data(), prims.size());
     }
 
     for (const auto& attrib : primitive.attributes) {
       auto accessor = model.accessors[attrib.second];
       const auto& bufferView = model.bufferViews[accessor.bufferView];
       const auto& buffer = model.buffers[bufferView.buffer];
-      const auto* bytes = &buffer.data.data()[bufferView.byteOffset];
+      const auto* bytes =
+          &buffer.data[bufferView.byteOffset + accessor.byteOffset];
       if (attrib.first == "POSITION") {
-        mesh.points =
-            Span((Point*)bytes, bufferView.byteLength / sizeof(Point));
+        auto* buf = (Point*)bytes;
+        points.insert(points.end(), buf, buf + accessor.count);
       } else if (attrib.first == "NORMAL") {
-        auto normals = Span((vec3*)bytes, bufferView.byteLength / sizeof(vec3));
-        for (auto prim : mesh.prims) {
-          auto [i1, i2, i3] = prim.points;
-          auto n1 = normals[i1];
-          auto n2 = normals[i2];
-          auto n3 = normals[i3];
-          ZASSERT(n1 == n2 and n2 == n3);
-          face_normals.push_back(n1);
-        }
-        mesh.normals = Span((vec3*)face_normals.data(), face_normals.size());
+        auto* buf = (vec3*)bytes;
+        normals.insert(normals.end(), buf, buf + accessor.count);
+      } else if (attrib.first == "TEXCOORD_0") {
+        auto* buf = (vec2*)bytes;
+        uvs.insert(uvs.end(), buf, buf + accessor.count);
       }
     }
-    auto ar = Archive();
-    mesh.write(ar);
-    ar.save(fmt::format("{}.zmesh", me.name));
+
+    if (primitive.material < 0) {
+      continue;
+    }
+
+    auto& mat = model.materials[primitive.material];
+    submesh.mat = pcx.materials[mat.name];
   }
 
+  // remove duplicate points
+  // auto pts = Vector<Point>();
+  // auto nrm = Vector<vec3>();
+  // auto buf = (Prim*)prims.data();
+  // auto unique_vertices = std::unordered_map<Point, u32>();
+  // auto points_i = usize(0);
+  // for (int i = 0; i < prims.size() / 3; ++i) {
+  //   auto& prim = buf[i];
+  //   auto& pti = prim.points;
+  //   for (int j = 0; j < 3; ++j) {
+  //     auto idx = pti[j];
+  //     auto P = points[idx];
+  //     auto N = normals[idx];
+  //     if (not unique_vertices.contains(P)) {
+  //       unique_vertices[P] = u32(pts.size());
+  //       pts.push_back(P);
+  //       nrm.push_back(N);
+  //     }
+  //     pti[j] = unique_vertices[P];
+  //   }
+  // }
+
+  auto mesh = Mesh();
+  mesh.points = Span(points.data(), points.size());
+  mesh.normals = Span(normals.data(), normals.size());
+  mesh.uvs = Span(uvs.data(), uvs.size());
+  mesh.prims = Span((Prim*)prims.data(), prims.size() / 3);
+  mesh.submeshes = Span(submeshes.data(), submeshes.size());
+  auto ar = Archive();
+  mesh.write(ar);
+  auto name = me.name.empty() ? "0" : me.name;
+  ar.save(save_dir / "Meshes" / name, ".zmesh");
+
   for (const auto& idx : node.children) {
-    process_nodes(model, model.nodes[idx]);
+    process_nodes(save_dir, model, model.nodes[idx], pcx);
   }
 }
 
-auto loadGLTF(const fs::path& path) -> SharedPtr<Mesh> {
-  auto mesh = shared<Mesh>();
+auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
   tinygltf::Model model;
   tinygltf::TinyGLTF gcx;
   String err;
@@ -155,10 +206,80 @@ auto loadGLTF(const fs::path& path) -> SharedPtr<Mesh> {
 
   const auto& scene = model.scenes[model.defaultScene];
   auto transform = mat4(1.0f);
+  auto pcx = ParseCtxt();
 
-  for (auto idx : scene.nodes) { process_nodes(model, model.nodes[idx]); }
+  /// TEXTURES
+  {
+    auto texture_idx = 0ZU;
+    auto out = YAML::Emitter();
+    out << YAML::BeginMap;
+    out << YAML::Key << "Textures" << YAML::Value << YAML::BeginSeq;
+    for (const auto& img : model.images) {
+      const auto& buf = img.image;
+      auto ar = Archive();
+      auto size = buf.size();
+      usize w = img.width;
+      usize h = img.height;
+      ar.copy((u8*)&w, sizeof(usize));
+      ar.copy((u8*)&h, sizeof(usize));
+      ar.copy((u8*)&size, sizeof(usize));
+      ar.copy((u8*)buf.data(), size);
+      auto name = img.name.empty() ? img.uri.empty() ? "" : img.uri : img.name;
+      ZASSERT(not name.empty());
+      ar.save(save_dir / "Textures" / name, ".ztex");
 
-  return mesh;
+      out << YAML::BeginMap;
+      auto p = save_dir / "Textures" / name;
+      p.replace_extension(".ztex");
+      out << YAML::Key << "Path" << YAML::Value << p.string();
+      auto id = UUID();
+      out << YAML::Key << "UUID" << YAML::Value << id.to_string();
+      pcx.img_map[name] = { id, texture_idx };
+      out << YAML::EndMap;
+      texture_idx += 1;
+    }
+    out << YAML::EndSeq;
+    out << YAML::EndMap;
+
+    auto ar = Archive();
+    ar.copy((u8*)out.c_str(), out.size());
+    ar.save(save_dir / "Textures", ".meta");
+  }
+
+  /// MATERIALS
+  {
+    auto mat_idx = 0ZU;
+    for (auto& mat : model.materials) {
+      if (mat.name.empty()) {
+        mat.name = fmt::format("Material{}", mat_idx);
+      }
+
+      const auto& pbr = mat.pbrMetallicRoughness;
+      if (pbr.baseColorTexture.index >= 0) {
+        auto find_texture_index = [&](int gltf_index) {
+          if (gltf_index < 0) {
+            return -1ZU;
+          }
+          auto& texture = model.textures[gltf_index];
+          auto& img = model.images[texture.source];
+          auto name =
+              img.name.empty() ? img.uri.empty() ? "" : img.uri : img.name;
+          ZASSERT(not name.empty());
+          return std::get<1>(pcx.img_map[name]);
+        };
+
+        pcx.materials[mat.name] = Material {
+          .color_texture = find_texture_index(pbr.baseColorTexture.index),
+          .normal_texture = find_texture_index(mat.normalTexture.index),
+        };
+      }
+      mat_idx += 1;
+    }
+  }
+
+  for (auto idx : scene.nodes) {
+    process_nodes(save_dir, model, model.nodes[idx], pcx);
+  }
 }
 
 } // namespace zod

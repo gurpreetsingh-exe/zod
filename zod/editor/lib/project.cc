@@ -10,6 +10,8 @@ auto Project::init() -> void {
   auto assets_dir = assets_directory();
   fs::create_directories(assets_dir / "Scenes", code);
   fs::create_directories(assets_dir / "Meshes", code);
+  fs::create_directories(assets_dir / "Textures", code);
+  fs::create_directories(assets_dir / "Materials", code);
 }
 
 auto Project::exists() const -> bool {

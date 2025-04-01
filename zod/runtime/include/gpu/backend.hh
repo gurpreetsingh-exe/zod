@@ -30,11 +30,7 @@ public:
   virtual auto create_shader(GPUShaderCreateInfo) -> SharedPtr<GPUShader> = 0;
   virtual auto create_state() -> SharedPtr<GPUState> = 0;
   virtual auto create_storage_buffer() -> SharedPtr<GPUStorageBuffer> = 0;
-  virtual auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,
-                              bool /* bindless */) -> SharedPtr<GPUTexture> = 0;
-  virtual auto create_texture(GPUTextureType, GPUTextureFormat, const fs::path&)
-      -> SharedPtr<GPUTexture> = 0;
-  virtual auto create_texture(GPUTextureType, const fs::path&)
+  virtual auto create_texture(GPUTextureCreateInfo)
       -> SharedPtr<GPUTexture> = 0;
   virtual auto create_uniform_buffer(usize /* size_in_bytes */)
       -> SharedPtr<GPUUniformBuffer> = 0;

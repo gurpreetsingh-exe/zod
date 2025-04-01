@@ -13,4 +13,10 @@ auto GPUPlatform::init(GPUBackendType backend, GPUDeviceType device,
   this->renderer = std::move(renderer);
 }
 
+auto GPUPlatform::to_string() const -> String {
+  return fmt::format("{} {} {}", vendor, version, renderer);
+}
+
+auto gpu_platform_string() -> String { return g_platform.to_string(); }
+
 } // namespace zod

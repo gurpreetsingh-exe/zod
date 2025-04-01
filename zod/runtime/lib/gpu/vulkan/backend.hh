@@ -55,18 +55,7 @@ public:
     return shared<VKStorageBuffer>(1);
   }
 
-  auto create_texture(GPUTextureType, GPUTextureFormat, i32, i32,
-                      bool /* bindless */) -> SharedPtr<GPUTexture> override {
-    TODO();
-  }
-
-  auto create_texture(GPUTextureType, GPUTextureFormat, const fs::path&)
-      -> SharedPtr<GPUTexture> override {
-    TODO();
-  }
-
-  auto create_texture(GPUTextureType, const fs::path&)
-      -> SharedPtr<GPUTexture> override {
+  auto create_texture(GPUTextureCreateInfo) -> SharedPtr<GPUTexture> override {
     TODO();
   }
 

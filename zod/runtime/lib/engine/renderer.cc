@@ -12,6 +12,10 @@ GPUShaderCreateInfo view_3d = GPUShaderCreateInfo("view_3d")
                                   .vertex_source(g_view3d_vert_src)
                                   .fragment_source(g_view3d_frag_src);
 
+GPUShaderCreateInfo gbuffer = GPUShaderCreateInfo("gbuffer")
+                                  .vertex_source(g_gbuffer_vert_src)
+                                  .fragment_source(g_gbuffer_frag_src);
+
 GPUShaderCreateInfo cubemap = GPUShaderCreateInfo("cubemap")
                                   .vertex_source(g_cubemap_vert_src)
                                   .fragment_source(g_cubemap_frag_src);
@@ -21,14 +25,14 @@ Renderer::Renderer()
                                                          DEFAULT_FB_SIZE)) {
   m_framebuffer->bind();
   GPUAttachment attach = { GPUBackend::get().create_texture(
-      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, DEFAULT_FB_SIZE,
-      DEFAULT_FB_SIZE, false) };
+      { .width = i32(DEFAULT_FB_SIZE), .height = i32(DEFAULT_FB_SIZE) }) };
   m_framebuffer->add_color_attachment(attach);
   m_framebuffer->add_depth_attachment();
   m_framebuffer->check();
   m_framebuffer->unbind();
 
   GPUBackend::get().create_shader(view_3d);
+  GPUBackend::get().create_shader(gbuffer);
   GPUBackend::get().create_shader(cubemap);
 }
 
@@ -57,8 +61,9 @@ auto Renderer::tick() -> void {
   GPUState::get().set_depth_test(Depth::Less);
   GPUState::get().set_blend(Blend::Alpha);
   GPU_TIME("mesh", {
-    auto shader = GPUBackend::get().get_shader("view_3d");
+    auto shader = GPUBackend::get().get_shader("gbuffer");
     shader->bind();
+    shader->uniform_int("u_mega_texture", ADDR(0));
     batch->batch().draw_indirect(shader);
   });
 

@@ -20,7 +20,15 @@ auto Entity::update_internal<TransformComponent>() -> void {
 template <>
 auto Entity::update_internal<SkyboxComponent>() -> void {
   auto& env = get_component<SkyboxComponent>().env;
+  if (env.mode != LightingMode::Texture) {
+    return;
+  }
   m_scene->m_cubemap = m_scene->m_mesh_batch->load_env(env);
+}
+
+template <>
+auto Entity::update_internal<StaticMeshComponent>() -> void {
+  m_scene->m_mesh_batch->recompute_batch();
 }
 
 } // namespace zod

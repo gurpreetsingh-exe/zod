@@ -15,4 +15,6 @@ enum class GPUDeviceType {
   None,
 };
 
+auto gpu_platform_string() -> String;
+
 } // namespace zod

@@ -33,29 +33,40 @@ auto get_exe_path() -> fs::path {
 #endif
 }
 
-auto memory_map(const fs::path& path) -> void* {
+auto memory_map(const fs::path& path) -> Mapping {
 #ifdef PLATFORM_WINDOWS
   TODO();
 #else
   auto fd = open(path.string().c_str(), O_RDONLY);
   if (fd == -1) {
     eprintln("cannot open file \"{}\"", path.string());
-    return nullptr;
+    return {};
   }
 
   struct stat sb;
   if (fstat(fd, &sb) == -1) {
     eprintln("fstat failed \"{}\", fd: {}", fd, path.string());
-    return nullptr;
+    return {};
   }
 
   void* addr = mmap(NULL, sb.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
   if (addr == MAP_FAILED) {
     eprintln("mmap failed \"{}\", fd: {}", fd, path.string());
-    return nullptr;
+    return {};
   }
 
-  return addr;
+  close(fd);
+  return { addr, usize(sb.st_size) };
+#endif
+}
+
+auto memory_unmap(Mapping mapping) -> void {
+#ifdef PLATFORM_WINDOWS
+  TODO();
+#else
+  if (munmap(mapping.page, mapping.size) == -1) {
+    eprintln("munmap failed");
+  }
 #endif
 }
 

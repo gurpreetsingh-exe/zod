@@ -15,13 +15,16 @@ NodeEditor::NodeEditor()
     : SPanel("Node Editor", shared<OrthographicCamera>(64.0f, 64.0f), false),
       m_width(64), m_height(64) {
   m_framebuffer->bind();
-  GPUAttachment attach = { GPUBackend::get().create_texture(
-      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, m_width, m_height,
-      false) };
+  GPUAttachment attach = { GPUBackend::get().create_texture({
+      .width = i32(m_width),
+      .height = i32(m_height),
+  }) };
   m_framebuffer->add_color_attachment(attach);
-  attach = { GPUBackend::get().create_texture(GPUTextureType::Texture2D,
-                                              GPUTextureFormat::R32UI, m_width,
-                                              m_height, false) };
+  attach = { GPUBackend::get().create_texture({
+      .width = i32(m_width),
+      .height = i32(m_height),
+      .format = GPUTextureFormat::R32UI,
+  }) };
   m_framebuffer->add_color_attachment(attach);
   m_framebuffer->add_depth_attachment();
   m_framebuffer->check();

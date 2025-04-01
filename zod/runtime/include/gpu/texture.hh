@@ -7,6 +7,7 @@ enum class GPUTextureType {
   Texture2D,
   Texture3D,
   TextureCube,
+  TextureArray,
 };
 
 enum class GPUTextureFormat {
@@ -17,18 +18,33 @@ enum class GPUTextureFormat {
   Red,
 };
 
+enum class GPUTextureData {
+  UByte,
+  Float,
+};
+
+enum class GPUTextureWrap {
+  Repeat,
+  Clamp,
+};
+
+struct GPUTextureCreateInfo {
+  i32 width;
+  i32 height;
+  GPUTextureType type = GPUTextureType::Texture2D;
+  GPUTextureFormat format = GPUTextureFormat::RGBA8;
+  GPUTextureData data = GPUTextureData::UByte;
+  GPUTextureWrap wrap = GPUTextureWrap::Repeat;
+  fs::path path = {};
+  void* pixels = nullptr;
+  usize layers = 0;
+  usize mips = 0;
+};
+
 class GPUTexture {
 protected:
-  i32 m_width = 0;
-  i32 m_height = 0;
-  GPUTextureType m_type;
-  GPUTextureFormat m_format;
-
-  GPUTexture(GPUTextureType type, GPUTextureFormat format, i32 width,
-             i32 height)
-      : m_width(width), m_height(height), m_type(type), m_format(format) {}
-  GPUTexture(GPUTextureType type, GPUTextureFormat format)
-      : m_type(type), m_format(format) {}
+  GPUTextureCreateInfo m_info;
+  GPUTexture(GPUTextureCreateInfo info) : m_info(info) {}
 
 public:
   virtual ~GPUTexture() = default;
@@ -36,8 +52,10 @@ public:
   virtual auto unbind() -> void = 0;
   virtual auto resize(i32, i32) -> void = 0;
   virtual auto get_id() -> void* = 0;
-  virtual auto blit(f32, f32, f32, f32, const void* /* pixels */) -> void = 0;
-  auto get_size() -> vec2 { return { f32(m_width), f32(m_height) }; }
+  virtual auto blit(f32, f32, f32, f32, const void* /* pixels */,
+                    usize /* layers */ = 0) -> void = 0;
+  virtual auto generate_mipmap() -> void = 0;
+  auto get_size() -> vec2 { return { f32(m_info.width), f32(m_info.height) }; }
 };
 
 } // namespace zod

@@ -15,6 +15,12 @@ class GPUMeshBatch;
 struct SceneData {
   mat4 view_projection;
   vec4 direction;
+  vec4 position;
+};
+
+struct TextureInfo {
+  vec2 offset;
+  vec2 size;
 };
 
 class Scene {

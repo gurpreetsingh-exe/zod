@@ -45,13 +45,21 @@ auto Mesh::write(Archive& ar) -> void {
   ar.copy((u8*)&size, sizeof(usize));
   ar.copy((u8*)normals.data(), normals.size_bytes());
 
+  size = uvs.size();
+  ar.copy((u8*)&size, sizeof(usize));
+  ar.copy((u8*)uvs.data(), uvs.size_bytes());
+
   size = prims.size();
   ar.copy((u8*)&size, sizeof(usize));
   ar.copy((u8*)prims.data(), prims.size_bytes());
+
+  size = submeshes.size();
+  ar.copy((u8*)&size, sizeof(usize));
+  ar.copy((u8*)submeshes.data(), submeshes.size_bytes());
 }
 
 auto Mesh::read(const fs::path& path) -> void {
-  u8* mapping = (u8*)memory_map(path);
+  u8* mapping = (u8*)memory_map(path).page;
   if (*(u32*)mapping != magic) {
     eprintln("invalid magic bits found");
   }
@@ -65,8 +73,22 @@ auto Mesh::read(const fs::path& path) -> void {
       Span((vec3*)&mapping[offset + sizeof(usize)], *(usize*)&mapping[offset]);
   offset += normals.size_bytes() + sizeof(usize);
 
+  uvs =
+      Span((vec2*)&mapping[offset + sizeof(usize)], *(usize*)&mapping[offset]);
+  offset += uvs.size_bytes() + sizeof(usize);
+
   prims =
       Span((Prim*)&mapping[offset + sizeof(usize)], *(usize*)&mapping[offset]);
+  offset += prims.size_bytes() + sizeof(usize);
+
+  submeshes = Span((SubMesh*)&mapping[offset + sizeof(usize)],
+                   *(usize*)&mapping[offset]);
+
+  fmt::println("Points: {}", points.size());
+  fmt::println("Normals: {}", normals.size());
+  fmt::println("UVs: {}", uvs.size());
+  fmt::println("Triangles: {}", prims.size());
+  fmt::println("SubMeshes: {}", submeshes.size());
 }
 
 } // namespace zod

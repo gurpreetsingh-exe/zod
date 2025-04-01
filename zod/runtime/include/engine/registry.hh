@@ -26,7 +26,8 @@ public:
   }
 
 private:
-  static inline Tuple<UUIDMap<SharedPtr<Mesh>>, UUIDMap<SharedPtr<Scene>>>
+  static inline Tuple<UUIDMap<SharedPtr<Mesh>>, UUIDMap<SharedPtr<Scene>>,
+                      UUIDMap<TextureInfo>>
       s_registry;
 };
 

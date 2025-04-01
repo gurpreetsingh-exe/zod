@@ -14,10 +14,24 @@ struct Prim {
   u32 points[3];
 };
 
+struct Material {
+  usize color_texture = -1ZU;
+  usize normal_texture = -1ZU;
+};
+
+struct SubMesh {
+  Material mat;
+  usize offset;
+  usize size;
+};
+
 struct Mesh {
   Span<Point> points;
   Span<vec3> normals;
+  Span<vec2> uvs;
   Span<Prim> prims;
+
+  Span<SubMesh> submeshes;
 
   static auto cube() -> SharedPtr<Mesh>;
   auto write(Archive&) -> void;

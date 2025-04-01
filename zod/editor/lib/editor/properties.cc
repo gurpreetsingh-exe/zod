@@ -86,6 +86,24 @@ auto Properties::update() -> void {
     return needs_update;
   });
 
+  draw_component<StaticMeshComponent>(
+      "Static Mesh", entity, [&](auto& component) {
+        auto needs_update = false;
+        if (ImGui::BeginDragDropTarget()) {
+          if (const auto* payload =
+                  ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {
+            const char* path = (const char*)payload->Data;
+            auto mesh_path = fs::path(path);
+            auto mesh = Mesh();
+            mesh.read(mesh_path);
+            component.mesh = shared<Mesh>(mesh);
+            needs_update = true;
+          }
+          ImGui::EndDragDropTarget();
+        }
+        return needs_update;
+      });
+
   ImGui::PushItemWidth(-1);
 
   float spcx = ImGui::GetStyle().ItemSpacing.x;

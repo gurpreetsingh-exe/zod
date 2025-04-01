@@ -82,9 +82,11 @@ auto Font::load_font(const fs::path& path) -> void {
   m_width = w;
   m_height = h + 2;
 
-  m_texture = GPUBackend::get().create_texture(GPUTextureType::Texture2D,
-                                               GPUTextureFormat::Red, m_width,
-                                               m_height, /* bindless */ false);
+  m_texture = GPUBackend::get().create_texture({
+      .width = m_width,
+      .height = m_height,
+      .format = GPUTextureFormat::Red,
+  });
   m_texture->bind();
 
   int x = 0;

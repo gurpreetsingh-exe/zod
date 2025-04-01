@@ -47,9 +47,10 @@ Viewport::Viewport()
       m_width(64), m_height(64) {
   m_framebuffer = Editor::get().get_renderer().get_render_target();
   m_framebuffer->bind();
-  GPUAttachment attach = { GPUBackend::get().create_texture(
-      GPUTextureType::Texture2D, GPUTextureFormat::RGBA8, m_width, m_height,
-      false) };
+  GPUAttachment attach = { GPUBackend::get().create_texture({
+      .width = i32(m_width),
+      .height = i32(m_height),
+  }) };
   m_framebuffer->add_color_attachment(attach);
   m_framebuffer->add_depth_attachment();
   m_framebuffer->check();

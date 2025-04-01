@@ -15,6 +15,8 @@ static auto to_gl(GPUTextureType type) -> GLenum {
       return GL_TEXTURE_3D;
     case GPUTextureType::TextureCube:
       return GL_TEXTURE_CUBE_MAP;
+    case GPUTextureType::TextureArray:
+      return GL_TEXTURE_2D_ARRAY;
     default:
       ZASSERT(false, "texture type not found");
       UNREACHABLE();
@@ -39,6 +41,16 @@ static auto to_gl(GPUTextureFormat format) -> GLenum {
   }
 }
 
+static auto to_gl(GPUTextureData data) -> GLenum {
+  switch (data) {
+    case GPUTextureData::UByte:
+      return GL_UNSIGNED_BYTE;
+    case GPUTextureData::Float:
+      return GL_FLOAT;
+  }
+  UNREACHABLE();
+};
+
 static auto gl_format(GPUTextureFormat format) -> GLenum {
   switch (format) {
     case GPUTextureFormat::RGBA8:
@@ -55,78 +67,115 @@ static auto gl_format(GPUTextureFormat format) -> GLenum {
   }
 }
 
-GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format, int w, int h,
-                     bool bindless)
-    : GPUTexture(type, format, w, h), m_bindless(bindless) {
-  m_target = to_gl(type);
-  glCreateTextures(m_target, 1, &m_id);
-  glBindTexture(m_target, m_id);
-  glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(m_target, 0, to_gl(format), m_width, m_height, 0,
-               gl_format(format), GL_UNSIGNED_BYTE, nullptr);
-  glBindTexture(m_target, 0);
+auto to_gl(GPUTextureWrap wrap) -> GLenum {
+  switch (wrap) {
+    case GPUTextureWrap::Repeat:
+      return GL_REPEAT;
+    case GPUTextureWrap::Clamp:
+      return GL_CLAMP_TO_EDGE;
+    default:
+      UNREACHABLE();
+  }
 }
 
-GLTexture::GLTexture(GPUTextureType type, GPUTextureFormat format,
-                     const fs::path& path)
-    : GPUTexture(type, format) {
-  i32 channels = 0;
-  auto data = stbi_loadf(path.c_str(), &m_width, &m_height, &channels, 0);
-  switch (channels) {
-    case 2: {
-      auto buf = new f32[m_width * m_height * 4];
-      for (usize x = 0; x < m_width; ++x) {
-        for (usize y = 0; y < m_height; ++y) {
-          auto index = x + y * m_width;
-          auto src = &data[index * 2];
-          auto dst = &buf[index * 4];
-          dst[0] = src[1];
-          dst[1] = src[1];
-          dst[2] = src[1];
-          dst[3] = src[0];
-        }
-      }
-      stbi_image_free(data);
-      data = buf;
-    } break;
-    default: {
-      fmt::println("{}", channels);
-      ZASSERT(false);
-    }
+GLTexture::GLTexture(GPUTextureCreateInfo info) : GPUTexture(info) {
+  if (m_info.type == GPUTextureType::TextureCube) {
+    ZASSERT(not m_info.path.empty());
+    create_cubemap();
+    return;
   }
 
-  m_target = to_gl(type);
+  if (not m_info.path.empty()) {
+    from_path();
+  }
+  m_target = to_gl(m_info.type);
   glCreateTextures(m_target, 1, &m_id);
   glBindTexture(m_target, m_id);
-  glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(m_target, GL_TEXTURE_WRAP_S, to_gl(m_info.wrap));
+  glTexParameteri(m_target, GL_TEXTURE_WRAP_T, to_gl(m_info.wrap));
+  glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER,
+                  m_info.mips ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR);
   glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(m_target, 0, to_gl(format), m_width, m_height, 0, GL_RGBA,
-               GL_FLOAT, data);
+  if (m_info.type == GPUTextureType::TextureArray) {
+    glTexImage3D(m_target, 0, to_gl(m_info.format), m_info.width, m_info.height,
+                 m_info.layers, 0, gl_format(m_info.format), to_gl(m_info.data),
+                 m_info.pixels);
+  } else {
+    glTexImage2D(m_target, 0, to_gl(m_info.format), m_info.width, m_info.height,
+                 0, gl_format(m_info.format), to_gl(m_info.data),
+                 m_info.pixels);
+  }
   glBindTexture(m_target, 0);
-  stbi_image_free(data);
 }
 
-GLTexture::GLTexture(GPUTextureType type, const fs::path& path)
-    : GPUTexture(type, GPUTextureFormat::RGBA32F) {
-  m_target = to_gl(type);
+template <typename T>
+auto GLTexture::copy_texture_data(i32 width, i32 height, T* data) -> void {
+  m_info.pixels = new T[width * height * 4];
+  for (usize x = 0; x < width; ++x) {
+    for (usize y = 0; y < height; ++y) {
+      auto index = x + y * width;
+      auto src = &data[index * 2];
+      auto dst = &((T*)m_info.pixels)[index * 4];
+      dst[0] = src[1];
+      dst[1] = src[1];
+      dst[2] = src[1];
+      dst[3] = src[0];
+    }
+  }
+}
+
+auto GLTexture::from_path() -> void {
+  i32 channels = 0;
+  if (m_info.data == GPUTextureData::Float) {
+    auto* data = stbi_loadf(m_info.path.c_str(), &m_info.width, &m_info.height,
+                            &channels, 0);
+    switch (channels) {
+      case 2: {
+        copy_texture_data<f32>(m_info.width, m_info.height, data);
+        stbi_image_free(data);
+      } break;
+      default: {
+        fmt::println("{}", channels);
+        ZASSERT(false);
+      }
+    }
+    m_info.format = GPUTextureFormat::RGBA32F;
+  } else {
+    auto* data = stbi_load(m_info.path.c_str(), &m_info.width, &m_info.height,
+                           &channels, 0);
+    switch (channels) {
+      case 2: {
+        copy_texture_data<u8>(m_info.width, m_info.height, data);
+        stbi_image_free(data);
+      } break;
+      default: {
+        fmt::println("{}", channels);
+        ZASSERT(false);
+      }
+    }
+    m_info.format = GPUTextureFormat::RGBA8;
+  }
+}
+
+auto GLTexture::create_cubemap() -> void {
+  m_target = to_gl(m_info.type);
   glCreateTextures(m_target, 1, &m_id);
   glBindTexture(m_target, m_id);
 
   i32 channels = 0;
   i32 w = 0;
   i32 h = 0;
-  auto data = stbi_loadf(path.c_str(), &w, &h, &channels, 0);
+  auto data = stbi_loadf(m_info.path.c_str(), &w, &h, &channels, 0);
   auto fmt = GL_NONE;
-  m_format = GPUTextureFormat::RGBA32F;
+  m_info.format = GPUTextureFormat::RGBA32F;
   switch (channels) {
     case 3: {
       fmt = GL_RGB;
-      m_format = GPUTextureFormat::RGB32F;
+      m_info.format = GPUTextureFormat::RGB32F;
     } break;
     case 4: {
       fmt = GL_RGBA;
-      m_format = GPUTextureFormat::RGBA32F;
+      m_info.format = GPUTextureFormat::RGBA32F;
     } break;
     default: {
       fmt::println("{}", channels);
@@ -138,19 +187,21 @@ GLTexture::GLTexture(GPUTextureType type, const fs::path& path)
     case GL_TEXTURE_2D: {
       glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexImage2D(m_target, 0, to_gl(m_format), w, h, 0, fmt, GL_FLOAT, data);
+      glTexImage2D(m_target, 0, to_gl(m_info.format), w, h, 0, fmt, GL_FLOAT,
+                   data);
     } break;
     case GL_TEXTURE_CUBE_MAP: {
-      m_width = 1000;
-      m_height = 1000;
+      m_info.width = 1000;
+      m_info.height = 1000;
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       for (u32 i = 0; i < 6; ++i) {
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, to_gl(m_format),
-                     1000, 1000, 0, fmt, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                     to_gl(m_info.format), 1000, 1000, 0, fmt, GL_FLOAT,
+                     nullptr);
       }
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0);
       glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0);
@@ -170,8 +221,8 @@ GLTexture::GLTexture(GPUTextureType type, const fs::path& path)
       glBindTexture(GL_TEXTURE_2D, hdri);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexImage2D(GL_TEXTURE_2D, 0, to_gl(m_format), w, h, 0, fmt, GL_FLOAT,
-                   data);
+      glTexImage2D(GL_TEXTURE_2D, 0, to_gl(m_info.format), w, h, 0, fmt,
+                   GL_FLOAT, data);
 
       u32 fbo;
       glGenFramebuffers(1, &fbo);
@@ -195,7 +246,7 @@ GLTexture::GLTexture(GPUTextureType type, const fs::path& path)
 
         GLint view[4];
         glGetIntegerv(GL_VIEWPORT, view);
-        glViewport(0, 0, i32(m_width), i32(m_height));
+        glViewport(0, 0, i32(m_info.width), i32(m_info.height));
 
         glBindTexture(GL_TEXTURE_2D, hdri);
         shader->bind();
@@ -214,15 +265,29 @@ GLTexture::GLTexture(GPUTextureType type, const fs::path& path)
   stbi_image_free(data);
 }
 
-auto GLTexture::blit(f32 x, f32 y, f32 width, f32 height, const void* pixels)
-    -> void {
-  glTexSubImage2D(m_target, 0, x, y, width, height, gl_format(m_format),
-                  GL_UNSIGNED_BYTE, pixels);
+auto GLTexture::blit(f32 x, f32 y, f32 width, f32 height, const void* pixels,
+                     usize depth) -> void {
+  if (m_info.type == GPUTextureType::TextureArray) {
+    glTexSubImage3D(m_target, 0, x, y, depth, width, height, 1,
+                    gl_format(m_info.format), to_gl(m_info.data), pixels);
+  } else {
+    glTexSubImage2D(m_target, 0, x, y, width, height, gl_format(m_info.format),
+                    to_gl(m_info.data), pixels);
+  }
+}
+
+auto GLTexture::generate_mipmap() -> void {
+  if (m_info.mips) {
+    glTexParameteri(m_target, GL_TEXTURE_MAX_LOD, m_info.mips);
+    glGenerateMipmap(m_target);
+  }
 }
 
 auto GLTexture::resize(i32 width, i32 height) -> void {
   glDeleteTextures(1, &m_id);
-  *this = GLTexture(m_type, m_format, width, height, m_bindless);
+  m_info.width = width;
+  m_info.height = height;
+  *this = GLTexture(m_info);
 }
 
 } // namespace zod

@@ -1,5 +1,7 @@
 #include <glad/glad.h>
 
+#include <set>
+
 #include "../platform_private.hh"
 #include "./backend.hh"
 
@@ -32,6 +34,19 @@ auto GLBackend::platform_init() -> void {
   } else {
     TODO();
   }
+
+  GLint no_of_extensions = 0;
+  glGetIntegerv(GL_NUM_EXTENSIONS, &no_of_extensions);
+
+  auto extensions = std::set<String>();
+  for (int i = 0; i < no_of_extensions; ++i) {
+    extensions.insert((const char*)glGetStringi(GL_EXTENSIONS, i));
+  }
+
+  if (extensions.find("GL_ARB_bindless_texture") == extensions.end()) {
+    fmt::println(stderr, "bindless textures not supported");
+  }
+
   g_platform.init(GPUBackendType::OpenGL, device, std::move(vendor),
                   std::move(version), std::move(renderer));
   // glEnable(GL_DEBUG_OUTPUT);
