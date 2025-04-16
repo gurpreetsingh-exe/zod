@@ -5,10 +5,13 @@ out vec3 N;
 out vec2 uv;
 out uint ID;
 
-layout(std140) uniform Camera {
-  mat4 view_projection;
-  vec4 direction;
-  vec4 camera_position;
+layout(std430, binding = 6) buffer Camera {
+  mat4 view;
+  mat4 projection;
+  mat4 inv_view;
+  mat4 inv_projection;
+  vec4 rd;
+  vec4 ro;
 };
 
 struct MeshInfo {
@@ -35,5 +38,5 @@ void main(void) {
   N = vec3(m * vec4(n, 1.0f));
   uv = buffer_uv[gl_VertexID];
   ID = gl_DrawID;
-  gl_Position = view_projection * m * vec4(p, 1.f);
+  gl_Position = projection * view * m * vec4(p, 1.f);
 }

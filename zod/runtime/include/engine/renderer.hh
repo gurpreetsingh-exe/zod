@@ -19,7 +19,10 @@ public:
     return m_framebuffer;
   }
 
+  auto get_gbuffer() const -> SharedPtr<GPUFrameBuffer> { return m_gbuffer; }
+
 private:
+  SharedPtr<GPUFrameBuffer> m_gbuffer = nullptr;
   SharedPtr<GPUFrameBuffer> m_framebuffer = nullptr;
 };
 

@@ -13,7 +13,10 @@ class Renderer;
 class GPUMeshBatch;
 
 struct SceneData {
-  mat4 view_projection;
+  mat4 view;
+  mat4 projection;
+  mat4 inv_view;
+  mat4 inv_projection;
   vec4 direction;
   vec4 position;
 };
@@ -52,7 +55,7 @@ private:
   entt::entity m_camera = entt::null;
   entt::entity m_env = entt::null;
   std::unordered_map<UUID, entt::entity> m_entity_map = {};
-  SharedPtr<GPUUniformBuffer> m_uniform_buffer = nullptr;
+  SharedPtr<GPUStorageBuffer> m_camera_buffer = nullptr;
   SharedPtr<GPUMeshBatch> m_mesh_batch = nullptr;
   SharedPtr<GPUTexture> m_cubemap = nullptr;
   friend class Entity;

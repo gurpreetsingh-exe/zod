@@ -20,7 +20,10 @@ public:
   ~GLTexture() = default;
 
 public:
-  auto bind() -> void override { glBindTexture(m_target, m_id); }
+  auto bind(usize slot = 0) -> void override {
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(m_target, m_id);
+  }
   auto unbind() -> void override { glBindTexture(m_target, 0); }
   auto resize(i32, i32) -> void override;
   auto get_id() -> void* override { return (void*)(intptr_t)m_id; }

@@ -9,23 +9,23 @@
 #include "operators/node.hh"
 #include "widgets/button.hh"
 
+#include "gpu/shader_builtins.hh"
+
 namespace zod {
 
 NodeEditor::NodeEditor()
     : SPanel("Node Editor", shared<OrthographicCamera>(64.0f, 64.0f), false),
       m_width(64), m_height(64) {
   m_framebuffer->bind();
-  GPUAttachment attach = { GPUBackend::get().create_texture({
+  m_framebuffer->add_color_attachment(GPUBackend::get().create_texture({
       .width = i32(m_width),
       .height = i32(m_height),
-  }) };
-  m_framebuffer->add_color_attachment(attach);
-  attach = { GPUBackend::get().create_texture({
+  }));
+  m_framebuffer->add_color_attachment(GPUBackend::get().create_texture({
       .width = i32(m_width),
       .height = i32(m_height),
       .format = GPUTextureFormat::R32UI,
-  }) };
-  m_framebuffer->add_color_attachment(attach);
+  }));
   m_framebuffer->add_depth_attachment();
   m_framebuffer->check();
   m_framebuffer->unbind();
@@ -194,7 +194,7 @@ auto NodeEditor::update() -> void {
   GPUState::get().set_blend(Blend::None);
   m_framebuffer->unbind();
 
-  auto& texture = m_framebuffer->get_slot(m_framebuffer_bit).texture;
+  auto texture = m_framebuffer->get_slot(m_framebuffer_bit);
   ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
                ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
 }

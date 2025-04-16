@@ -12,6 +12,8 @@ enum class GPUTextureType {
 
 enum class GPUTextureFormat {
   RGBA8,
+  RGB8,
+  RGBA32,
   RGB32F,
   RGBA32F,
   R32UI,
@@ -48,7 +50,7 @@ protected:
 
 public:
   virtual ~GPUTexture() = default;
-  virtual auto bind() -> void = 0;
+  virtual auto bind(usize /* slot */ = 0) -> void = 0;
   virtual auto unbind() -> void = 0;
   virtual auto resize(i32, i32) -> void = 0;
   virtual auto get_id() -> void* = 0;

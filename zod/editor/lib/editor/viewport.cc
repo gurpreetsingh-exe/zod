@@ -8,6 +8,8 @@
 #include "viewport.hh"
 #include "widgets/button.hh"
 
+#include "gpu/shader_builtins.hh"
+
 namespace zod {
 
 static auto grid = true;
@@ -46,15 +48,6 @@ Viewport::Viewport()
              shared<PerspectiveCamera>(64, 64, 90.0f, 0.01f, 100.0f), false),
       m_width(64), m_height(64) {
   m_framebuffer = Editor::get().get_renderer().get_render_target();
-  m_framebuffer->bind();
-  GPUAttachment attach = { GPUBackend::get().create_texture({
-      .width = i32(m_width),
-      .height = i32(m_height),
-  }) };
-  m_framebuffer->add_color_attachment(attach);
-  m_framebuffer->add_depth_attachment();
-  m_framebuffer->check();
-  m_framebuffer->unbind();
 
   // Shader taken from
   // https://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/
@@ -70,11 +63,18 @@ auto Viewport::draw_grid() -> void {
   GPUState::get().draw_immediate(6);
 }
 
-auto Viewport::on_event_imp(Event&) -> void {}
+auto Viewport::on_event_imp(Event& event) -> void {
+  if (event.kind == Event::WindowResize) {
+    Editor::get().get_renderer().resize(event.size.x, event.size.y);
+  }
+}
 
 auto Viewport::draw_imp(Geometry&) -> void {
   Editor::get().get_renderer().tick();
-  auto texture = m_framebuffer->get_slot(0).texture;
+  auto texture =
+      m_gbuffer_display
+          ? Editor::get().get_renderer().get_gbuffer()->get_slot(m_gbuffer_slot)
+          : m_framebuffer->get_slot(0);
   ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
                ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
   Button("Grid", grid);

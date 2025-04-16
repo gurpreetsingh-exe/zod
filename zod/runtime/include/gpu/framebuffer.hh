@@ -21,15 +21,12 @@ enum class GPUAttachmentType : int {
 constexpr int GPU_FB_MAX_COLOR_ATTACHMENT =
     int(GPUAttachmentType::ColorMax) - int(GPUAttachmentType::Color0);
 
-struct GPUAttachment {
-  SharedPtr<GPUTexture> texture;
-};
-
 class GPUFrameBuffer {
 protected:
   i32 m_width = 0;
   i32 m_height = 0;
-  Vector<GPUAttachment> m_color_attachments;
+  Vector<SharedPtr<GPUTexture>> m_color_attachments;
+  // SharedPtr<GPUTexture> m_depth_attachment = nullptr;
   i32 m_samples = 1;
   // i32 m_viewport[4] = { 0 };
   // i32 m_scissor[4] = { 0 };
@@ -43,12 +40,17 @@ public:
   virtual auto check() -> void = 0;
   virtual auto clear() -> void = 0;
   virtual auto clear_color(vec4) -> void = 0;
-  virtual auto add_color_attachment(GPUAttachment&) -> void = 0;
+  virtual auto add_color_attachment(SharedPtr<GPUTexture>) -> void = 0;
   virtual auto add_depth_attachment() -> void = 0;
   virtual auto read_pixel(usize, i32, i32) -> u32 = 0;
-  auto get_slot(usize slot) -> GPUAttachment& {
+  auto get_slot(usize slot) -> SharedPtr<GPUTexture> {
     return m_color_attachments[slot];
   }
+  virtual auto bind_depth(usize /* slot */) -> void = 0;
+  // auto get_depth() -> GPUAttachment& {
+  //   ZASSERT(m_depth_attachment.get() != nullptr);
+  //   return *m_depth_attachment;
+  // }
   auto get_width() -> i32 { return m_width; }
   auto get_height() -> i32 { return m_height; }
 };

@@ -1,5 +1,7 @@
 #include "engine/font.hh"
 
+#include "gpu/shader_builtins.hh"
+
 namespace zod {
 
 constexpr usize MAX_VERTICES = 64 * 1024;

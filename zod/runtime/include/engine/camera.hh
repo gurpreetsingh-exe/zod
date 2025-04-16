@@ -24,6 +24,8 @@ public:
 public:
   auto get_view() const -> const mat4& { return m_view; }
   auto get_projection() const -> const mat4& { return m_projection; }
+  auto get_inv_view() const -> const mat4& { return m_inv_view; }
+  auto get_inv_projection() const -> const mat4& { return m_inv_projection; }
   auto get_view_projection() const -> const mat4& { return m_view_projection; }
   auto get_position() const -> const vec3& { return m_position; }
   auto get_direction() const -> const vec3& { return m_direction; }
@@ -38,6 +40,8 @@ public:
     update_view();
     update_projection();
     m_view_projection = m_projection * m_view;
+    m_inv_projection = inverse(m_projection);
+    m_inv_view = inverse(m_view);
   }
 
   auto resize(f32 width, f32 height) -> void {
@@ -72,6 +76,8 @@ protected:
   mat4 m_model = {};
   mat4 m_view = {};
   mat4 m_projection = {};
+  mat4 m_inv_view = {};
+  mat4 m_inv_projection = {};
   mat4 m_view_projection = {};
   vec2 m_pivot_point = {};
 };

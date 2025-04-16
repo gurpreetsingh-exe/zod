@@ -3,6 +3,8 @@
 #include "./texture.hh"
 #include "backend.hh"
 
+#include "gpu/shader_builtins.hh"
+
 namespace zod {
 
 static auto to_gl(GPUTextureType type) -> GLenum {
@@ -27,6 +29,10 @@ static auto to_gl(GPUTextureFormat format) -> GLenum {
   switch (format) {
     case GPUTextureFormat::RGBA8:
       return GL_RGBA8;
+    case GPUTextureFormat::RGB8:
+      return GL_RGB8;
+    case GPUTextureFormat::RGBA32:
+      return GL_RGBA32UI;
     case GPUTextureFormat::RGB32F:
       return GL_RGB32F;
     case GPUTextureFormat::RGBA32F:
@@ -54,9 +60,12 @@ static auto to_gl(GPUTextureData data) -> GLenum {
 static auto gl_format(GPUTextureFormat format) -> GLenum {
   switch (format) {
     case GPUTextureFormat::RGBA8:
-    case GPUTextureFormat::RGB32F:
+    case GPUTextureFormat::RGBA32:
     case GPUTextureFormat::RGBA32F:
       return GL_RGBA;
+    case GPUTextureFormat::RGB8:
+    case GPUTextureFormat::RGB32F:
+      return GL_RGB;
     case GPUTextureFormat::R32UI:
       return GL_RED_INTEGER;
     case GPUTextureFormat::Red:

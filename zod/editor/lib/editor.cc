@@ -230,6 +230,13 @@ auto Editor::update() -> void {
       if (ImGui::Checkbox("V-Sync", &vsync)) {
         Application::get().active_window().set_vsync(vsync);
       }
+      ImGui::Separator();
+
+      auto viewport =
+          std::static_pointer_cast<Viewport>(m_layout->area("Viewport"));
+      ImGui::Checkbox("G-Buffer", std::addressof(viewport->gbuffer()));
+      ImGui::SliderInt("G-Buffer Slot",
+                       std::addressof(viewport->gbuffer_slot()), 0, 1);
 
       ImGui::Separator();
       for (const auto& [name, time] : GPUTimer::get().timings()) {

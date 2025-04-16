@@ -3,6 +3,8 @@
 
 namespace zod {
 
+extern vec2 MEGA_TEXTURE_SIZE;
+
 class GPUMeshBatch {
 public:
   GPUMeshBatch();

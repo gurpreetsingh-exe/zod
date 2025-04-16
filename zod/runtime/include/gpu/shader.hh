@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gpu/types.hh"
-#include "shaders_generated.hh"
 
 namespace zod {
 

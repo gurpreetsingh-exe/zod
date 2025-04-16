@@ -25,8 +25,9 @@ public:
   auto check() -> void override;
   auto clear() -> void override;
   auto clear_color(vec4) -> void override;
-  auto add_color_attachment(GPUAttachment&) -> void override;
+  auto add_color_attachment(SharedPtr<GPUTexture>) -> void override;
   auto add_depth_attachment() -> void override;
+  auto bind_depth(usize) -> void override;
 
   auto read_pixel(usize idx, i32 x, i32 y) -> u32 override {
     u32 pixel;

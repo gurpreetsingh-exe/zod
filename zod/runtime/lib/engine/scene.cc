@@ -96,8 +96,9 @@ auto operator<<(YAML::Emitter& out, const vec3& v) -> YAML::Emitter& {
 
 Scene::Scene()
     : m_mesh_batch(shared<GPUMeshBatch>()),
-      m_uniform_buffer(
-          GPUBackend::get().create_uniform_buffer(sizeof(SceneData))) {}
+      m_camera_buffer(GPUBackend::get().create_storage_buffer()) {
+  m_camera_buffer->upload_data(nullptr, sizeof(SceneData));
+}
 
 auto Scene::create() -> Entity {
   return create(fmt::format("empty.{}", next_id()));
@@ -127,10 +128,13 @@ auto Scene::update() -> void {
   auto camera = entity.get_component<CameraComponent>().camera;
   if (camera->is_dirty) {
     camera->is_dirty = false;
-    auto storage = SceneData { camera->get_view_projection(),
+    auto storage = SceneData { camera->get_view(),
+                               camera->get_projection(),
+                               camera->get_inv_view(),
+                               camera->get_inv_projection(),
                                vec4(camera->get_direction(), 0.0f),
                                vec4(camera->get_position(), 0.0f) };
-    m_uniform_buffer->upload_data(&storage, sizeof(SceneData));
+    m_camera_buffer->upload_data(&storage, sizeof(SceneData));
   }
 }
 
@@ -291,7 +295,7 @@ auto Scene::deserialize(const fs::path& path) -> void {
     auto size = vec2(*(usize*)mapping[0], *(usize*)mapping[sizeof(usize)]);
     auto span =
         Span(mapping[sizeof(usize) * 3], *(usize*)mapping[sizeof(usize) * 2]);
-    if (offset.x + size.x > 12 * 1024) {
+    if (offset.x + size.x > MEGA_TEXTURE_SIZE.x) {
       offset.x = 0.0f;
       offset.y += max_height;
       max_height = 0.0f;

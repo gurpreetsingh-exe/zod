@@ -85,12 +85,13 @@ auto SPanel::draw(Geometry& g) -> void {
     m_size = size;
     m_framebuffer->resize(size.x, size.y);
     m_camera->resize(size.x, size.y);
-    auto event = Event();
+    auto event = Event { .kind = Event::WindowResize, .size = size };
     m_camera->update(event);
     auto storage =
         CameraUniformBufferStorage { m_camera->get_view_projection(),
                                      vec4(m_camera->get_direction(), 0.0f) };
     m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
+    on_event_imp(event);
   }
   draw_imp(g);
   if (not m_debug_message.empty()) {

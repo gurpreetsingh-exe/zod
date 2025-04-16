@@ -5,6 +5,7 @@
 namespace zod {
 
 static constexpr usize BUFFER_INIT_SIZE = 8 * 1024 * 1024;
+vec2 MEGA_TEXTURE_SIZE = vec2(10 * 1024, 8 * 1024);
 
 struct DrawElementsIndirectCommand {
   u32 count;
@@ -26,8 +27,10 @@ GPUMeshBatch::GPUMeshBatch()
       m_uv_buffer(GPUBackend::get().create_storage_buffer()),
       m_matrix_buffer(GPUBackend::get().create_storage_buffer()),
       m_mesh_info(GPUBackend::get().create_storage_buffer()),
-      m_mega_texture(GPUBackend::get().create_texture(
-          { .width = 12 * 1024, .height = 8 * 1024, .mips = 8 })),
+      m_mega_texture(
+          GPUBackend::get().create_texture({ .width = i32(MEGA_TEXTURE_SIZE.x),
+                                             .height = i32(MEGA_TEXTURE_SIZE.y),
+                                             .mips = 8 })),
       m_texture_info(GPUBackend::get().create_storage_buffer()) {
   m_vertex_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
   m_normal_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);

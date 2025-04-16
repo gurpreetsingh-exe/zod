@@ -39,9 +39,9 @@ auto GLFrameBuffer::resize(i32 width, i32 height) -> void {
   m_width = width;
   m_height = height;
   bind();
-  for (auto [i, attach] : rng::enumerate_view(m_color_attachments)) {
-    attach.texture->resize(width, height);
-    auto gl_tex = std::static_pointer_cast<GLTexture>(attach.texture);
+  for (auto [i, texture] : rng::enumerate_view(m_color_attachments)) {
+    texture->resize(width, height);
+    auto gl_tex = std::static_pointer_cast<GLTexture>(texture);
     gl_tex->bind();
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
                            gl_tex->m_target, gl_tex->m_id, 0);
@@ -99,9 +99,10 @@ auto GLFrameBuffer::clear_color(vec4 color) -> void {
   glClearColor(color.x, color.y, color.z, color.w);
 }
 
-auto GLFrameBuffer::add_color_attachment(GPUAttachment& attach) -> void {
+auto GLFrameBuffer::add_color_attachment(SharedPtr<GPUTexture> texture)
+    -> void {
   auto multisampled = m_samples > 1;
-  auto gl_tex = static_pointer_cast<GLTexture>(attach.texture);
+  auto gl_tex = static_pointer_cast<GLTexture>(texture);
   auto target = multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
   ZASSERT(gl_tex->m_target == target);
   gl_tex->bind();
@@ -115,7 +116,7 @@ auto GLFrameBuffer::add_color_attachment(GPUAttachment& attach) -> void {
   glFramebufferTexture2D(GL_FRAMEBUFFER,
                          GL_COLOR_ATTACHMENT0 + m_color_attachments.size(),
                          target, gl_tex->m_id, 0);
-  m_color_attachments.push_back(attach);
+  m_color_attachments.push_back(texture);
 }
 
 auto GLFrameBuffer::add_depth_attachment() -> void {
@@ -128,6 +129,11 @@ auto GLFrameBuffer::add_depth_attachment() -> void {
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, target,
                          m_depth_attachment, 0);
   glBindTexture(target, 0);
+}
+
+auto GLFrameBuffer::bind_depth(usize slot) -> void {
+  glActiveTexture(GL_TEXTURE0 + slot);
+  glBindTexture(GL_TEXTURE_2D, m_depth_attachment);
 }
 
 } // namespace zod

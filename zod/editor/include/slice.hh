@@ -28,7 +28,7 @@ public:
   }
 
   auto get_texture() -> SharedPtr<GPUTexture> {
-    return m_framebuffer->get_slot(0).texture;
+    return m_framebuffer->get_slot(0);
   }
 
 private:
