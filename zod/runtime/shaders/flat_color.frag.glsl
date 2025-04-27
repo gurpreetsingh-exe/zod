@@ -1,5 +1,3 @@
-#version 450
-
 out vec4 color;
 
 uniform vec3 u_color;

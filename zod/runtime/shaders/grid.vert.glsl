@@ -1,5 +1,3 @@
-#version 450
-
 layout(std140) uniform Camera {
   mat4 view_projection;
   vec4 direction;

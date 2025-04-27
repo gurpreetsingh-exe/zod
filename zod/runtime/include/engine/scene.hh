@@ -61,6 +61,8 @@ private:
   friend class Entity;
   friend class Outliner;
   friend class Renderer;
+  friend class ForwardRenderer;
+  friend class DeferredRenderer;
 };
 
 }; // namespace zod

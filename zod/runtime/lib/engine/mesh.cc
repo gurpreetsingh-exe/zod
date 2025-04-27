@@ -24,6 +24,9 @@ static Prim g_prims[] = {
   { .points = { 7, 0, 4 } }, { .points = { 0, 2, 4 } },
   { .points = { 6, 1, 7 } }, { .points = { 1, 0, 7 } },
 };
+static SubMesh g_submeshes[] = {
+  { .mat = {}, .offset = 0, .size = 36 },
+};
 
 auto Mesh::cube() -> SharedPtr<Mesh> {
   auto mesh = shared<Mesh>();
@@ -31,6 +34,7 @@ auto Mesh::cube() -> SharedPtr<Mesh> {
     .points = Span<Point>(g_points, 8),
     .normals = Span<vec3>(g_normals, 12),
     .prims = Span<Prim>(g_prims, 12),
+    .submeshes = Span<SubMesh>(g_submeshes, 1),
   };
   return mesh;
 }

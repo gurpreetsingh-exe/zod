@@ -1,5 +1,3 @@
-#version 450
-
 layout(packed) uniform UIUbo {
   int width;
   int height;

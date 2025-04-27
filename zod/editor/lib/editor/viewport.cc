@@ -71,10 +71,7 @@ auto Viewport::on_event_imp(Event& event) -> void {
 
 auto Viewport::draw_imp(Geometry&) -> void {
   Editor::get().get_renderer().tick();
-  auto texture =
-      m_gbuffer_display
-          ? Editor::get().get_renderer().get_gbuffer()->get_slot(m_gbuffer_slot)
-          : m_framebuffer->get_slot(0);
+  auto texture = m_framebuffer->get_slot(0);
   ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
                ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
   Button("Grid", grid);

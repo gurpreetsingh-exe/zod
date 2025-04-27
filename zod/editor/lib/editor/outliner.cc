@@ -49,6 +49,11 @@ auto Outliner::draw_imp(Geometry&) -> void {
       cube.add_component<StaticMeshComponent>(Mesh::cube());
       C.set_active_object(cube);
     }
+    if (ImGui::MenuItem("Light")) {
+      auto light = scene.create();
+      light.add_component<LightComponent>();
+      C.set_active_object(light);
+    }
 
     ImGui::EndPopup();
   }
@@ -64,7 +69,15 @@ auto Outliner::draw_imp(Geometry&) -> void {
       ImGui::TableNextRow();
       auto entity = Entity(entity_id, std::addressof(scene));
       auto& component = entity.get_component<IdentifierComponent>();
-      if (draw_row(component.identifier, "Object",
+      auto* object_type = "Object";
+      if (entity.has_component<StaticMeshComponent>()) {
+        object_type = "Mesh";
+      } else if (entity.has_component<LightComponent>()) {
+        object_type = "Light";
+      } else if (entity.has_component<CameraComponent>()) {
+        object_type = "Camera";
+      }
+      if (draw_row(component.identifier, object_type,
                    C.active_object() == entity)) {
         C.set_active_object(entity);
       }

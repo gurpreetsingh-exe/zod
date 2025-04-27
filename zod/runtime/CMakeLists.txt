@@ -19,7 +19,12 @@ target_include_directories(zodpch INTERFACE ${INC})
 target_link_libraries(zodpch INTERFACE fmt glm::glm)
 
 # embed
-add_executable(embed ${CMAKE_CURRENT_SOURCE_DIR}/lib/embed/main.cc)
+set(EMBED ${CMAKE_CURRENT_SOURCE_DIR}/lib/embed/main.cc)
+add_custom_target(embed-force-rebuild
+  COMMAND ${CMAKE_COMMAND} -E touch_nocreate ${EMBED})
+
+add_executable(embed ${EMBED})
+add_dependencies(embed embed-force-rebuild)
 target_link_libraries(embed zodpch)
 
 # gpu
@@ -67,6 +72,7 @@ endif()
 file(GLOB_RECURSE GPU_LIB2 ${LIB}/gpu/*.cc)
 file(GLOB_RECURSE RUNTIME_LIB ${LIB}/*.cc)
 list(REMOVE_ITEM RUNTIME_LIB ${GPU_LIB2})
+list(REMOVE_ITEM RUNTIME_LIB ${EMBED})
 
 add_library(zrt ${RUNTIME_LIB})
 if (VULKAN_BACKEND)

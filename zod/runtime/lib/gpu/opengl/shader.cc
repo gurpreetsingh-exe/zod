@@ -21,7 +21,7 @@ auto GLShader::create_shader(GLuint type, const char* source) -> GLuint {
     auto info_log = Vector<char>(usize(length));
     glGetShaderInfoLog(shader, length, &length, &info_log[0]);
     glDeleteShader(shader);
-    eprintln("{}", info_log.data());
+    eprintln("{}: {}", name, info_log.data());
   }
 
   return shader;
@@ -39,6 +39,7 @@ auto GLShader::init_compute_shader(const char* source) -> void {
 }
 
 auto GLShader::compile(GPUShaderCreateInfo info) -> void {
+  info.generate();
   auto bits = info.shader_bits();
   auto link_program_or_crash = [&] {
     glLinkProgram(m_id);
@@ -50,7 +51,7 @@ auto GLShader::compile(GPUShaderCreateInfo info) -> void {
       auto info_log = Vector<char>(usize(length));
       glGetProgramInfoLog(m_id, length, &length, &info_log[0]);
       glDeleteProgram(m_id);
-      eprintln("{}", info_log.data());
+      eprintln("{}: {}", name, info_log.data());
     }
   };
 
@@ -71,7 +72,7 @@ auto GLShader::compile(GPUShaderCreateInfo info) -> void {
       glDetachShader(m_id, m_comp);
     } break;
     default: {
-      eprintln("invalid bits found when compiling shader");
+      eprintln("{}: invalid bits found when compiling shader", name);
     } break;
   }
 }

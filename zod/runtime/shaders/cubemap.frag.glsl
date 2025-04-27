@@ -1,5 +1,3 @@
-#version 450
-
 in vec3 P;
 out vec4 color;
 

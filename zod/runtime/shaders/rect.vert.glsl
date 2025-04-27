@@ -1,5 +1,3 @@
-// #version 450
-
 // layout (packed) uniform UIUbo {
 //     mat4 view_projection_mat;
 // };
@@ -28,8 +26,6 @@
 //   }
 //   gl_Position = view_projection_mat * vec4(p, 0.f, 1.f);
 // }
-
-#version 450
 
 layout(packed) uniform UIUbo { mat4 view_projection_mat; };
 

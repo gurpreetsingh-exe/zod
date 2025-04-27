@@ -1,4 +1,4 @@
-#version 460
+#include "mesh_info.glsl"
 
 out vec3 P;
 out vec3 N;
@@ -12,12 +12,6 @@ layout(std430, binding = 6) buffer Camera {
   mat4 inv_projection;
   vec4 rd;
   vec4 ro;
-};
-
-struct MeshInfo {
-  uint matrix_index;
-  uint base_color_texture_index;
-  uint normal_texture_index;
 };
 
 layout(std430, binding = 0) buffer vertexNormal { float buffer_normal[]; };
@@ -35,7 +29,7 @@ void main(void) {
   MeshInfo inf = minfo[gl_DrawID];
   mat4 m = model[inf.matrix_index];
   P = vec3(m * vec4(p, 1.0f));
-  N = vec3(m * vec4(n, 1.0f));
+  N = normalize(vec3(m * vec4(n, 1.0f)));
   uv = buffer_uv[gl_VertexID];
   ID = gl_DrawID;
   gl_Position = projection * view * m * vec4(p, 1.f);

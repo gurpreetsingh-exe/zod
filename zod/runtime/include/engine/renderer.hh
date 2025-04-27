@@ -11,19 +11,38 @@ public:
   ~Renderer() = default;
 
 public:
-  auto tick() -> void;
-  auto resize(f32, f32) -> void;
+  virtual auto tick() -> void = 0;
+  virtual auto resize(f32, f32) -> void;
 
 public:
   auto get_render_target() const -> SharedPtr<GPUFrameBuffer> {
     return m_framebuffer;
   }
 
-  auto get_gbuffer() const -> SharedPtr<GPUFrameBuffer> { return m_gbuffer; }
+protected:
+  SharedPtr<GPUFrameBuffer> m_framebuffer = nullptr;
+};
+
+class ForwardRenderer : public Renderer {
+public:
+  ForwardRenderer();
+  ~ForwardRenderer() = default;
+
+public:
+  auto tick() -> void override;
+};
+
+class DeferredRenderer : public Renderer {
+public:
+  DeferredRenderer();
+  ~DeferredRenderer() = default;
+
+public:
+  auto tick() -> void override;
+  auto resize(f32, f32) -> void override;
 
 private:
   SharedPtr<GPUFrameBuffer> m_gbuffer = nullptr;
-  SharedPtr<GPUFrameBuffer> m_framebuffer = nullptr;
 };
 
 } // namespace zod

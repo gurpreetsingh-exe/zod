@@ -70,7 +70,6 @@ target_link_libraries(sodium
 ##########################################################################
 file(GLOB_RECURSE ZOD_EDITOR_SRC ${ZOD_EDITOR_DIR}/lib/*.cc)
 add_executable(zod ${ZOD_EDITOR_SRC})
-target_compile_definitions(zod PUBLIC GLFW_INCLUDE_NONE=1)
 target_include_directories(zod PUBLIC ${ZOD_RUNTIME_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)
 target_link_libraries(zod zodpch zrt sodium tinyobj tinygltf)

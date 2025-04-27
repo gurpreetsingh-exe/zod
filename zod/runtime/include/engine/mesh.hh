@@ -17,6 +17,7 @@ struct Prim {
 struct Material {
   usize color_texture = -1ZU;
   usize normal_texture = -1ZU;
+  usize roughness_texture = -1ZU;
 };
 
 struct SubMesh {

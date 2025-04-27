@@ -19,6 +19,7 @@ struct GPUMeshInfo {
   u32 matrix_index;
   u32 base_color_texture_index;
   u32 normal_texture_index;
+  u32 roughness_texture_index;
 };
 
 GPUMeshBatch::GPUMeshBatch()
@@ -31,13 +32,15 @@ GPUMeshBatch::GPUMeshBatch()
           GPUBackend::get().create_texture({ .width = i32(MEGA_TEXTURE_SIZE.x),
                                              .height = i32(MEGA_TEXTURE_SIZE.y),
                                              .mips = 8 })),
-      m_texture_info(GPUBackend::get().create_storage_buffer()) {
+      m_texture_info(GPUBackend::get().create_storage_buffer()),
+      m_light_indices(GPUBackend::get().create_storage_buffer()) {
   m_vertex_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
   m_normal_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
   m_uv_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
   m_matrix_buffer->upload_data(nullptr, 64000);
   m_mesh_info->upload_data(nullptr, 500 * sizeof(GPUMeshInfo));
   m_texture_info->upload_data(nullptr, 500 * sizeof(TextureInfo));
+  m_light_indices->upload_data(nullptr, 500 * sizeof(u32));
   m_batch = GPUBackend::get().create_batch({});
   m_batch->upload_indirect(nullptr, 0);
 
@@ -75,15 +78,22 @@ auto GPUMeshBatch::recompute_batch() -> void {
   auto indices = Vector<u32>();
   auto indirect = Vector<DrawElementsIndirectCommand>();
   auto mesh_info = Vector<GPUMeshInfo>();
+  auto lights = Vector<u32>();
   i = usize(0);
   auto matrix_index = usize(0);
   for (auto entity_id : view) {
     auto entity = Entity(entity_id, std::addressof(scene));
+    if (entity.has_component<LightComponent>()) {
+      lights.push_back(matrix_index);
+      ++matrix_index;
+      ++i;
+      continue;
+    }
     auto mesh = entity.has_component<StaticMeshComponent>()
                     ? entity.get_component<StaticMeshComponent>().mesh
                     : nullptr;
     if (not mesh) {
-      indirect.emplace_back(0, 1, 0, 0, i);
+      ++matrix_index;
       ++i;
       continue;
     }
@@ -99,12 +109,12 @@ auto GPUMeshBatch::recompute_batch() -> void {
       for (auto n : prim.points) { indices.push_back(n + offset); }
     }
     for (auto submesh : mesh->submeshes) {
-      // auto count = indices.size() - begin;
       auto count = submesh.size;
       auto offset = begin + submesh.offset;
       indirect.emplace_back(count, 1, offset, 0, i);
       mesh_info.emplace_back(matrix_index, submesh.mat.color_texture,
-                             submesh.mat.normal_texture);
+                             submesh.mat.normal_texture,
+                             submesh.mat.roughness_texture);
       ++i;
     }
     offset += mesh->points.size();
@@ -113,7 +123,10 @@ auto GPUMeshBatch::recompute_batch() -> void {
 
   m_mesh_info->update_data(mesh_info.data(),
                            mesh_info.size() * sizeof(GPUMeshInfo));
-
+  u32 number_of_lights = lights.size();
+  m_light_indices->update_data(&number_of_lights, sizeof(u32));
+  m_light_indices->update_data(lights.data(), lights.size() * sizeof(u32),
+                               sizeof(u32));
   m_batch = GPUBackend::get().create_batch({}, indices);
 
   m_batch->upload_indirect(
@@ -140,6 +153,7 @@ auto GPUMeshBatch::bind() -> void {
   m_mesh_info->bind(3);
   m_texture_info->bind(4);
   m_uv_buffer->bind(5);
+  m_light_indices->bind(7);
   m_mega_texture->bind();
 }
 

@@ -37,6 +37,7 @@ private:
   SharedPtr<GPUStorageBuffer> m_mesh_info = nullptr;
   SharedPtr<GPUTexture> m_mega_texture = nullptr;
   SharedPtr<GPUStorageBuffer> m_texture_info = nullptr;
+  SharedPtr<GPUStorageBuffer> m_light_indices = nullptr;
   SharedPtr<GPUBatch> m_cubemap_batch = nullptr;
 
   std::unordered_map<Entity, usize> m_matrix_offset_map = {};

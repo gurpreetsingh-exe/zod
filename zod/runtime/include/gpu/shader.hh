@@ -43,15 +43,20 @@ public:
   auto fragment_source(const char*) -> GPUShaderCreateInfo&;
   auto compute_source(const char*) -> GPUShaderCreateInfo&;
   auto shader_bits() const -> u8 { return m_shader_bits; }
-  auto get_vertex_source() -> const char* { return m_vertex_source; }
-  auto get_fragment_source() -> const char* { return m_fragment_source; }
-  auto get_compute_source() -> const char* { return m_compute_source; }
+  auto get_vertex_source() const -> const char*;
+  auto get_fragment_source() const -> const char*;
+  auto get_compute_source() const -> const char*;
+  auto generate() -> void;
 
 private:
   u8 m_shader_bits = 0;
   const char* m_vertex_source = nullptr;
   const char* m_fragment_source = nullptr;
   const char* m_compute_source = nullptr;
+
+  String m_vertex_generated = "";
+  String m_fragment_generated = "";
+  String m_compute_generated = "";
 };
 
 class GPUShader {

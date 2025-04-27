@@ -343,4 +343,10 @@ auto Scene::on_component_added<SkyboxComponent>(Entity entity, SkyboxComponent&)
   m_env = entity.m_inner;
 }
 
+template <>
+auto Scene::on_component_added<LightComponent>(Entity, LightComponent&)
+    -> void {
+  m_mesh_batch->recompute_batch();
+}
+
 }; // namespace zod

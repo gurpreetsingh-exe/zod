@@ -57,4 +57,13 @@ struct SkyboxComponent {
   SkyboxComponent(Environment _env) : env(std::move(_env)) {}
 };
 
+enum LightKind {
+  Point,
+  Sun,
+};
+
+struct LightComponent {
+  LightKind kind = LightKind::Point;
+};
+
 }; // namespace zod

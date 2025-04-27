@@ -1,5 +1,3 @@
-#version 450
-
 // adapted from Blender's workbench engine
 // https://projects.blender.org/blender/blender/src/commit/30038f17105a4c3d2839b9f166995ae91ec12d35/source/blender/draw/engines/workbench/shaders/workbench_world_light_lib.glsl
 
@@ -7,9 +5,13 @@ in vec3 P;
 in vec3 N;
 out vec4 color;
 
-layout(std140) uniform Camera {
-  mat4 view_projection;
-  vec4 direction;
+layout(std430, binding = 6) buffer Camera {
+  mat4 view;
+  mat4 projection;
+  mat4 inv_view;
+  mat4 inv_projection;
+  vec4 rd;
+  vec4 ro;
 };
 
 struct Light {
@@ -37,7 +39,7 @@ vec4 wrapped_lighting(vec4 NL, vec4 w) {
 
 void main(void) {
   vec3 n = N;
-  float fresnel = dot(direction.xyz, n) * 0.5 + 0.5;
+  float fresnel = dot(rd.xyz, n) * 0.5 + 0.5;
 
   vec3 ambient = vec3(0);
   vec3 diffuse_light = ambient;

@@ -271,6 +271,8 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
         pcx.materials[mat.name] = Material {
           .color_texture = find_texture_index(pbr.baseColorTexture.index),
           .normal_texture = find_texture_index(mat.normalTexture.index),
+          .roughness_texture =
+              find_texture_index(pbr.metallicRoughnessTexture.index),
         };
       }
       mat_idx += 1;

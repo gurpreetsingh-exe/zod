@@ -24,7 +24,7 @@ static auto preferences = false;
 auto Editor::get() -> Editor& { return *g_editor; }
 
 Editor::Editor()
-    : ILayer(), m_renderer(new Renderer()),
+    : ILayer(), m_renderer(new ForwardRenderer()),
       m_imgui_layer(unique<ImGuiLayer>(
           Application::get().active_window().get_native_handle())),
       m_layout(unique<Layout>()), m_node_tree(shared<NodeTree>()) {

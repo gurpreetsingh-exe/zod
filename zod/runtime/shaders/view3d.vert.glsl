@@ -1,5 +1,3 @@
-#version 460
-
 out vec3 P;
 out vec3 N;
 out uint ID;
