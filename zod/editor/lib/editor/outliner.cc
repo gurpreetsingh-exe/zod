@@ -76,6 +76,8 @@ auto Outliner::draw_imp(Geometry&) -> void {
         object_type = "Light";
       } else if (entity.has_component<CameraComponent>()) {
         object_type = "Camera";
+      } else if (entity.has_component<SkyboxComponent>()) {
+        object_type = "Skybox";
       }
       if (draw_row(component.identifier, object_type,
                    C.active_object() == entity)) {

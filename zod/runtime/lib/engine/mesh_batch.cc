@@ -22,6 +22,12 @@ struct GPUMeshInfo {
   u32 roughness_texture_index;
 };
 
+struct LightInfo {
+  u32 index;
+  f32 a;
+  f32 b;
+};
+
 GPUMeshBatch::GPUMeshBatch()
     : m_vertex_buffer(GPUBackend::get().create_storage_buffer()),
       m_normal_buffer(GPUBackend::get().create_storage_buffer()),
@@ -33,14 +39,14 @@ GPUMeshBatch::GPUMeshBatch()
                                              .height = i32(MEGA_TEXTURE_SIZE.y),
                                              .mips = 8 })),
       m_texture_info(GPUBackend::get().create_storage_buffer()),
-      m_light_indices(GPUBackend::get().create_storage_buffer()) {
+      m_light_info(GPUBackend::get().create_storage_buffer()) {
   m_vertex_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
   m_normal_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
   m_uv_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
   m_matrix_buffer->upload_data(nullptr, 64000);
   m_mesh_info->upload_data(nullptr, 500 * sizeof(GPUMeshInfo));
   m_texture_info->upload_data(nullptr, 500 * sizeof(TextureInfo));
-  m_light_indices->upload_data(nullptr, 500 * sizeof(u32));
+  m_light_info->upload_data(nullptr, 500 * sizeof(u32));
   m_batch = GPUBackend::get().create_batch({});
   m_batch->upload_indirect(nullptr, 0);
 
@@ -57,34 +63,42 @@ GPUMeshBatch::GPUMeshBatch()
                 6, 3, 2, 7, 3, 6, 3, 7, 0, 7, 4, 0, 5, 1, 0, 4, 5, 0 });
 }
 
+struct Matrix {
+  mat4 model_matrix;
+  mat4 inv_model_matrix;
+};
+
 auto GPUMeshBatch::recompute_batch() -> void {
   // TODO: make another version of this function which just appends
   // the new mesh at the end instead of recomputing the whole thing
   auto& scene = Runtime::get().scene();
   auto view = scene->view<TransformComponent>();
-  auto* matrix = new f32[view.size() * 16];
+  auto matrix = Vector<Matrix>();
+  matrix.reserve(view.size());
   auto i = usize(0);
   for (auto entity_id : view) {
     auto entity = Entity(entity_id, std::addressof(scene));
     auto mat = *entity.get_component<TransformComponent>();
-    std::memcpy(&matrix[i * 16], ADDROF(mat), sizeof(mat4));
-    m_matrix_offset_map[entity] = i * sizeof(mat4);
+    m_matrix_offset_map[entity] = matrix.size() * sizeof(Matrix);
+    matrix.push_back({ mat, transpose(inverse(mat)) });
     ++i;
   }
-  m_matrix_buffer->upload_data(matrix, sizeof(mat4) * i);
-  delete[] matrix;
+  m_matrix_buffer->upload_data(matrix.data(), matrix.size() * sizeof(Matrix));
 
   auto offset = usize(0);
   auto indices = Vector<u32>();
   auto indirect = Vector<DrawElementsIndirectCommand>();
   auto mesh_info = Vector<GPUMeshInfo>();
-  auto lights = Vector<u32>();
+  auto lights = Vector<LightInfo>();
   i = usize(0);
   auto matrix_index = usize(0);
   for (auto entity_id : view) {
     auto entity = Entity(entity_id, std::addressof(scene));
     if (entity.has_component<LightComponent>()) {
-      lights.push_back(matrix_index);
+      auto light = entity.get_component<LightComponent>();
+      lights.push_back({ u32(matrix_index), light.a, light.b });
+      m_light_offset_map[entity] = { lights.size() * sizeof(LightInfo),
+                                     u32(matrix_index) };
       ++matrix_index;
       ++i;
       continue;
@@ -123,10 +137,10 @@ auto GPUMeshBatch::recompute_batch() -> void {
 
   m_mesh_info->update_data(mesh_info.data(),
                            mesh_info.size() * sizeof(GPUMeshInfo));
-  u32 number_of_lights = lights.size();
-  m_light_indices->update_data(&number_of_lights, sizeof(u32));
-  m_light_indices->update_data(lights.data(), lights.size() * sizeof(u32),
-                               sizeof(u32));
+  LightInfo number_of_lights = { u32(lights.size()), 0.0f, 0.0f };
+  m_light_info->update_data(&number_of_lights, sizeof(LightInfo));
+  m_light_info->update_data(lights.data(), lights.size() * sizeof(LightInfo),
+                            sizeof(LightInfo));
   m_batch = GPUBackend::get().create_batch({}, indices);
 
   m_batch->upload_indirect(
@@ -135,7 +149,15 @@ auto GPUMeshBatch::recompute_batch() -> void {
 
 auto GPUMeshBatch::update_matrix(Entity entity, const mat4& mat) -> void {
   auto offset = m_matrix_offset_map[entity];
-  m_matrix_buffer->update_data(ADDROF(mat), sizeof(mat4), offset);
+  auto data = Matrix { mat, transpose(inverse(mat)) };
+  m_matrix_buffer->update_data(&data, sizeof(Matrix), offset);
+}
+
+auto GPUMeshBatch::update_light(Entity entity, const LightComponent& light)
+    -> void {
+  auto [offset, index] = m_light_offset_map[entity];
+  auto light_info = LightInfo { index, light.a, light.b };
+  m_light_info->update_data(&light_info, sizeof(LightInfo), offset);
 }
 
 auto GPUMeshBatch::load_env(Environment& env) -> SharedPtr<GPUTexture> {
@@ -153,7 +175,7 @@ auto GPUMeshBatch::bind() -> void {
   m_mesh_info->bind(3);
   m_texture_info->bind(4);
   m_uv_buffer->bind(5);
-  m_light_indices->bind(7);
+  m_light_info->bind(7);
   m_mega_texture->bind();
 }
 

@@ -202,14 +202,15 @@ auto Scene::serialize(const fs::path& path) -> void {
       out << YAML::BeginMap;
       const auto& env = entity.get_component<SkyboxComponent>().env;
       if (env.mode == LightingMode::SolidColor) {
-        write_field(out, "LightingMode", "SolidColor");
+        out << YAML::Key << "SolidColor" << YAML::Value << YAML::BeginMap;
         write_field(out, "Color", env.color.v3);
       } else if (env.mode == LightingMode::Texture) {
-        write_field(out, "LightingMode", "Texture");
+        out << YAML::Key << "Texture" << YAML::Value << YAML::BeginMap;
         write_field(out, "HDRI", env.hdr.s);
       } else {
         UNREACHABLE();
       }
+      out << YAML::EndMap;
       out << YAML::EndMap;
     }
 
@@ -222,6 +223,18 @@ auto Scene::serialize(const fs::path& path) -> void {
       auto [near, far] = camera->get_clipping();
       write_field(out, "ClipNear", near);
       write_field(out, "ClipFar", far);
+      out << YAML::EndMap;
+      out << YAML::EndMap;
+    }
+
+    if (entity.has_component<LightComponent>()) {
+      out << YAML::Key << "LightComponent";
+      out << YAML::BeginMap;
+      const auto light_kind = entity.get_component<LightComponent>().kind;
+      ZASSERT(light_kind == LightKind::Point);
+      out << YAML::Key << "Point" << YAML::Value << YAML::BeginMap;
+      write_field(out, "A", 0.1f);
+      write_field(out, "B", 0.1f);
       out << YAML::EndMap;
       out << YAML::EndMap;
     }
@@ -277,6 +290,35 @@ auto Scene::deserialize(const fs::path& path) -> void {
       auto root = path.parent_path().parent_path();
       mesh->read(root / mesh_path);
       entity.add_component<StaticMeshComponent>(mesh);
+    }
+
+    if (node["SkyboxComponent"]) {
+      const auto& snode = node["SkyboxComponent"];
+      auto& component = entity.add_component<SkyboxComponent>();
+      auto& env = component.env;
+      if (snode["SolidColor"]) {
+        env.mode = LightingMode::SolidColor;
+        const auto& solid_color = snode["SolidColor"];
+        env.color.v3 = solid_color["Color"].as<vec3>();
+      } else if (snode["Texture"]) {
+        env.mode = LightingMode::Texture;
+        const auto& hdri = snode["Texture"];
+        std::memcpy(env.hdr.s, hdri["HDRI"].as<String>().c_str(),
+                    STRING_PROP_MAX_SIZE);
+      } else {
+        ZASSERT(false, "invalid field in SkyboxComponent");
+      }
+    }
+
+    if (node["LightComponent"]) {
+      const auto& lnode = node["LightComponent"];
+      auto& component = entity.add_component<LightComponent>();
+      if (lnode["Point"]) {
+        component.kind = LightKind::Point;
+        const auto& point_light = lnode["Point"];
+        component.a = point_light["A"].as<f32>();
+        component.b = point_light["B"].as<f32>();
+      }
     }
   }
 

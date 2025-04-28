@@ -1,6 +1,5 @@
 #include "brdf.glsl"
 #include "tonemapping.glsl"
-#include "mesh_info.glsl"
 
 in vec3 P;
 in vec3 N;
@@ -8,23 +7,6 @@ in vec2 uv;
 flat in uint ID;
 
 out vec4 O_color;
-
-layout(std430, binding = 6) buffer Camera {
-  mat4 view;
-  mat4 projection;
-  mat4 inv_view;
-  mat4 inv_projection;
-  vec4 rd;
-  vec4 ro;
-};
-
-struct TextureInfo {
-  vec2 offset;
-  vec2 size;
-};
-
-layout(std430, binding = 3) buffer meshInfo { MeshInfo minfo[]; };
-layout(std430, binding = 4) buffer textureInfo { TextureInfo tinfo[]; };
 
 uniform sampler2D u_mega_texture;
 

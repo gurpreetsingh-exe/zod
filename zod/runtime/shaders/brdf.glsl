@@ -1,7 +1,6 @@
-#define PI 3.14159f
+#include "buffers.glsl"
 
-layout(std430, binding = 1) buffer modelMatrix { mat4 model[]; };
-layout(std430, binding = 7) buffer lightIndices { uint light_indices[]; };
+#define PI 3.14159f
 
 float D_GGX(float NoH, float roughness) {
   float a = roughness * roughness;
@@ -35,17 +34,18 @@ vec3 get_color(vec3 P, vec3 v, vec3 base_color, vec3 n, float metallic, float ro
   vec3 base_reflectivity = mix(vec3(0.04f), base_color, metallic);
 
   vec3 Lo = vec3(0.0f);
-  for (uint i = 1; i < light_indices[0] + 1; ++i) {
-    uint light_index = light_indices[i];
-    mat4 light_matrix = model[light_index];
-    vec3 light_position = vec3(light_matrix[3]);
+  for (uint i = 1; i < light_info[0].index + 1; ++i) {
+    LightInfo linfo = light_info[i];
+    uint light_index = linfo.index;
+    Matrix light_matrix = matrix[light_index];
+    vec3 light_position = vec3(light_matrix.model[3]);
     vec3 L = normalize(light_position - P);
     vec3 H = normalize(v + L);
     float distance = length(light_position - P);
-    float linear = 0.1f;
-    float quadratic = 0.1f;
+    float linear = linfo.a;
+    float quadratic = linfo.b;
     float attenuation = 1.0f / (1.0f + linear * distance + quadratic * distance * distance);
-    vec3 radiance = vec3(1.0f) * attenuation;
+    vec3 radiance = vec3(10.0f) * attenuation;
 
     float NoV = max(dot(n, v), 0.000001f);
     float NoL = max(dot(n, L), 0.000001f);

@@ -104,6 +104,14 @@ auto Properties::update() -> void {
         return needs_update;
       });
 
+  draw_component<LightComponent>("Light", entity, [&](auto& component) {
+    ImGui::Combo("Type", (int*)&component.kind, "Point\0\0");
+    auto needs_update = false;
+    needs_update |= ImGui::DragFloat("A", &component.a);
+    needs_update |= ImGui::DragFloat("B", &component.b);
+    return needs_update;
+  });
+
   ImGui::PushItemWidth(-1);
 
   float spcx = ImGui::GetStyle().ItemSpacing.x;

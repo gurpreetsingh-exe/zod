@@ -3,15 +3,6 @@
 
 in vec2 uv;
 
-layout(std430, binding = 6) buffer Camera {
-  mat4 view;
-  mat4 projection;
-  mat4 inv_view;
-  mat4 inv_projection;
-  vec4 rd;
-  vec4 ro;
-};
-
 uniform sampler2D u_albedo;
 uniform sampler2D u_normal;
 uniform sampler2D u_depth;
@@ -42,9 +33,8 @@ void main() {
   vec3 normal = texture(u_normal, uv).rgb;
   vec3 n = normal;
 
-  float metallic = 0.0f;
-  float roughness = 0.5f;
-  vec3 light_position = vec3(0.0f, 0.0f, 5.0f);
+  float metallic = r.b;
+  float roughness = r.g;
 
   vec3 color = get_color(P, v, base_color, n, metallic, roughness);
   O_color = vec4(tonemap(color), 1.0f);

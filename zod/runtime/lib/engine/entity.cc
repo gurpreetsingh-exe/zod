@@ -32,6 +32,8 @@ auto Entity::update_internal<StaticMeshComponent>() -> void {
 }
 
 template <>
-auto Entity::update_internal<LightComponent>() -> void {}
+auto Entity::update_internal<LightComponent>() -> void {
+  m_scene->m_mesh_batch->update_light(*this, get_component<LightComponent>());
+}
 
 } // namespace zod

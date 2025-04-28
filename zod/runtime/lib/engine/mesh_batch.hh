@@ -13,6 +13,7 @@ public:
 public:
   auto recompute_batch() -> void;
   auto update_matrix(Entity, const mat4&) -> void;
+  auto update_light(Entity, const LightComponent&) -> void;
   auto load_env(Environment&) -> SharedPtr<GPUTexture>;
   auto mega_texture() const -> SharedPtr<GPUTexture> { return m_mega_texture; }
   auto texture_info() const -> SharedPtr<GPUStorageBuffer> {
@@ -37,10 +38,15 @@ private:
   SharedPtr<GPUStorageBuffer> m_mesh_info = nullptr;
   SharedPtr<GPUTexture> m_mega_texture = nullptr;
   SharedPtr<GPUStorageBuffer> m_texture_info = nullptr;
-  SharedPtr<GPUStorageBuffer> m_light_indices = nullptr;
+  SharedPtr<GPUStorageBuffer> m_light_info = nullptr;
   SharedPtr<GPUBatch> m_cubemap_batch = nullptr;
 
   std::unordered_map<Entity, usize> m_matrix_offset_map = {};
+  struct LightCache {
+    usize offset;
+    u32 index;
+  };
+  std::unordered_map<Entity, LightCache> m_light_offset_map = {};
 };
 
 } // namespace zod

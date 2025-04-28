@@ -64,6 +64,8 @@ enum LightKind {
 
 struct LightComponent {
   LightKind kind = LightKind::Point;
+  f32 a = 0.1f;
+  f32 b = 0.1f;
 };
 
 }; // namespace zod
