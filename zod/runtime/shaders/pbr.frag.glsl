@@ -5,6 +5,7 @@ in vec2 uv;
 
 uniform sampler2D u_albedo;
 uniform sampler2D u_normal;
+uniform sampler2D u_roughness;
 uniform sampler2D u_depth;
 
 layout(location = 0) out vec4 O_color;
@@ -31,10 +32,11 @@ void main() {
 
   vec3 base_color = texture(u_albedo, uv).rgb;
   vec3 normal = texture(u_normal, uv).rgb;
+  vec3 r = texture(u_roughness, uv).rgb;
   vec3 n = normal;
 
-  float metallic = r.b;
-  float roughness = r.g;
+  float metallic = r.x;
+  float roughness = r.y;
 
   vec3 color = get_color(P, v, base_color, n, metallic, roughness);
   O_color = vec4(tonemap(color), 1.0f);

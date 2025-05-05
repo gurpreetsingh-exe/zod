@@ -14,6 +14,7 @@ enum class GPUTextureFormat {
   RGBA8,
   RGB8,
   RGBA32,
+  RG32F,
   RGB32F,
   RGBA32F,
   R32UI,

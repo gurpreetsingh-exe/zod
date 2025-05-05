@@ -33,6 +33,8 @@ static auto to_gl(GPUTextureFormat format) -> GLenum {
       return GL_RGB8;
     case GPUTextureFormat::RGBA32:
       return GL_RGBA32UI;
+    case GPUTextureFormat::RG32F:
+      return GL_RG32F;
     case GPUTextureFormat::RGB32F:
       return GL_RGB32F;
     case GPUTextureFormat::RGBA32F:
@@ -70,6 +72,8 @@ static auto gl_format(GPUTextureFormat format) -> GLenum {
       return GL_RED_INTEGER;
     case GPUTextureFormat::Red:
       return GL_RED;
+    case GPUTextureFormat::RG32F:
+      return GL_RG;
     default:
       ZASSERT(false, "texture format not found");
       UNREACHABLE();

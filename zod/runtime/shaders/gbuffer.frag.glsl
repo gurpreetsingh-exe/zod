@@ -7,6 +7,7 @@ flat in uint ID;
 
 layout(location = 0) out vec4 O_color;
 layout(location = 1) out vec4 O_normal;
+layout(location = 2) out vec4 O_roughness;
 
 uniform sampler2D u_mega_texture;
 
@@ -26,7 +27,11 @@ void main(void) {
   vec3 normal = texture(u_mega_texture,
                         get_texture_coords(mesh_info.normal_texture_index))
                     .rgb;
+  vec3 r = texture(u_mega_texture,
+                        get_texture_coords(mesh_info.roughness_texture_index))
+                    .rgb;
 
   O_color = vec4(base_color.rgb, 1.0f);
   O_normal = vec4(n, 1.0f);
+  O_roughness = vec4(r.b, r.g, 0.0f, 1.0f);
 }

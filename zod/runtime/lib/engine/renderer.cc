@@ -117,6 +117,12 @@ DeferredRenderer::DeferredRenderer()
       .format = GPUTextureFormat::RGB32F,
       .data = GPUTextureData::Float,
   }));
+  m_gbuffer->add_color_attachment(GPUBackend::get().create_texture({
+      .width = i32(DEFAULT_FB_SIZE),
+      .height = i32(DEFAULT_FB_SIZE),
+      .format = GPUTextureFormat::RG32F,
+      .data = GPUTextureData::Float,
+  }));
   m_gbuffer->add_depth_attachment();
   m_gbuffer->check();
   m_gbuffer->unbind();
@@ -167,8 +173,10 @@ auto DeferredRenderer::tick() -> void {
     shader->uniform_int("u_albedo", ADDR(0));
     m_gbuffer->get_slot(1)->bind(1);
     shader->uniform_int("u_normal", ADDR(1));
-    m_gbuffer->bind_depth(2);
-    shader->uniform_int("u_depth", ADDR(2));
+    m_gbuffer->get_slot(2)->bind(2);
+    shader->uniform_int("u_roughness", ADDR(2));
+    m_gbuffer->bind_depth(3);
+    shader->uniform_int("u_depth", ADDR(3));
     GPUState::get().draw_immediate(3);
   });
 
