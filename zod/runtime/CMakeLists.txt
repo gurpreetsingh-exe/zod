@@ -10,7 +10,8 @@ add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
 add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
 add_subdirectory(${THIRD_PARTY_DIR}/yaml-cpp yaml-cpp)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/shaders shaderlib)
+set(SHADERS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
+add_subdirectory(${SHADERS_DIR} shaderlib)
 
 # precompiled header
 add_library(zodpch INTERFACE)
@@ -46,6 +47,7 @@ endif()
 add_library(gpu ${GPU_LIB})
 target_include_directories(gpu PUBLIC ${INC})
 target_link_libraries(gpu zodpch shaderlib stbi)
+target_compile_definitions(gpu PRIVATE GPU_SHADERS_DIR="${SHADERS_DIR}")
 
 if (VULKAN_BACKEND)
   target_compile_definitions(gpu PRIVATE VULKAN_BACKEND)

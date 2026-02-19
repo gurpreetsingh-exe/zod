@@ -8,7 +8,7 @@ namespace zod {
 class Renderer {
 public:
   Renderer();
-  ~Renderer() = default;
+  virtual ~Renderer() = default;
 
 public:
   virtual auto tick() -> void = 0;

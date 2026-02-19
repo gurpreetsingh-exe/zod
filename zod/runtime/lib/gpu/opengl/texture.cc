@@ -118,6 +118,7 @@ GLTexture::GLTexture(GPUTextureCreateInfo info) : GPUTexture(info) {
                  0, gl_format(m_info.format), to_gl(m_info.data),
                  m_info.pixels);
   }
+  generate_mipmap();
   glBindTexture(m_target, 0);
 }
 
