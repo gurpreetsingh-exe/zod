@@ -389,6 +389,7 @@ template <>
 auto Scene::on_component_added<LightComponent>(Entity, LightComponent&)
     -> void {
   m_mesh_batch->recompute_batch();
+  m_stats.number_lights += 1;
 }
 
 }; // namespace zod

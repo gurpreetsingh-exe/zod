@@ -1,7 +1,4 @@
-layout(std140) uniform Camera {
-  mat4 view_projection;
-  vec4 direction;
-};
+#include "buffers.glsl"
 
 out vec3 near_point;
 out vec3 far_point;
@@ -10,7 +7,7 @@ vec3 grid_plane[6] = vec3[](vec3(1, 1, 0), vec3(-1, -1, 0), vec3(-1, 1, 0),
                             vec3(-1, -1, 0), vec3(1, 1, 0), vec3(1, -1, 0));
 
 vec3 unproject_point(float x, float y, float z) {
-  mat4 inv = inverse(view_projection);
+  mat4 inv = inv_view * inv_projection;
   vec4 point = inv * vec4(x, y, z, 1.0);
   return point.xyz / point.w;
 }

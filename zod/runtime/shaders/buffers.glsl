@@ -36,4 +36,5 @@ layout(std430, binding = 2) buffer vertexPosition { float buffer_position[]; };
 layout(std430, binding = 3) buffer meshInfo { MeshInfo minfo[]; };
 layout(std430, binding = 4) buffer textureInfo { TextureInfo tinfo[]; };
 layout(std430, binding = 5) buffer vertexUV { vec2 buffer_uv[]; };
+/// the info list starts at 1, the first index contains the size
 layout(std430, binding = 7) buffer lightInfo { LightInfo light_info[]; };

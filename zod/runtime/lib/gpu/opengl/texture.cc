@@ -140,12 +140,19 @@ auto GLTexture::copy_texture_data(i32 width, i32 height, T* data) -> void {
 
 auto GLTexture::from_path() -> void {
   i32 channels = 0;
+  stbi_set_flip_vertically_on_load(true);
   if (m_info.data == GPUTextureData::Float) {
     auto* data = stbi_loadf(m_info.path.c_str(), &m_info.width, &m_info.height,
                             &channels, 0);
     switch (channels) {
       case 2: {
         copy_texture_data<f32>(m_info.width, m_info.height, data);
+        stbi_image_free(data);
+      } break;
+      case 4: {
+        m_info.pixels = new f32[m_info.width * m_info.height * 4];
+        std::memcpy(m_info.pixels, data,
+                    m_info.width * m_info.height * 4 * sizeof(f32));
         stbi_image_free(data);
       } break;
       default: {
@@ -161,6 +168,22 @@ auto GLTexture::from_path() -> void {
       case 2: {
         copy_texture_data<u8>(m_info.width, m_info.height, data);
         stbi_image_free(data);
+      } break;
+      case 4: {
+        auto width = m_info.width;
+        auto height = m_info.height;
+        m_info.pixels = new u8[width * height * 4];
+        for (usize x = 0; x < width; ++x) {
+          for (usize y = 0; y < height; ++y) {
+            auto index = x + y * width;
+            auto src = &data[index * 4];
+            auto dst = &((u8*)m_info.pixels)[index * 4];
+            dst[0] = src[0];
+            dst[1] = src[1];
+            dst[2] = src[2];
+            dst[3] = src[3];
+          }
+        }
       } break;
       default: {
         fmt::println("{}", channels);

@@ -1,7 +1,4 @@
-layout(std140) uniform Camera {
-  mat4 view_projection;
-  vec4 direction;
-};
+#include "buffers.glsl"
 
 in vec3 near_point;
 in vec3 far_point;
@@ -30,7 +27,7 @@ vec4 grid(vec3 position, float scale) {
 }
 
 float compute_depth(vec3 pos) {
-  vec4 clip_space_pos = view_projection * vec4(pos, 1.0);
+  vec4 clip_space_pos = projection * view * vec4(pos, 1.0);
   return clip_space_pos.z / clip_space_pos.w;
 }
 
@@ -44,7 +41,7 @@ float depth_fix_range(float depth) {
 }
 
 float compute_linear_depth(vec3 pos) {
-  vec4 clip_space_pos = view_projection * vec4(pos, 1.0);
+  vec4 clip_space_pos = projection * view * vec4(pos, 1.0);
   float clip_space_depth = (clip_space_pos.z / clip_space_pos.w) * 2.0 - 1.0;
   float linera_depth =
       (2.0 * near * far) /

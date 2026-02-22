@@ -26,6 +26,10 @@ struct TextureInfo {
   vec2 size;
 };
 
+struct SceneStatistics {
+  usize number_lights = 0;
+};
+
 class Scene {
 public:
   Scene();
@@ -44,6 +48,7 @@ public:
   auto deserialize(const fs::path&) -> void;
   auto on_component_added(Entity, auto&) -> void;
   auto name() const -> const String& { return m_name; }
+  auto stats() const -> SceneStatistics { return m_stats; }
 
 private:
   auto next_id() -> usize { return m_disambiguator++; }
@@ -58,6 +63,9 @@ private:
   SharedPtr<GPUStorageBuffer> m_camera_buffer = nullptr;
   SharedPtr<GPUMeshBatch> m_mesh_batch = nullptr;
   SharedPtr<GPUTexture> m_cubemap = nullptr;
+
+  SceneStatistics m_stats = {};
+
   friend class Entity;
   friend class Outliner;
   friend class Renderer;

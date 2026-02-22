@@ -1,6 +1,8 @@
-in vec2 uv;
-out vec4 color;
+in vec2 V_tex_coords;
+out vec4 O_color;
 
 uniform sampler2D u_texture;
 
-void main() { color = texture2D(u_texture, uv); }
+void main() {
+    O_color = texture2D(u_texture, V_tex_coords);
+}

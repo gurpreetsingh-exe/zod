@@ -12,7 +12,7 @@
 
 namespace zod {
 
-static auto grid = true;
+static auto grid = false;
 static auto cursor_position = 0.0f;
 
 constexpr auto padding = 4.0f;
@@ -49,18 +49,46 @@ Viewport::Viewport()
       m_width(64), m_height(64) {
   m_framebuffer = Editor::get().get_renderer().get_render_target();
 
+  m_icons = GPUBackend::get().create_texture(
+      { .path = "./lighting-bulb-1.png", .mips = 4 });
+  m_icons->generate_mipmap();
+
   // Shader taken from
   // https://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/
-  m_grid_shader =
-      GPUBackend::get().create_shader(GPUShaderCreateInfo("grid")
-                                          .vertex_source(g_grid_vert_src)
-                                          .fragment_source(g_grid_frag_src));
+  GPUBackend::get().create_shader(GPUShaderCreateInfo("grid")
+                                      .vertex_source(g_grid_vert_src)
+                                      .fragment_source(g_grid_frag_src));
+
+  GPUBackend::get().create_shader(GPUShaderCreateInfo("billboard")
+                                      .vertex_source(g_billboard_vert_src)
+                                      .fragment_source(g_texture_src));
+
+  m_overlay_batch = GPUBackend::get().create_batch({}, { 1, 2, 0, 2, 3, 1 });
 }
 
-auto Viewport::draw_grid() -> void {
-  m_grid_shader->bind();
-  m_grid_shader->uniform_float("u_color", value_ptr(vec3(0.25f)), 3);
-  GPUState::get().draw_immediate(6);
+auto Viewport::draw_overlays() -> void {
+  m_framebuffer->bind();
+  GPUState::get().set_depth_test(Depth::Less);
+  GPUState::get().set_blend(Blend::Alpha);
+  if (grid) {
+    // grid
+    auto shader = GPUBackend::get().get_shader("grid");
+    shader->bind();
+    shader->uniform_float("u_color", ADDROF(vec3(0.25f)), 3);
+    GPUState::get().draw_immediate(6);
+  }
+  {
+    // icons
+    auto shader = GPUBackend::get().get_shader("billboard");
+    shader->bind();
+    m_icons->bind();
+    shader->uniform_int("u_texture", ADDR(0));
+    auto lights = Runtime::get().scene().stats().number_lights;
+    m_overlay_batch->draw_instanced(shader, lights);
+  }
+  GPUState::get().set_depth_test(Depth::None);
+  GPUState::get().set_blend(Blend::None);
+  m_framebuffer->unbind();
 }
 
 auto Viewport::on_event_imp(Event& event) -> void {
@@ -71,6 +99,8 @@ auto Viewport::on_event_imp(Event& event) -> void {
 
 auto Viewport::draw_imp(Geometry&) -> void {
   Editor::get().get_renderer().tick();
+  draw_overlays();
+
   auto texture = m_framebuffer->get_slot(0);
   ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
                ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });

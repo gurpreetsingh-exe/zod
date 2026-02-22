@@ -13,7 +13,7 @@ private:
   auto draw_imp(Geometry&) -> void override;
   auto on_event_imp(Event&) -> void override;
   auto draw_cubemap() -> void;
-  auto draw_grid() -> void;
+  auto draw_overlays() -> void;
 
 public:
   auto gbuffer() -> bool& { return m_gbuffer_display; }
@@ -22,7 +22,8 @@ public:
 private:
   f32 m_width;
   f32 m_height;
-  SharedPtr<GPUShader> m_grid_shader;
+  SharedPtr<GPUBatch> m_overlay_batch = nullptr;
+  SharedPtr<GPUTexture> m_icons = nullptr;
 
   bool m_gbuffer_display = false;
   i32 m_gbuffer_slot = 0;
