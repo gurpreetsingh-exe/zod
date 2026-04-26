@@ -1,7 +1,7 @@
 #include "engine/renderer.hh"
 #include "./mesh_batch.hh"
 #include "engine/components.hh"
-#include "engine/runtime.hh"
+#include "engine/project.hh"
 #include "gpu/timer.hh"
 
 #include "gpu/shader_builtins.hh"
@@ -44,12 +44,12 @@ Renderer::Renderer()
 
 auto Renderer::resize(f32 w, f32 h) -> void {
   m_framebuffer->resize(w, h);
-  auto& scene = Runtime::get().scene();
-  if (scene.m_camera == entt::null) {
+  auto scene = g_project->active_scene();
+  if (scene->m_camera == entt::null) {
     return;
   }
   auto& component =
-      Entity(scene.m_camera, &scene).get_component<CameraComponent>();
+      Entity(scene->m_camera, scene.get()).get_component<CameraComponent>();
   auto camera = component.camera;
   camera->resize(w, h);
   camera->update_matrix();
@@ -58,10 +58,10 @@ auto Renderer::resize(f32 w, f32 h) -> void {
 ForwardRenderer::ForwardRenderer() : Renderer() {}
 
 auto ForwardRenderer::tick() -> void {
-  auto& scene = Runtime::get().scene();
-  auto batch = scene.m_mesh_batch;
+  auto scene = g_project->active_scene();
+  auto batch = scene->m_mesh_batch;
   batch->bind();
-  scene.m_camera_buffer->bind(6);
+  scene->m_camera_buffer->bind(6);
 
   m_framebuffer->bind();
   m_framebuffer->clear();
@@ -75,19 +75,19 @@ auto ForwardRenderer::tick() -> void {
     batch->batch().draw_indirect(shader);
   });
 
-  if (scene.m_env != entt::null) {
+  if (scene->m_env != entt::null) {
     auto& env =
-        Entity(scene.m_env, &scene).get_component<SkyboxComponent>().env;
+        Entity(scene->m_env, scene.get()).get_component<SkyboxComponent>().env;
     if (env.mode == LightingMode::Texture) {
       GPU_TIME("cubemap", {
-        if (not scene.m_cubemap) {
+        if (not scene->m_cubemap) {
           m_framebuffer->clear_color(vec4(1.0f, 0.0f, 1.0f, 1.0f));
           return;
         }
         GPUState::get().set_depth_test(Depth::LessEqual);
         auto shader = GPUBackend::get().get_shader("cubemap");
         shader->bind();
-        scene.m_cubemap->bind();
+        scene->m_cubemap->bind();
         shader->uniform_int("u_cubemap", ADDR(0));
         batch->batch<false>().draw(shader);
       });
@@ -131,22 +131,22 @@ DeferredRenderer::DeferredRenderer()
 auto DeferredRenderer::resize(f32 w, f32 h) -> void {
   m_gbuffer->resize(w, h);
   m_framebuffer->resize(w, h);
-  auto& scene = Runtime::get().scene();
-  if (scene.m_camera == entt::null) {
+  auto scene = g_project->active_scene();
+  if (scene->m_camera == entt::null) {
     return;
   }
   auto& component =
-      Entity(scene.m_camera, &scene).get_component<CameraComponent>();
+      Entity(scene->m_camera, scene.get()).get_component<CameraComponent>();
   auto camera = component.camera;
   camera->resize(w, h);
   camera->update_matrix();
 }
 
 auto DeferredRenderer::tick() -> void {
-  auto& scene = Runtime::get().scene();
-  auto batch = scene.m_mesh_batch;
+  auto scene = g_project->active_scene();
+  auto batch = scene->m_mesh_batch;
   batch->bind();
-  scene.m_camera_buffer->bind(6);
+  scene->m_camera_buffer->bind(6);
 
   m_gbuffer->bind();
   m_gbuffer->clear();

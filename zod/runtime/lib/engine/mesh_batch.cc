@@ -1,6 +1,6 @@
 #include "./mesh_batch.hh"
 #include "engine/components.hh"
-#include "engine/runtime.hh"
+#include "engine/project.hh"
 
 namespace zod {
 
@@ -71,13 +71,13 @@ struct Matrix {
 auto GPUMeshBatch::recompute_batch() -> void {
   // TODO: make another version of this function which just appends
   // the new mesh at the end instead of recomputing the whole thing
-  auto& scene = Runtime::get().scene();
-  auto view = scene->view<TransformComponent>();
+  auto scene = g_project->active_scene();
+  auto view = (*scene)->view<TransformComponent>();
   auto matrix = Vector<Matrix>();
   matrix.reserve(view.size());
   auto i = usize(0);
   for (auto entity_id : view) {
-    auto entity = Entity(entity_id, std::addressof(scene));
+    auto entity = Entity(entity_id, scene.get());
     auto mat = *entity.get_component<TransformComponent>();
     m_matrix_offset_map[entity] = matrix.size() * sizeof(Matrix);
     matrix.push_back({ mat, transpose(inverse(mat)) });
@@ -93,7 +93,7 @@ auto GPUMeshBatch::recompute_batch() -> void {
   i = usize(0);
   auto matrix_index = usize(0);
   for (auto entity_id : view) {
-    auto entity = Entity(entity_id, std::addressof(scene));
+    auto entity = Entity(entity_id, scene.get());
     if (entity.has_component<LightComponent>()) {
       auto light = entity.get_component<LightComponent>();
       lights.push_back({ u32(matrix_index), light.a, light.b });

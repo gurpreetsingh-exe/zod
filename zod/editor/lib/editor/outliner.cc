@@ -2,7 +2,7 @@
 
 #include "editor.hh"
 #include "engine/components.hh"
-#include "engine/runtime.hh"
+#include "engine/project.hh"
 #include "outliner.hh"
 
 namespace zod {
@@ -37,20 +37,20 @@ static auto draw_row(const char* name, const char* type, bool selected)
 
 auto Outliner::draw_imp(Geometry&) -> void {
   auto& C = Editor::get();
-  auto& scene = Runtime::get().scene();
+  auto scene = g_project->active_scene();
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 4.0f));
   if (ImGui::BeginPopupContextWindow("Add Menu",
                                      ImGuiPopupFlags_MouseButtonRight)) {
     if (ImGui::MenuItem("Empty")) {
-      C.set_active_object(scene.create());
+      C.set_active_object(scene->create());
     }
     if (ImGui::MenuItem("Cube")) {
-      auto cube = scene.create();
+      auto cube = scene->create();
       cube.add_component<StaticMeshComponent>(Mesh::cube());
       C.set_active_object(cube);
     }
     if (ImGui::MenuItem("Light")) {
-      auto light = scene.create();
+      auto light = scene->create();
       light.add_component<LightComponent>();
       C.set_active_object(light);
     }
@@ -65,9 +65,9 @@ auto Outliner::draw_imp(Geometry&) -> void {
     ImGui::TableSetupColumn("Type");
     ImGui::TableHeadersRow();
     usize i = 1;
-    for (auto& entity_id : scene->view<IdentifierComponent>()) {
+    for (auto& entity_id : (*scene)->view<IdentifierComponent>()) {
       ImGui::TableNextRow();
-      auto entity = Entity(entity_id, std::addressof(scene));
+      auto entity = Entity(entity_id, scene.get());
       auto& component = entity.get_component<IdentifierComponent>();
       auto* object_type = "Object";
       if (entity.has_component<StaticMeshComponent>()) {

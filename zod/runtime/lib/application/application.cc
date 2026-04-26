@@ -1,6 +1,5 @@
 #include "application/application.hh"
 #include "engine/font.hh"
-#include "engine/runtime.hh"
 
 namespace zod {
 
@@ -22,11 +21,10 @@ Application::Application(const ApplicationCreateInfo& info)
   }
 
   m_window->set_event_callback(std::bind(&Application::on_event, this, ph::_1));
-  Runtime::init();
   init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
 }
 
-Application::~Application() { Runtime::destroy(); }
+Application::~Application() {}
 
 auto Application::get() -> Application& {
   ZASSERT(g_instance != nullptr);

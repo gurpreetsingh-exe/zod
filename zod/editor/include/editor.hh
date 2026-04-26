@@ -7,9 +7,7 @@
 #include "engine/environment.hh"
 #include "engine/node_types.hh"
 #include "engine/renderer.hh"
-#include "gpu/backend.hh"
 #include "imgui_layer.hh"
-#include "project.hh"
 #include "widgets/layout.hh"
 
 namespace zod {
@@ -27,7 +25,6 @@ public:
   auto active_object() const -> Entity { return m_active_object; }
   auto set_active_object(Entity e) -> void { m_active_object = e; }
   auto get_renderer() -> Renderer& { return *m_renderer; }
-  auto get_project() -> Project* { return m_project; }
 
 private:
   auto setup() -> void override;
@@ -43,7 +40,6 @@ private:
   AssetManager m_asset_manager;
   Entity m_active_object;
   Environment m_env;
-  Project* m_project = nullptr;
 };
 
 } // namespace zod

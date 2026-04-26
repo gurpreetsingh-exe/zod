@@ -3,7 +3,6 @@
 #include "application/platform.hh"
 #include "content_browser.hh"
 #include "engine/components.hh"
-#include "engine/runtime.hh"
 #include "gpu/timer.hh"
 #include "loaders.hh"
 #include "node_editor.hh"
@@ -13,6 +12,7 @@
 #include "theme.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
+#include "engine/project.hh"
 
 namespace zod {
 
@@ -46,7 +46,7 @@ auto Editor::setup() -> void {
     eprintln("\"{}\" is a directory", path.string());
   }
 
-  m_project = Project::load(path);
+  Project::load(path);
 
   m_layout->add_area(shared<Viewport>());
   m_layout->add_area(shared<NodeEditor>());
@@ -66,8 +66,8 @@ auto Editor::on_event(Event& event) -> void {
 
 auto Editor::update_viewport_camera() -> void {
   auto viewport = m_layout->area("Viewport");
-  auto& scene = Runtime::get().scene();
-  auto entity = scene.active_camera();
+  auto scene = g_project->active_scene();
+  auto entity = scene->active_camera();
   auto camera = entity.get_component<CameraComponent>().camera;
   auto size = viewport->get_size();
   camera->resize(size.x, size.y);
@@ -76,7 +76,7 @@ auto Editor::update_viewport_camera() -> void {
 }
 
 auto Editor::update() -> void {
-  Runtime::get().scene().update();
+  g_project->active_scene()->update();
 
   GPU_TIME("main-loop", {
     m_imgui_layer->begin_frame();
@@ -94,16 +94,16 @@ auto Editor::update() -> void {
         }
         if (ImGui::MenuItem("Open")) {
           auto config_path = open_dialog({ .filter = "*.zproj" });
-          if (m_project) {
-            delete m_project;
+          if (g_project) {
+            delete g_project;
           }
-          m_project = Project::load(config_path);
+          Project::load(config_path);
           update_viewport_camera();
         }
         ImGui::Separator();
         if (ImGui::MenuItem("Save")) {
-          if (m_project) {
-            m_project->save();
+          if (g_project) {
+            g_project->save();
           } else {
             open_save_modal = true;
           }
@@ -113,7 +113,7 @@ auto Editor::update() -> void {
         if (ImGui::BeginMenu("Import")) {
           if (ImGui::MenuItem("GLTF")) {
             auto gltf_path = open_dialog({ .filter = "*.gltf *.glb" });
-            loadGLTF(m_project->assets_directory(), gltf_path);
+            loadGLTF(g_project->assets_directory(), gltf_path);
           }
           ImGui::EndMenu();
         }
@@ -188,9 +188,9 @@ auto Editor::update() -> void {
       align(width);
 
       if (ImGui::Button("Save", s)) {
-        m_project = new Project(nbuf, buf);
-        m_project->init();
-        m_project->save();
+        g_project = new Project(nbuf, buf);
+        g_project->init();
+        g_project->save();
 
         open_save_modal = false;
         ImGui::CloseCurrentPopup();

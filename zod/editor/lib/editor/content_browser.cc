@@ -1,13 +1,14 @@
 #include <imgui.h>
 
 #include "content_browser.hh"
-#include "editor.hh"
+#include "engine/camera.hh"
+#include "engine/project.hh"
 
 namespace zod {
 
 ContentBrowser::ContentBrowser()
     : SPanel("Content Browser", shared<OrthographicCamera>(64.0f, 64.0f)),
-      m_base_directory(Editor::get().get_project()->assets_directory()),
+      m_base_directory(g_project->assets_directory()),
       m_current_directory(m_base_directory) {}
 
 auto ContentBrowser::update() -> void {

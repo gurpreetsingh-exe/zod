@@ -3,10 +3,8 @@
 
 #include "editor.hh"
 #include "engine/camera.hh"
-#include "engine/runtime.hh"
-#include "gpu/timer.hh"
+#include "engine/project.hh"
 #include "viewport.hh"
-#include "widgets/button.hh"
 
 #include "gpu/shader_builtins.hh"
 
@@ -83,7 +81,7 @@ auto Viewport::draw_overlays() -> void {
     shader->bind();
     m_icons->bind();
     shader->uniform_int("u_texture", ADDR(0));
-    auto lights = Runtime::get().scene().stats().number_lights;
+    auto lights = g_project->active_scene()->stats().number_lights;
     m_overlay_batch->draw_instanced(shader, lights);
   }
   GPUState::get().set_depth_test(Depth::None);
