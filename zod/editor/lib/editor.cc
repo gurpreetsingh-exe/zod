@@ -3,6 +3,7 @@
 #include "application/platform.hh"
 #include "content_browser.hh"
 #include "engine/components.hh"
+#include "engine/project.hh"
 #include "gpu/timer.hh"
 #include "loaders.hh"
 #include "node_editor.hh"
@@ -12,7 +13,6 @@
 #include "theme.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
-#include "engine/project.hh"
 
 namespace zod {
 

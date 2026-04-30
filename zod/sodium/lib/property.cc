@@ -48,7 +48,7 @@ static auto DragScalar(const char* label, ImGuiDataType data_type, void* p_data,
     format = ImGui::DataTypeGetInfo(data_type)->PrintFmt;
   }
 
-  auto hovered = ImGui::ItemHoverable(frame_bb, id, g.LastItemData.InFlags);
+  auto hovered = ImGui::ItemHoverable(frame_bb, id, g.LastItemData.ItemFlags);
   auto temp_input_is_active =
       temp_input_allowed and ImGui::TempInputIsActive(id);
   if (not temp_input_is_active) {

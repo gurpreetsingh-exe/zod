@@ -42,10 +42,23 @@ struct Mesh {
 } // namespace zod
 
 namespace std {
+// HACK: inline the hash<glm::vec3>() method because glm is broken????
+
 template <>
 struct hash<zod::Point> {
   auto operator()(zod::Point const& point) const -> zod::usize {
-    return hash<zod::vec3>()(point.P);
+    auto seed = zod::usize();
+    auto hasher = hash<zod::f32>();
+
+    auto hash_combine = [&seed](zod::usize hash) {
+      hash += 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      seed ^= hash;
+    };
+
+    hash_combine(hasher(point.P.x));
+    hash_combine(hasher(point.P.y));
+    hash_combine(hasher(point.P.z));
+    return seed;
   }
 };
 } // namespace std

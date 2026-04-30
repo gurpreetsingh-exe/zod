@@ -195,8 +195,8 @@ auto NodeEditor::update() -> void {
   m_framebuffer->unbind();
 
   auto texture = m_framebuffer->get_slot(m_framebuffer_bit);
-  ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y),
-               ImVec2 { 0.0, 0.0 }, ImVec2 { 1.0, -1.0 });
+  ImGui::Image(texture->get_id(), ImVec2(m_size.x, m_size.y), ImVec2 { 0, 1 },
+               ImVec2 { 1, 0 });
 }
 
 } // namespace zod
