@@ -2,40 +2,30 @@
 
 namespace zod {
 
+enum class GPUBufferUsage {
+  Vertex,
+  Index,
+  Storage,
+  Uniform,
+};
+
+struct GPUBufferCreateInfo {
+  const char* name;
+  GPUBufferUsage usage;
+  usize size;
+};
+
 class GPUBuffer {
+protected:
+  GPUBufferCreateInfo m_info;
+  GPUBuffer(GPUBufferCreateInfo info) : m_info(info) {}
+
 public:
+  virtual ~GPUBuffer() = default;
   virtual auto bind(int = 0) -> void = 0;
   virtual auto unbind() -> void = 0;
-  virtual auto upload_data(const void*, usize /* size */, usize start = 0)
+  virtual auto write(const void*, usize /* size */, usize /* offset */ = 0)
       -> void = 0;
-  virtual auto update_data(const void*, usize /* size */, usize start = 0)
-      -> void = 0;
-};
-
-class GPUUniformBuffer : public GPUBuffer {
-protected:
-  usize m_size;
-
-protected:
-  GPUUniformBuffer(usize size) : m_size(size) {}
-
-public:
-  virtual ~GPUUniformBuffer() = default;
-};
-
-class GPUVertexBuffer : public GPUBuffer {
-public:
-  virtual ~GPUVertexBuffer() = default;
-};
-
-class GPUIndexBuffer : public GPUBuffer {
-public:
-  virtual ~GPUIndexBuffer() = default;
-};
-
-class GPUStorageBuffer : public GPUBuffer {
-public:
-  virtual ~GPUStorageBuffer() = default;
 };
 
 } // namespace zod

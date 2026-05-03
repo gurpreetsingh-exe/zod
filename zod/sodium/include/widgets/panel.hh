@@ -1,7 +1,7 @@
 #pragma once
 
-#include "application/input.hh"
-#include "gpu/backend.hh"
+#include "gpu/buffer.hh"
+#include "gpu/framebuffer.hh"
 #include "widget.hh"
 
 namespace zod {
@@ -15,7 +15,7 @@ struct CameraUniformBufferStorage {
 
 class IOperator;
 
-inline SharedPtr<GPUUniformBuffer> unit_uniform_buffer = nullptr;
+inline SharedPtr<GPUBuffer> unit_uniform_buffer = nullptr;
 
 class SPanel : public SWidget {
 public:
@@ -34,7 +34,7 @@ protected:
   bool m_padding = true;
   bool m_active = false;
   SharedPtr<ICamera> m_camera;
-  SharedPtr<GPUUniformBuffer> m_uniform_buffer;
+  SharedPtr<GPUBuffer> m_uniform_buffer;
   SharedPtr<GPUFrameBuffer> m_framebuffer;
   std::unordered_map<KeyCode, std::function<void()>> m_keymaps = {};
   IOperator* m_active_operator = nullptr;

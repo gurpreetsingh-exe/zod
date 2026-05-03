@@ -16,9 +16,7 @@ public:
   auto update_light(Entity, const LightComponent&) -> void;
   auto load_env(Environment&) -> SharedPtr<GPUTexture>;
   auto mega_texture() const -> SharedPtr<GPUTexture> { return m_mega_texture; }
-  auto texture_info() const -> SharedPtr<GPUStorageBuffer> {
-    return m_texture_info;
-  }
+  auto texture_info() const -> SharedPtr<GPUBuffer> { return m_texture_info; }
   auto bind() -> void;
   template <bool Mesh = true>
   constexpr auto batch() const -> GPUBatch& {
@@ -31,14 +29,14 @@ public:
 
 private:
   SharedPtr<GPUBatch> m_batch = nullptr;
-  SharedPtr<GPUStorageBuffer> m_vertex_buffer = nullptr;
-  SharedPtr<GPUStorageBuffer> m_normal_buffer = nullptr;
-  SharedPtr<GPUStorageBuffer> m_uv_buffer = nullptr;
-  SharedPtr<GPUStorageBuffer> m_matrix_buffer = nullptr;
-  SharedPtr<GPUStorageBuffer> m_mesh_info = nullptr;
+  SharedPtr<GPUBuffer> m_vertex_buffer = nullptr;
+  SharedPtr<GPUBuffer> m_normal_buffer = nullptr;
+  SharedPtr<GPUBuffer> m_uv_buffer = nullptr;
+  SharedPtr<GPUBuffer> m_matrix_buffer = nullptr;
+  SharedPtr<GPUBuffer> m_mesh_info = nullptr;
   SharedPtr<GPUTexture> m_mega_texture = nullptr;
-  SharedPtr<GPUStorageBuffer> m_texture_info = nullptr;
-  SharedPtr<GPUStorageBuffer> m_light_info = nullptr;
+  SharedPtr<GPUBuffer> m_texture_info = nullptr;
+  SharedPtr<GPUBuffer> m_light_info = nullptr;
   SharedPtr<GPUBatch> m_cubemap_batch = nullptr;
 
   std::unordered_map<Entity, usize> m_matrix_offset_map = {};

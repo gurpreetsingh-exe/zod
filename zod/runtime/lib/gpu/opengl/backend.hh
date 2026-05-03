@@ -24,6 +24,11 @@ public:
     return shared<GLBatch>(layouts, indices);
   }
 
+  auto create_buffer(GPUBufferCreateInfo info)
+      -> SharedPtr<GPUBuffer> override {
+    return shared<GLBuffer>(info);
+  }
+
   auto create_context(void* glfw_window) -> SharedPtr<GPUContext> override {
     return shared<GLContext>(glfw_window);
   }
@@ -52,22 +57,9 @@ public:
     return shared<GLState>();
   }
 
-  auto create_storage_buffer() -> SharedPtr<GPUStorageBuffer> override {
-    return shared<GLStorageBuffer>();
-  }
-
   auto create_texture(GPUTextureCreateInfo info)
       -> SharedPtr<GPUTexture> override {
     return shared<GLTexture>(info);
-  }
-
-  auto create_uniform_buffer(usize size)
-      -> SharedPtr<GPUUniformBuffer> override {
-    return shared<GLUniformBuffer>(size);
-  }
-
-  auto create_vertex_buffer() -> SharedPtr<GPUVertexBuffer> override {
-    return shared<GLVertexBuffer>();
   }
 
 private:

@@ -6,8 +6,6 @@
 #include "engine/project.hh"
 #include "gpu/timer.hh"
 #include "loaders.hh"
-#include "node_editor.hh"
-#include "node_properties.hh"
 #include "outliner.hh"
 #include "properties.hh"
 #include "theme.hh"
@@ -49,9 +47,7 @@ auto Editor::setup() -> void {
   Project::load(path);
 
   m_layout->add_area(shared<Viewport>());
-  m_layout->add_area(shared<NodeEditor>());
   m_layout->add_area(shared<Properties>());
-  m_layout->add_area(shared<NodeProperties>());
   m_layout->add_area(shared<Outliner>());
   m_layout->add_area(shared<ContentBrowser>());
 
@@ -151,7 +147,7 @@ auto Editor::update() -> void {
       // Project Name
       ImGui::BeginGroup();
       ImGui::AlignTextToFramePadding();
-      ImGui::Text(name_l);
+      ImGui::Text("%s", name_l);
       ImGui::SameLine(padding);
       static char nbuf[MAX_PATH] = {};
       ImGui::InputText("##Name", nbuf, MAX_PATH);
@@ -160,7 +156,7 @@ auto Editor::update() -> void {
       // Project Location
       ImGui::BeginGroup();
       ImGui::AlignTextToFramePadding();
-      ImGui::Text(loc_l);
+      ImGui::Text("%s", loc_l);
       ImGui::SameLine(padding);
       static char buf[MAX_PATH] = {};
       ImGui::InputText("##Location", buf, MAX_PATH);

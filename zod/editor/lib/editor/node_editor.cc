@@ -4,6 +4,7 @@
 #include "curve.hh"
 #include "engine/camera.hh"
 #include "engine/font.hh"
+#include "engine/node_types.hh"
 #include "node_editor.hh"
 #include "nodes.hh"
 #include "operators/node.hh"
@@ -54,9 +55,10 @@ NodeEditor::NodeEditor()
     node_tree->add_node<NODE_TRANSFORM>(vec2(-100, (f32(i) * 150) - 400));
   }
 
-  m_node_ssbo = GPUBackend::get().create_storage_buffer();
-  m_node_ssbo->upload_data(node_tree->get_data(),
-                           node_tree->get_size() * sizeof(NodeType));
+  m_node_ssbo = GPUBackend::get().create_buffer(
+      { "node_info", GPUBufferUsage::Storage, 1024 * sizeof(NodeType) });
+  m_node_ssbo->write(node_tree->get_data(),
+                     node_tree->get_size() * sizeof(NodeType));
 
   m_keymaps.insert(
       { Key::Tab, [&] { m_framebuffer_bit = not m_framebuffer_bit; } });
@@ -66,8 +68,8 @@ auto NodeEditor::add_node(usize type) -> void {
   auto position = region_space_mouse_position() - vec2(NODE_SIZE);
   auto node_tree = Editor::get().get_node_tree();
   auto& node = node_tree->add_node(type, position);
-  m_node_ssbo->upload_data(node_tree->get_data(),
-                           node_tree->get_size() * sizeof(NodeType));
+  m_node_ssbo->write(node_tree->get_data(),
+                     node_tree->get_size() * sizeof(NodeType));
   m_active_operator = new OpNodeTransform(this);
 }
 
@@ -91,7 +93,7 @@ auto NodeEditor::on_event_imp(Event& event) -> void {
                       mouse.y > m_framebuffer->get_height()
                   ? 0
                   : m_framebuffer->read_pixel(1, mouse.x, mouse.y);
-      if (not pixel & 0xffffff) {
+      if (not(pixel & 0xffffff)) {
         node_tree->set_active_id(0);
         return;
       }

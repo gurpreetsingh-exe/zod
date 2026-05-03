@@ -60,7 +60,7 @@ private:
   entt::entity m_camera = entt::null;
   entt::entity m_env = entt::null;
   std::unordered_map<UUID, entt::entity> m_entity_map = {};
-  SharedPtr<GPUStorageBuffer> m_camera_buffer = nullptr;
+  SharedPtr<GPUBuffer> m_camera_buffer = nullptr;
   SharedPtr<GPUMeshBatch> m_mesh_batch = nullptr;
   SharedPtr<GPUTexture> m_cubemap = nullptr;
 

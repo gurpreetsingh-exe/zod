@@ -7,7 +7,7 @@ static auto to_gl(GPUDataType type) -> GLenum {
   switch (type) {
     case GPUDataType::Int:
       return GL_INT;
-    case GPUDataType::Float:
+    default:
       return GL_FLOAT;
   }
   UNREACHABLE();
@@ -22,10 +22,14 @@ GLBatch::GLBatch(const Vector<GPUBufferLayout>& layouts,
   glBindVertexArray(m_id);
 
   for (const auto& layout : layouts) {
-    auto buffer = shared<GLVertexBuffer>();
-    buffer->bind();
     auto byte_size = gpu_sizeof(layout.type);
-    buffer->upload_data(layout.buffer, byte_size * layout.length);
+    auto buffer = shared<GLBuffer>(GPUBufferCreateInfo {
+        "batch.vertex",
+        GPUBufferUsage::Vertex,
+        byte_size * layout.length,
+    });
+    buffer->bind();
+    buffer->write(layout.buffer, byte_size * layout.length);
     auto attr = m_vertex_buffers.size();
     glEnableVertexAttribArray(attr);
     glVertexAttribPointer(attr, layout.size, to_gl(layout.type),
@@ -41,9 +45,13 @@ GLBatch::GLBatch(const Vector<GPUBufferLayout>& layouts,
     glBindVertexArray(0);
     return;
   }
-  auto buffer = shared<GLIndexBuffer>();
+  auto buffer = shared<GLBuffer>(GPUBufferCreateInfo {
+      "batch.index",
+      GPUBufferUsage::Index,
+      indices.size() * sizeof(u32),
+  });
   buffer->bind();
-  buffer->upload_data(indices.data(), indices.size() * sizeof(u32));
+  buffer->write(indices.data(), indices.size() * sizeof(u32));
   m_index_buffer = buffer;
   glBindVertexArray(0);
 }

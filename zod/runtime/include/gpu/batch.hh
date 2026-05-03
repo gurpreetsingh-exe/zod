@@ -17,23 +17,21 @@ struct GPUBufferLayout {
 
 class GPUBatch {
 protected:
-  Vector<SharedPtr<GPUVertexBuffer>> m_vertex_buffers;
-  SharedPtr<GPUIndexBuffer> m_index_buffer;
+  Vector<SharedPtr<GPUBuffer>> m_vertex_buffers;
+  SharedPtr<GPUBuffer> m_index_buffer;
 
 public:
   virtual ~GPUBatch() = default;
 
 public:
-  auto get_buffer(usize i) -> SharedPtr<GPUVertexBuffer> {
+  auto get_buffer(usize i) -> SharedPtr<GPUBuffer> {
     return m_vertex_buffers[i];
   }
 
-  auto get_index_buffer() -> SharedPtr<GPUIndexBuffer> {
-    return m_index_buffer;
-  }
+  auto get_index_buffer() -> SharedPtr<GPUBuffer> { return m_index_buffer; }
 
   auto update_binding(usize index, void* data, usize size) -> void {
-    m_vertex_buffers[index]->update_data(data, size);
+    m_vertex_buffers[index]->write(data, size);
   }
 
   virtual auto draw(SharedPtr<GPUShader>) -> void = 0;

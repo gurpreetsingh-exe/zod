@@ -96,9 +96,8 @@ auto operator<<(YAML::Emitter& out, const vec3& v) -> YAML::Emitter& {
 
 Scene::Scene()
     : m_mesh_batch(shared<GPUMeshBatch>()),
-      m_camera_buffer(GPUBackend::get().create_storage_buffer()) {
-  m_camera_buffer->upload_data(nullptr, sizeof(SceneData));
-}
+      m_camera_buffer(GPUBackend::get().create_buffer(
+          { "scene.camera", GPUBufferUsage::Storage, sizeof(SceneData) })) {}
 
 auto Scene::create() -> Entity {
   return create(fmt::format("empty.{}", next_id()));
@@ -134,7 +133,7 @@ auto Scene::update() -> void {
                                camera->get_inv_projection(),
                                vec4(camera->get_direction(), 0.0f),
                                vec4(camera->get_position(), 0.0f) };
-    m_camera_buffer->upload_data(&storage, sizeof(SceneData));
+    m_camera_buffer->write(&storage, sizeof(SceneData));
   }
 }
 
@@ -352,7 +351,7 @@ auto Scene::deserialize(const fs::path& path) -> void {
   }
   mega_texture->generate_mipmap();
 
-  m_mesh_batch->texture_info()->update_data(
+  m_mesh_batch->texture_info()->write(
       texture_info.data(), texture_info.size() * sizeof(TextureInfo));
 }
 

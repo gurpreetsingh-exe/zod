@@ -1,14 +1,17 @@
 #include <imgui.h>
 
+#include "application/input.hh"
 #include "engine/camera.hh"
+#include "gpu/backend.hh"
 #include "widgets/panel.hh"
 
 namespace zod {
 
 SPanel::SPanel(String name, SharedPtr<ICamera> camera, bool padding)
     : SWidget(std::move(name)), m_camera(camera), m_padding(padding),
-      m_uniform_buffer(GPUBackend::get().create_uniform_buffer(
-          sizeof(CameraUniformBufferStorage))),
+      m_uniform_buffer(GPUBackend::get().create_buffer(
+          { "panel.uniform_buffer", GPUBufferUsage::Uniform,
+            sizeof(CameraUniformBufferStorage) })),
       m_framebuffer(GPUBackend::get().create_framebuffer(64.0f, 64.0f)) {}
 
 auto SPanel::get_active() const -> bool { return m_active; }
@@ -61,10 +64,11 @@ auto SPanel::on_event(Event& event) -> void {
         auto storage = CameraUniformBufferStorage {
           m_camera->get_view_projection(), vec4(m_camera->get_direction(), 0.0f)
         };
-        m_uniform_buffer->upload_data(&storage,
-                                      sizeof(CameraUniformBufferStorage));
+        m_uniform_buffer->write(&storage, sizeof(CameraUniformBufferStorage));
       }
-    }
+    } break;
+    default:
+      break;
   }
 
   on_event_imp(event);
@@ -90,13 +94,13 @@ auto SPanel::draw(Geometry& g) -> void {
     auto storage =
         CameraUniformBufferStorage { m_camera->get_view_projection(),
                                      vec4(m_camera->get_direction(), 0.0f) };
-    m_uniform_buffer->upload_data(&storage, sizeof(CameraUniformBufferStorage));
+    m_uniform_buffer->write(&storage, sizeof(CameraUniformBufferStorage));
     on_event_imp(event);
   }
   draw_imp(g);
   if (not m_debug_message.empty()) {
     ImGui::SetCursorPos(ImVec2(5, 20));
-    ImGui::Text(m_debug_message.c_str());
+    ImGui::Text("%s", m_debug_message.c_str());
   }
   ImGui::End();
   if (not m_padding) {

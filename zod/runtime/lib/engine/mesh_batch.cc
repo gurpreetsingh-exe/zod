@@ -29,24 +29,27 @@ struct LightInfo {
 };
 
 GPUMeshBatch::GPUMeshBatch()
-    : m_vertex_buffer(GPUBackend::get().create_storage_buffer()),
-      m_normal_buffer(GPUBackend::get().create_storage_buffer()),
-      m_uv_buffer(GPUBackend::get().create_storage_buffer()),
-      m_matrix_buffer(GPUBackend::get().create_storage_buffer()),
-      m_mesh_info(GPUBackend::get().create_storage_buffer()),
+    : m_vertex_buffer(GPUBackend::get().create_buffer(
+          { "mesh_batch.vertex", GPUBufferUsage::Storage, BUFFER_INIT_SIZE })),
+      m_normal_buffer(GPUBackend::get().create_buffer(
+          { "mesh_batch.normal", GPUBufferUsage::Storage, BUFFER_INIT_SIZE })),
+      m_uv_buffer(GPUBackend::get().create_buffer(
+          { "mesh_batch.uv", GPUBufferUsage::Storage, BUFFER_INIT_SIZE })),
+      m_matrix_buffer(GPUBackend::get().create_buffer(
+          { "mesh_batch.matrix", GPUBufferUsage::Storage, 64'000 })),
+      m_mesh_info(GPUBackend::get().create_buffer(
+          { "mesh_batch.mesh_info", GPUBufferUsage::Storage,
+            500 * sizeof(GPUMeshInfo) })),
       m_mega_texture(
           GPUBackend::get().create_texture({ .width = i32(MEGA_TEXTURE_SIZE.x),
                                              .height = i32(MEGA_TEXTURE_SIZE.y),
                                              .mips = 8 })),
-      m_texture_info(GPUBackend::get().create_storage_buffer()),
-      m_light_info(GPUBackend::get().create_storage_buffer()) {
-  m_vertex_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
-  m_normal_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
-  m_uv_buffer->upload_data(nullptr, BUFFER_INIT_SIZE);
-  m_matrix_buffer->upload_data(nullptr, 64000);
-  m_mesh_info->upload_data(nullptr, 500 * sizeof(GPUMeshInfo));
-  m_texture_info->upload_data(nullptr, 500 * sizeof(TextureInfo));
-  m_light_info->upload_data(nullptr, 500 * sizeof(u32));
+      m_texture_info(GPUBackend::get().create_buffer(
+          { "mesh_batch.texture_info", GPUBufferUsage::Storage,
+            500 * sizeof(TextureInfo) })),
+      m_light_info(GPUBackend::get().create_buffer({ "mesh_batch.light_info",
+                                                     GPUBufferUsage::Storage,
+                                                     500 * sizeof(u32) })) {
   m_batch = GPUBackend::get().create_batch({});
   m_batch->upload_indirect(nullptr, 0);
 
@@ -83,7 +86,7 @@ auto GPUMeshBatch::recompute_batch() -> void {
     matrix.push_back({ mat, transpose(inverse(mat)) });
     ++i;
   }
-  m_matrix_buffer->upload_data(matrix.data(), matrix.size() * sizeof(Matrix));
+  m_matrix_buffer->write(matrix.data(), matrix.size() * sizeof(Matrix));
 
   auto offset = usize(0);
   auto indices = Vector<u32>();
@@ -111,13 +114,12 @@ auto GPUMeshBatch::recompute_batch() -> void {
       ++i;
       continue;
     }
-    m_vertex_buffer->update_data(mesh->points.data(), mesh->points.size_bytes(),
-                                 offset * sizeof(vec3));
-    m_normal_buffer->update_data(mesh->normals.data(),
-                                 mesh->normals.size_bytes(),
-                                 offset * sizeof(vec3));
-    m_uv_buffer->update_data(mesh->uvs.data(), mesh->uvs.size_bytes(),
-                             offset * sizeof(vec2));
+    m_vertex_buffer->write(mesh->points.data(), mesh->points.size_bytes(),
+                           offset * sizeof(vec3));
+    m_normal_buffer->write(mesh->normals.data(), mesh->normals.size_bytes(),
+                           offset * sizeof(vec3));
+    m_uv_buffer->write(mesh->uvs.data(), mesh->uvs.size_bytes(),
+                       offset * sizeof(vec2));
     auto begin = indices.size();
     for (const auto& prim : mesh->prims) {
       for (auto n : prim.points) { indices.push_back(n + offset); }
@@ -135,12 +137,11 @@ auto GPUMeshBatch::recompute_batch() -> void {
     ++matrix_index;
   }
 
-  m_mesh_info->update_data(mesh_info.data(),
-                           mesh_info.size() * sizeof(GPUMeshInfo));
+  m_mesh_info->write(mesh_info.data(), mesh_info.size() * sizeof(GPUMeshInfo));
   LightInfo number_of_lights = { u32(lights.size()), 0.0f, 0.0f };
-  m_light_info->update_data(&number_of_lights, sizeof(LightInfo));
-  m_light_info->update_data(lights.data(), lights.size() * sizeof(LightInfo),
-                            sizeof(LightInfo));
+  m_light_info->write(&number_of_lights, sizeof(LightInfo));
+  m_light_info->write(lights.data(), lights.size() * sizeof(LightInfo),
+                      sizeof(LightInfo));
   m_batch = GPUBackend::get().create_batch({}, indices);
 
   m_batch->upload_indirect(
@@ -150,14 +151,14 @@ auto GPUMeshBatch::recompute_batch() -> void {
 auto GPUMeshBatch::update_matrix(Entity entity, const mat4& mat) -> void {
   auto offset = m_matrix_offset_map[entity];
   auto data = Matrix { mat, transpose(inverse(mat)) };
-  m_matrix_buffer->update_data(&data, sizeof(Matrix), offset);
+  m_matrix_buffer->write(&data, sizeof(Matrix), offset);
 }
 
 auto GPUMeshBatch::update_light(Entity entity, const LightComponent& light)
     -> void {
   auto [offset, index] = m_light_offset_map[entity];
   auto light_info = LightInfo { index, light.a, light.b };
-  m_light_info->update_data(&light_info, sizeof(LightInfo), offset);
+  m_light_info->write(&light_info, sizeof(LightInfo), offset);
 }
 
 auto GPUMeshBatch::load_env(Environment& env) -> SharedPtr<GPUTexture> {

@@ -2,7 +2,6 @@
 
 #include "editor.hh"
 #include "engine/node_types.hh"
-#include "gpu/backend.hh"
 #include "widgets/panel.hh"
 
 namespace zod {
@@ -32,8 +31,8 @@ private:
               ? (link.node_to->type->location + vec2(NODE_SIZE) + vec2(0, 38))
               : region_space_mouse_position();
       m_links.push_back(other_end);
-      m_curves->get_buffer(0)->upload_data(m_links.data(),
-                                           sizeof(vec2) * m_links.size());
+      m_curves->get_buffer(0)->write(m_links.data(),
+                                     sizeof(vec2) * m_links.size());
     }
 
     auto* node = node_tree->get_active();
@@ -41,15 +40,15 @@ private:
       return;
     }
     fn(node);
-    m_node_ssbo->update_data(node->type, sizeof(NodeType),
-                             (node->type->id - 1) * sizeof(NodeType));
+    m_node_ssbo->write(node->type, sizeof(NodeType),
+                       (node->type->id - 1) * sizeof(NodeType));
   }
 
 private:
   f32 m_width;
   f32 m_height;
   SharedPtr<GPUShader> m_shader;
-  SharedPtr<GPUStorageBuffer> m_node_ssbo;
+  SharedPtr<GPUBuffer> m_node_ssbo;
   SharedPtr<GPUShader> m_node_shader;
   SharedPtr<GPUBatch> m_batch;
   SharedPtr<GPUShader> m_line_shader;
