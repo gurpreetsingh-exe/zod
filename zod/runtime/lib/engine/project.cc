@@ -6,13 +6,18 @@
 namespace zod {
 
 auto SceneManager::load_from_file(const fs::path& path) -> void {
-  auto scene = shared<Scene>();
-  m_scenes.push_back(scene);
+  auto scene = create_scene();
   scene->deserialize(path);
 }
 
 auto SceneManager::active_scene() -> SharedPtr<Scene> {
   return m_scenes[m_active_scene];
+}
+
+auto SceneManager::create_scene() -> SharedPtr<Scene> {
+  auto scene = shared<Scene>();
+  m_scenes.push_back(scene);
+  return scene;
 }
 
 Project* g_project = nullptr;
@@ -24,6 +29,8 @@ auto Project::init() -> void {
   fs::create_directories(assets_dir / "Meshes", code);
   fs::create_directories(assets_dir / "Textures", code);
   fs::create_directories(assets_dir / "Materials", code);
+  m_scene_manager.create_scene();
+  save();
 }
 
 auto Project::exists() const -> bool {

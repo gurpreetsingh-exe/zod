@@ -85,6 +85,7 @@ auto Font::load_font(const fs::path& path) -> void {
   m_height = h + 2;
 
   m_texture = GPUBackend::get().create_texture({
+      .name = "font-texture",
       .width = m_width,
       .height = m_height,
       .format = GPUTextureFormat::Red,

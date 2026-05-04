@@ -3,6 +3,7 @@
 #include "./texture.hh"
 #include "backend.hh"
 
+#include "debug.hh"
 #include "gpu/shader_builtins.hh"
 
 namespace zod {
@@ -104,8 +105,11 @@ GLTexture::GLTexture(GPUTextureCreateInfo info) : GPUTexture(info) {
   m_target = to_gl(m_info.type);
   glCreateTextures(m_target, 1, &m_id);
   glBindTexture(m_target, m_id);
+  gl::object_label(GL_TEXTURE, m_id, m_info.name);
   glTexParameteri(m_target, GL_TEXTURE_WRAP_S, to_gl(m_info.wrap));
   glTexParameteri(m_target, GL_TEXTURE_WRAP_T, to_gl(m_info.wrap));
+  // TODO: default to linear and send custom sampling parameters
+  // with the material in the shader
   glTexParameteri(m_target, GL_TEXTURE_MIN_FILTER,
                   m_info.mips ? GL_NEAREST_MIPMAP_NEAREST : GL_LINEAR);
   glTexParameteri(m_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -198,6 +202,7 @@ auto GLTexture::create_cubemap() -> void {
   m_target = to_gl(m_info.type);
   glCreateTextures(m_target, 1, &m_id);
   glBindTexture(m_target, m_id);
+  gl::object_label(GL_TEXTURE, m_id, m_info.name);
 
   i32 channels = 0;
   i32 w = 0;

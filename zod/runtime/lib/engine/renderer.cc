@@ -8,7 +8,7 @@
 
 namespace zod {
 
-static constexpr f32 DEFAULT_FB_SIZE = 1024.0f;
+static constexpr i32 DEFAULT_FB_SIZE = 1024;
 
 GPUShaderCreateInfo forward = GPUShaderCreateInfo("forward")
                                   .vertex_source(g_gbuffer_vert_src)
@@ -27,11 +27,13 @@ GPUShaderCreateInfo pbr = GPUShaderCreateInfo("pbr")
                               .fragment_source(g_pbr_frag_src);
 
 Renderer::Renderer()
-    : m_framebuffer(GPUBackend::get().create_framebuffer(DEFAULT_FB_SIZE,
-                                                         DEFAULT_FB_SIZE)) {
+    : m_framebuffer(GPUBackend::get().create_framebuffer(
+          { "main_framebuffer", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })) {
   m_framebuffer->bind();
-  m_framebuffer->add_color_attachment(GPUBackend::get().create_texture(
-      { .width = i32(DEFAULT_FB_SIZE), .height = i32(DEFAULT_FB_SIZE) }));
+  m_framebuffer->add_color_attachment(
+      GPUBackend::get().create_texture({ .name = "framebuffer.texture",
+                                         .width = DEFAULT_FB_SIZE,
+                                         .height = DEFAULT_FB_SIZE }));
   m_framebuffer->add_depth_attachment();
   m_framebuffer->check();
   m_framebuffer->unbind();

@@ -12,7 +12,8 @@ SPanel::SPanel(String name, SharedPtr<ICamera> camera, bool padding)
       m_uniform_buffer(GPUBackend::get().create_buffer(
           { "panel.uniform_buffer", GPUBufferUsage::Uniform,
             sizeof(CameraUniformBufferStorage) })),
-      m_framebuffer(GPUBackend::get().create_framebuffer(64.0f, 64.0f)) {}
+      m_framebuffer(
+          GPUBackend::get().create_framebuffer({ name.c_str(), 64, 64 })) {}
 
 auto SPanel::get_active() const -> bool { return m_active; }
 

@@ -8,6 +8,7 @@ class SceneManager {
 public:
   auto load_from_file(const fs::path&) -> void;
   auto active_scene() -> SharedPtr<Scene>;
+  auto create_scene() -> SharedPtr<Scene>;
 
 private:
   Vector<SharedPtr<Scene>> m_scenes = {};

@@ -1,4 +1,5 @@
 #include "./buffer.hh"
+#include "debug.hh"
 
 namespace zod {
 
@@ -18,6 +19,7 @@ auto to_gl(GPUBufferUsage usage) -> GLenum {
 GLBuffer::GLBuffer(GPUBufferCreateInfo info)
     : GPUBuffer(info), m_usage(to_gl(info.usage)) {
   glCreateBuffers(1, &m_id);
+  gl::object_label(m_usage, m_id, m_info.name);
   // TODO: immutable buffers
   glNamedBufferData(m_id, info.size, nullptr, GL_STREAM_DRAW);
   if (m_info.usage == GPUBufferUsage::Storage or
@@ -31,23 +33,13 @@ GLBuffer::~GLBuffer() { glDeleteBuffers(1, &m_id); }
 auto GLBuffer::bind(int slot) -> void {
   if (m_info.usage == GPUBufferUsage::Storage or
       m_info.usage == GPUBufferUsage::Uniform) {
-    ZASSERT(m_bound_slot == -1, "buffer already bound at slot `{}`",
-            m_bound_slot);
-    m_bound_slot = slot;
     glBindBufferBase(m_usage, slot, m_id);
     return;
   }
   glBindBuffer(m_usage, m_id);
 }
 
-auto GLBuffer::unbind() -> void {
-  if (m_info.usage == GPUBufferUsage::Storage or
-      m_info.usage == GPUBufferUsage::Uniform) {
-    glBindBufferBase(m_usage, m_bound_slot, 0);
-    return;
-  }
-  glBindBuffer(m_usage, 0);
-}
+auto GLBuffer::unbind() -> void { glBindBuffer(m_usage, 0); }
 
 auto GLBuffer::write(const void* data, usize size, usize offset) -> void {
   ZASSERT(m_info.size >= offset + size,

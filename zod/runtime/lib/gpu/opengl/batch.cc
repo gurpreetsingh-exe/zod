@@ -79,6 +79,9 @@ auto GLBatch::draw_instanced(SharedPtr<GPUShader> shader, usize instance_count)
 }
 
 auto GLBatch::draw_indirect(SharedPtr<GPUShader> shader) -> void {
+  if (not m_indirect_size) {
+    return;
+  }
   glBindVertexArray(m_id);
   glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirect);
   glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, 0, m_indirect_size,

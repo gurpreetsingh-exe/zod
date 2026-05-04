@@ -18,19 +18,24 @@ enum class GPUAttachmentType : int {
   ColorMax,
 };
 
+struct GPUFrameBufferCreateInfo {
+  const char* name;
+  i32 width;
+  i32 height;
+};
+
 constexpr int GPU_FB_MAX_COLOR_ATTACHMENT =
     int(GPUAttachmentType::ColorMax) - int(GPUAttachmentType::Color0);
 
 class GPUFrameBuffer {
 protected:
-  i32 m_width = 0;
-  i32 m_height = 0;
+  GPUFrameBufferCreateInfo m_info;
   Vector<SharedPtr<GPUTexture>> m_color_attachments;
   // SharedPtr<GPUTexture> m_depth_attachment = nullptr;
   i32 m_samples = 1;
   // i32 m_viewport[4] = { 0 };
   // i32 m_scissor[4] = { 0 };
-  GPUFrameBuffer(i32 width, i32 height) : m_width(width), m_height(height) {}
+  GPUFrameBuffer(GPUFrameBufferCreateInfo info) : m_info(info) {}
 
 public:
   virtual ~GPUFrameBuffer() = default;
@@ -51,8 +56,8 @@ public:
   //   ZASSERT(m_depth_attachment.get() != nullptr);
   //   return *m_depth_attachment;
   // }
-  auto get_width() -> i32 { return m_width; }
-  auto get_height() -> i32 { return m_height; }
+  auto get_width() -> i32 { return m_info.width; }
+  auto get_height() -> i32 { return m_info.height; }
 };
 
 } // namespace zod

@@ -48,7 +48,7 @@ Viewport::Viewport()
   m_framebuffer = Editor::get().get_renderer().get_render_target();
 
   m_icons = GPUBackend::get().create_texture(
-      { .path = "./lighting-bulb-1.png", .mips = 4 });
+      { .name = "lightbulb-icon", .path = "./lighting-bulb-1.png", .mips = 4 });
   m_icons->generate_mipmap();
 
   // Shader taken from

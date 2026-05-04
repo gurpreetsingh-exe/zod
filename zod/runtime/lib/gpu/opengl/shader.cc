@@ -1,15 +1,30 @@
 #include "./shader.hh"
+#include "debug.hh"
 
 namespace zod {
 
 GLShader::GLShader(GPUShaderCreateInfo info) : GPUShader(info) {
   m_id = glCreateProgram();
+  gl::object_label(GL_PROGRAM, m_id, info.name);
   compile(info);
+}
+
+auto type_to_string(GLenum type) -> const char* {
+  switch (type) {
+    case GL_VERTEX_SHADER:
+      return "-VERT";
+    case GL_FRAGMENT_SHADER:
+      return "-FRAG";
+    case GL_COMPUTE_SHADER:
+      return "-COMP";
+  }
+  UNREACHABLE();
 }
 
 auto GLShader::create_shader(GLuint type, const char* source) -> GLuint {
   ZASSERT(m_id, "shader program not found");
   auto shader = glCreateShader(type);
+  gl::object_label(type, shader, type_to_string(type));
   glShaderSource(shader, 1, &source, 0);
   glCompileShader(shader);
 

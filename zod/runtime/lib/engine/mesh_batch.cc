@@ -40,10 +40,11 @@ GPUMeshBatch::GPUMeshBatch()
       m_mesh_info(GPUBackend::get().create_buffer(
           { "mesh_batch.mesh_info", GPUBufferUsage::Storage,
             500 * sizeof(GPUMeshInfo) })),
-      m_mega_texture(
-          GPUBackend::get().create_texture({ .width = i32(MEGA_TEXTURE_SIZE.x),
-                                             .height = i32(MEGA_TEXTURE_SIZE.y),
-                                             .mips = 8 })),
+      m_mega_texture(GPUBackend::get().create_texture(
+          { .name = "mega_texture",
+            .width = i32(MEGA_TEXTURE_SIZE.x),
+            .height = i32(MEGA_TEXTURE_SIZE.y),
+            .mips = 8 })),
       m_texture_info(GPUBackend::get().create_buffer(
           { "mesh_batch.texture_info", GPUBufferUsage::Storage,
             500 * sizeof(TextureInfo) })),

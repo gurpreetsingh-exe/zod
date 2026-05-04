@@ -12,6 +12,8 @@
 #include "viewport.hh"
 #include "widgets/layout.hh"
 
+#include "core/option.hh"
+
 namespace zod {
 
 Editor* g_editor;
@@ -31,20 +33,39 @@ Editor::Editor()
 
 Editor::~Editor() { delete m_renderer; }
 
+[[noreturn]]
+auto usage(const String& arg0) {
+  fmt::println("Usage: {} [options] path...", arg0);
+  std::exit(1);
+}
+
 auto Editor::setup() -> void {
   auto args = Application::get().args();
+  const auto& arg0 = args[0];
   if (args.size() < 2) {
-    eprintln("no input file");
+    usage(arg0);
   }
   auto path = fs::path(args[1]);
   if (not fs::exists(path)) {
     eprintln("\"{}\" does not exist", path.string());
-  }
-  if (fs::is_directory(path)) {
-    eprintln("\"{}\" is a directory", path.string());
-  }
+  } else if (fs::is_directory(path)) {
+    auto zproj = none<fs::path>();
+    for (const auto f : fs::directory_iterator(path)) {
+      auto code = std::error_code();
+      if (f.is_regular_file(code) and f.path().extension() == ".zproj") {
+        zproj = some(f.path());
+      }
+    }
 
-  Project::load(path);
+    if (zproj) {
+      Project::load(*zproj);
+    } else {
+      g_project = new Project("Project", path);
+      g_project->init();
+    }
+  } else {
+    Project::load(path);
+  }
 
   m_layout->add_area(shared<Viewport>());
   m_layout->add_area(shared<Properties>());

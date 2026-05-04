@@ -32,6 +32,7 @@ enum class GPUTextureWrap {
 };
 
 struct GPUTextureCreateInfo {
+  const char* name = nullptr;
   i32 width;
   i32 height;
   GPUTextureType type = GPUTextureType::Texture2D;

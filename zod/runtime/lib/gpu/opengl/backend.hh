@@ -33,8 +33,9 @@ public:
     return shared<GLContext>(glfw_window);
   }
 
-  auto create_framebuffer(int w, int h) -> SharedPtr<GPUFrameBuffer> override {
-    return shared<GLFrameBuffer>(w, h);
+  auto create_framebuffer(GPUFrameBufferCreateInfo info)
+      -> SharedPtr<GPUFrameBuffer> override {
+    return shared<GLFrameBuffer>(info);
   }
 
   auto create_pipeline(GPUPipelineCreateInfo info)

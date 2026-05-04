@@ -20,7 +20,6 @@ public:
 private:
   GLuint m_id;
   GLenum m_usage;
-  int m_bound_slot = -1;
 };
 
 } // namespace zod

@@ -16,7 +16,7 @@ private:
   GLint m_view[4];
 
 public:
-  GLFrameBuffer(i32 /* width */, i32 /* height */);
+  GLFrameBuffer(GPUFrameBufferCreateInfo);
   ~GLFrameBuffer();
 
   auto bind() -> void override;

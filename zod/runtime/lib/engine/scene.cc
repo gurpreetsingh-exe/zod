@@ -97,7 +97,11 @@ auto operator<<(YAML::Emitter& out, const vec3& v) -> YAML::Emitter& {
 Scene::Scene()
     : m_mesh_batch(shared<GPUMeshBatch>()),
       m_camera_buffer(GPUBackend::get().create_buffer(
-          { "scene.camera", GPUBufferUsage::Storage, sizeof(SceneData) })) {}
+          { "scene.camera", GPUBufferUsage::Storage, sizeof(SceneData) })) {
+  auto entity = create("SceneCamera");
+  entity.add_component<CameraComponent>();
+  m_camera = entity.m_inner;
+}
 
 auto Scene::create() -> Entity {
   return create(fmt::format("empty.{}", next_id()));

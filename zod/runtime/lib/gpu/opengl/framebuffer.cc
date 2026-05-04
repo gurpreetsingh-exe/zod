@@ -1,5 +1,6 @@
 #include "./framebuffer.hh"
 #include "./context.hh"
+#include "debug.hh"
 
 namespace zod {
 
@@ -10,16 +11,11 @@ static GLenum g_attachments[4] = {
   GL_COLOR_ATTACHMENT3,
 };
 
-GLFrameBuffer::GLFrameBuffer(i32 width, i32 height)
-    : GPUFrameBuffer(width, height) {
-  // m_width = w;
-  // m_height = h;
-  // m_viewport[0] = m_scissor[0] = 0;
-  // m_viewport[1] = m_scissor[1] = 0;
-  // m_viewport[2] = m_scissor[2] = w;
-  // m_viewport[3] = m_scissor[3] = h;
+GLFrameBuffer::GLFrameBuffer(GPUFrameBufferCreateInfo info)
+    : GPUFrameBuffer(info) {
   glCreateFramebuffers(1, &m_id);
   glBindFramebuffer(GL_FRAMEBUFFER, m_id);
+  gl::object_label(GL_FRAMEBUFFER, m_id, m_info.name);
 }
 
 GLFrameBuffer::~GLFrameBuffer() { glDeleteFramebuffers(1, &m_id); }
@@ -27,7 +23,7 @@ GLFrameBuffer::~GLFrameBuffer() { glDeleteFramebuffers(1, &m_id); }
 auto GLFrameBuffer::bind() -> void {
   glGetIntegerv(GL_VIEWPORT, m_view);
   glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-  glViewport(0, 0, m_width, m_height);
+  glViewport(0, 0, m_info.width, m_info.height);
 }
 
 auto GLFrameBuffer::unbind() -> void {
@@ -36,8 +32,8 @@ auto GLFrameBuffer::unbind() -> void {
 }
 
 auto GLFrameBuffer::resize(i32 width, i32 height) -> void {
-  m_width = width;
-  m_height = height;
+  m_info.width = width;
+  m_info.height = height;
   bind();
   for (auto [i, texture] : rng::enumerate_view(m_color_attachments)) {
     texture->resize(width, height);
@@ -125,7 +121,7 @@ auto GLFrameBuffer::add_depth_attachment() -> void {
 
   glCreateTextures(target, 1, &m_depth_attachment);
   glBindTexture(target, m_depth_attachment);
-  glTexStorage2D(target, 1, GL_DEPTH24_STENCIL8, m_width, m_height);
+  glTexStorage2D(target, 1, GL_DEPTH24_STENCIL8, m_info.width, m_info.height);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, target,
                          m_depth_attachment, 0);
   glBindTexture(target, 0);
