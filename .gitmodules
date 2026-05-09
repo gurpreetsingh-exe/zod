@@ -34,3 +34,6 @@
 [submodule "third-party/yaml-cpp"]
 	path = third-party/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "third-party/msdfgen"]
+	path = third-party/msdfgen
+	url = https://github.com/Chlumsky/msdfgen.git
