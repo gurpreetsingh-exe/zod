@@ -1,5 +1,7 @@
-#include "application/window.hh"
+#include "private/window_api.hh"
+
 #include "application/input.hh"
+#include "application/window.hh"
 
 namespace zod {
 
@@ -13,7 +15,7 @@ Window::Window(const String& name) {
   }
 
   glfwSetErrorCallback(error_callback);
-  // glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+  glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 #ifdef VULKAN_BACKEND
@@ -31,6 +33,10 @@ Window::Window(const String& name) {
 #endif
 
   m_gcx = gpu_context_create(m_window);
+
+#if defined(PLATFORM_LINUX)
+  x11::init_x11();
+#endif
 
   glfwSetCursorPosCallback(m_window, [](GLFWwindow* win, double x, double y) {
     auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
@@ -71,13 +77,19 @@ Window::Window(const String& name) {
       m_window, [](GLFWwindow* win, int button, int action, int mods) {
         auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
         auto kind = Event::None;
+        f64 x, y;
+        glfwGetCursorPos(win, &x, &y);
         if (action == GLFW_PRESS) {
+#if defined(PLATFORM_LINUX)
+          if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            auto size = window->get_size();
+            x11::mouse_down_event(win, x, y, size.x, size.y);
+          }
+#endif
           kind = Event::MouseDown;
         } else if (action == GLFW_RELEASE) {
           kind = Event::MouseUp;
         }
-        f64 x, y;
-        glfwGetCursorPos(win, &x, &y);
         Event event = { .kind = kind,
                         .button = MouseButton(button),
                         .shift = bool(mods & GLFW_MOD_SHIFT),

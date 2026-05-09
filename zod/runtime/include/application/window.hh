@@ -9,6 +9,7 @@ namespace zod {
 class Window {
 public:
   using EventCallbackFn = std::function<void(Event&)>;
+  static constexpr auto TitleBarHeight = 30.f;
 
   Window(const String& /* name */);
   ~Window();
