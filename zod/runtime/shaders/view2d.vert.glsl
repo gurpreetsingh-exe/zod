@@ -1,14 +1,18 @@
-layout(location = 0) in vec2 position;
-layout(location = 1) in vec4 color;
-
-layout(std140, binding = 1) uniform Camera {
-  mat4 view_projection;
-  vec4 direction;
+struct PointDrawData {
+  vec2 position;
+  vec2 uv;
 };
 
-out vec4 v_color;
-
-void main() {
-  gl_Position = view_projection * vec4(position, 0.0f, 1.0f);
-  v_color = color;
+layout(std430, binding = 1) readonly buffer GPUDrawData {
+  PointDrawData g_draw_data[];
 };
+
+out vec2 v_texcoords;
+
+uniform mat4 u_projection;
+
+void main(void) {
+  vec2 position = g_draw_data[gl_VertexID].position;
+  v_texcoords = g_draw_data[gl_VertexID].uv;
+  gl_Position = u_projection * vec4(position, 0.f, 1.f);
+}

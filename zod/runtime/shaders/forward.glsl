@@ -21,9 +21,8 @@ vec2 get_texture_coords(uint texture_index) {
 
 vec3 fetch_color(uint texture_index, vec3 otherwise) {
   vec2 coords = get_texture_coords(texture_index);
-  return texture_index != invalid_texture
-    ? texture(u_mega_texture, coords).rgb
-    : otherwise;
+  return texture_index != invalid_texture ? texture(u_mega_texture, coords).rgb
+                                          : otherwise;
 }
 
 void main(void) {

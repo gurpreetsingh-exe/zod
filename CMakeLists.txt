@@ -35,7 +35,6 @@ endif()
 add_compile_options(-msse3 -ggdb3)
 
 add_subdirectory(${ZOD_RUNTIME_DIR} zrt)
-add_subdirectory(${THIRD_PARTY_DIR}/json nlohmann_json)
 add_subdirectory(${THIRD_PARTY_DIR}/tinyobj tinyobj)
 add_subdirectory(${THIRD_PARTY_DIR}/tinygltf tinygltf)
 
@@ -51,25 +50,10 @@ target_include_directories(imgui PUBLIC "${IMGUI_DIR}")
 target_include_directories(imgui PUBLIC "${IMGUI_DIR}/backends")
 
 ##########################################################################
-# sodium ui
-##########################################################################
-file(GLOB_RECURSE SODIUM_SRC ${SODIUM_DIR}/lib/*.cc)
-add_library(sodium ${SODIUM_SRC})
-target_include_directories(sodium PUBLIC ${ZOD_RUNTIME_DIR}/include)
-target_include_directories(sodium PUBLIC ${SODIUM_DIR}/include)
-target_link_libraries(sodium
-  zodpch
-  zrt
-  nlohmann_json::nlohmann_json
-  imgui
-  pthread
-  ${CMAKE_DL_LIBS})
-
-##########################################################################
 # zod editor
 ##########################################################################
 file(GLOB_RECURSE ZOD_EDITOR_SRC ${ZOD_EDITOR_DIR}/lib/*.cc)
 add_executable(zod ${ZOD_EDITOR_SRC})
 target_include_directories(zod PUBLIC ${ZOD_RUNTIME_DIR}/include)
 target_include_directories(zod PUBLIC ${ZOD_EDITOR_DIR}/include)
-target_link_libraries(zod zodpch zrt sodium tinyobj tinygltf)
+target_link_libraries(zod zodpch zrt tinyobj tinygltf)

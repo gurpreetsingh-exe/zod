@@ -1,0 +1,43 @@
+#pragma once
+
+#include "gpu/buffer.hh"
+#include "gpu/framebuffer.hh"
+
+namespace zod {
+
+// class ICamera;
+//
+// struct CameraUniformBufferStorage {
+//   mat4 view_projection;
+//   vec4 direction;
+// };
+//
+// class IOperator;
+//
+// inline SharedPtr<GPUBuffer> unit_uniform_buffer = nullptr;
+//
+// class SPanel : public widget {
+// public:
+//   SPanel(String /* name */, SharedPtr<ICamera>, bool /* padding */ = true);
+//   auto on_event(Event&) -> void override;
+//   auto compute_desired_size() -> void override;
+//   virtual auto on_event_imp(Event&) -> void {};
+//   auto draw(Geometry&) -> void;
+//   auto get_active() const -> bool;
+//   auto camera() const -> SharedPtr<ICamera>;
+//   auto set_camera(SharedPtr<ICamera>) -> void;
+//   auto relative_mouse_position() const -> vec2;
+//   auto region_space_mouse_position() const -> vec2;
+//
+// protected:
+//   bool m_padding = true;
+//   bool m_active = false;
+//   SharedPtr<ICamera> m_camera;
+//   SharedPtr<GPUBuffer> m_uniform_buffer;
+//   SharedPtr<GPUFrameBuffer> m_framebuffer;
+//   std::unordered_map<KeyCode, std::function<void()>> m_keymaps = {};
+//   IOperator* m_active_operator = nullptr;
+//   String m_debug_message = String();
+// };
+
+} // namespace zod

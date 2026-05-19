@@ -2,8 +2,8 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include "imgui_layer.hh"
-#include "theme.hh"
+#include "sodium/imgui_layer.hh"
+#include "sodium/theme.hh"
 
 namespace zod {
 
@@ -31,8 +31,15 @@ void ImGuiLayer::begin_frame() {
 
   if (m_opt_fullscreen) {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(viewport->WorkSize);
+    constexpr f32 titleBarHeight = 30;
+
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x, viewport->WorkPos.y + titleBarHeight));
+    ImGui::SetNextWindowSize(
+        ImVec2(viewport->WorkSize.x, viewport->WorkSize.y - titleBarHeight));
+
+    // ImGui::SetNextWindowPos(viewport->WorkPos);
+    // ImGui::SetNextWindowSize(viewport->WorkSize);
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);

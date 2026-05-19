@@ -7,10 +7,14 @@ class Option {
 public:
   explicit Option() : m_inner(T()), m_has_value(false) {}
   Option(const T& value) : m_inner(std::move(value)), m_has_value(true) {}
-  operator bool() { return m_has_value; }
-  auto operator*() -> T& {
+  operator bool() const { return m_has_value; }
+  auto operator*() const -> const T& {
     ZASSERT(m_has_value);
     return m_inner;
+  }
+
+  auto value_or(const T& v) const -> const T& {
+    return m_has_value ? m_inner : v;
   }
 
 private:

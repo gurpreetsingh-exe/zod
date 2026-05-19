@@ -4,8 +4,18 @@ set(LIB ${CMAKE_CURRENT_SOURCE_DIR}/lib)
 add_subdirectory(${THIRD_PARTY_DIR}/entt EnTT)
 add_subdirectory(${THIRD_PARTY_DIR}/fmt fmt)
 add_subdirectory(${THIRD_PARTY_DIR}/freetype freetype)
+if (TARGET freetype AND NOT TARGET Freetype::Freetype)
+  add_library(Freetype::Freetype ALIAS freetype)
+endif()
+set(MSDFGEN_USE_VCPKG OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_BUILD_STANDALONE OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_USE_SKIA OFF CACHE BOOL "" FORCE)
+set(MSDFGEN_DISABLE_SVG ON CACHE BOOL "" FORCE)
+set(MSDFGEN_DISABLE_PNG ON CACHE BOOL "" FORCE)
+add_subdirectory(${THIRD_PARTY_DIR}/msdfgen msdfgen)
 add_subdirectory(${THIRD_PARTY_DIR}/glfw glfw)
 add_subdirectory(${THIRD_PARTY_DIR}/glm glm)
+add_subdirectory(${THIRD_PARTY_DIR}/json nlohmann_json)
 add_subdirectory(${THIRD_PARTY_DIR}/stbi stbi)
 add_subdirectory(${THIRD_PARTY_DIR}/uuid_v4 uuid_v4)
 add_subdirectory(${THIRD_PARTY_DIR}/yaml-cpp yaml-cpp)
@@ -89,5 +99,10 @@ target_link_libraries(zrt
   freetype
   glfw
   gpu
+  imgui
+  msdfgen::msdfgen
+  nlohmann_json::nlohmann_json
+  pthread
   uuid_v4
-  yaml-cpp::yaml-cpp)
+  yaml-cpp::yaml-cpp
+  ${CMAKE_DL_LIBS})

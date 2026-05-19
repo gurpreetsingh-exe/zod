@@ -2,8 +2,8 @@
 #include <imgui.h>
 #include <nlohmann/json.hpp>
 
-#include "config.hh"
-#include "theme.hh"
+#include "sodium/config.hh"
+#include "sodium/theme.hh"
 
 namespace zod {
 

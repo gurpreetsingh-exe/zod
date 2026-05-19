@@ -24,7 +24,8 @@ public:
       -> SharedPtr<GPUBatch> = 0;
   virtual auto create_buffer(GPUBufferCreateInfo) -> SharedPtr<GPUBuffer> = 0;
   virtual auto create_context(void* /* window */) -> SharedPtr<GPUContext> = 0;
-  virtual auto create_framebuffer(GPUFrameBufferCreateInfo) -> SharedPtr<GPUFrameBuffer> = 0;
+  virtual auto create_framebuffer(GPUFrameBufferCreateInfo)
+      -> SharedPtr<GPUFrameBuffer> = 0;
   virtual auto create_pipeline(GPUPipelineCreateInfo)
       -> SharedPtr<GPUPipeline> = 0;
   virtual auto create_query() -> SharedPtr<GPUQuery> = 0;

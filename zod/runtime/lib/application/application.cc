@@ -1,5 +1,5 @@
 #include "application/application.hh"
-#include "engine/font.hh"
+#include "sodium/gui.hh"
 
 namespace zod {
 
@@ -21,7 +21,8 @@ Application::Application(const ApplicationCreateInfo& info)
   }
 
   m_window->set_event_callback(std::bind(&Application::on_event, this, ph::_1));
-  init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
+  sodium::init_gui();
+  sodium::init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
 }
 
 Application::~Application() {}
@@ -61,11 +62,9 @@ auto Application::run() -> void {
 }
 
 auto Application::on_event(Event& event) -> void {
-  switch (event.kind) {
-    case Event::WindowClose: {
-      m_running = event.hanging = false;
-      return;
-    };
+  if (event.kind == Event::WindowClose) {
+    m_running = event.hanging = false;
+    return;
   }
 
   for (auto i = int(m_layers.size()) - 1; i >= 0; --i) {

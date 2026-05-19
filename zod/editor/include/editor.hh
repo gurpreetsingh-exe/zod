@@ -7,12 +7,12 @@
 #include "engine/environment.hh"
 #include "engine/node_types.hh"
 #include "engine/renderer.hh"
-#include "imgui_layer.hh"
-#include "widgets/layout.hh"
+// #include "imgui_layer.hh"
+// #include "sodium/widgets/layout.hh"
+
+#include "sodium/gui.hh"
 
 namespace zod {
-
-class Layout;
 
 class Editor : public ILayer {
 public:
@@ -34,8 +34,8 @@ private:
 
 private:
   Renderer* m_renderer;
-  UniquePtr<ImGuiLayer> m_imgui_layer;
-  UniquePtr<Layout> m_layout;
+  SharedPtr<sodium::Widget> m_widget;
+  // UniquePtr<ImGuiLayer> m_imgui_layer;
   SharedPtr<NodeTree> m_node_tree;
   AssetManager m_asset_manager;
   Entity m_active_object;
