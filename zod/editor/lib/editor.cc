@@ -56,10 +56,11 @@ Editor::Editor()
                               .min_size({ 50, 0 })
                               .button_style({ { 0.9, 0.2, 0.2, 1.0 } })
                               .background({ 0.1, 0.1, 0.1, 1.0 })
-                              .on_clicked([]() {
+                              .on_clicked([](auto&) {
                                 auto event =
                                     Event { .kind = Event::WindowClose };
                                 Application::get().on_event(event);
+                                return EventResponse::handled();
                               })];
   auto minimize = slot().auto_width()[create<Button>(IconId::Minimize)
                                           .min_size({ 50, 0 })

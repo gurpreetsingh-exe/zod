@@ -986,7 +986,7 @@ auto Button::on_mouse_up(const Event& event) -> EventResponse {
     m_pressed = false;
     if (was_pressed) {
       if (m_hovered and m_on_clicked) {
-        m_on_clicked();
+        m_on_clicked.execute(event);
       }
       return EventResponse::handled();
     }

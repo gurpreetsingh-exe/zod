@@ -441,13 +441,17 @@ public:
   auto set_focusable(bool focusable) -> void { m_focusable = focusable; }
   auto set_enabled(bool enabled) -> void { m_enabled = enabled; }
   auto set_button_style(Style style) -> void { m_button_style = style; }
-  auto set_on_clicked(std::function<void()> callback) -> void {
-    m_on_clicked = std::move(callback);
+  auto set_on_clicked(EventHandler callback) -> void {
+    m_on_clicked = callback;
   }
 
   template <class ObjectT>
-  auto set_on_clicked(ObjectT* object, void (ObjectT::*method)()) -> void {
-    m_on_clicked = [object, method]() { (object->*method)(); };
+  auto set_on_clicked(ObjectT* object,
+                      EventResponse (ObjectT::*method)(const Event&)) -> void {
+    m_on_clicked =
+        EventHandler([object, method](const Event& event) -> EventResponse {
+          return (object->*method)(event);
+        });
   }
 
   auto set_content_padding(Padding padding) -> void {
@@ -466,7 +470,7 @@ private:
   bool m_pressed = false;
   IconId m_icon = IconId::None;
   Style m_button_style = {};
-  std::function<void()> m_on_clicked = {};
+  EventHandler m_on_clicked = {};
 };
 
 class Menu : public Widget {
@@ -831,15 +835,17 @@ public:
     return *this;
   }
 
-  auto on_clicked(std::function<void()> callback) -> WidgetBuilder&
+  auto on_clicked(EventHandler callback) -> WidgetBuilder&
     requires std::is_base_of_v<Button, WidgetT>
   {
-    m_widget->set_on_clicked(std::move(callback));
+    m_widget->set_on_clicked(callback);
     return *this;
   }
 
   template <class ObjectT>
-  auto on_clicked(ObjectT* object, void (ObjectT::*method)()) -> WidgetBuilder&
+  auto on_clicked(ObjectT* object,
+                  EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder&
     requires std::is_base_of_v<Button, WidgetT>
   {
     m_widget->set_on_clicked(object, method);
