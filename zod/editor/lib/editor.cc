@@ -1,4 +1,5 @@
 #include "editor.hh"
+#include "core/platform/macros.hh"
 
 #include "application/platform.hh"
 #include "content_browser.hh"
@@ -50,10 +51,16 @@ Editor::Editor()
                                    .name(name)];
   };
 
-  auto close = slot().auto_width()[create<Button>(IconId::Close)
-                                       .min_size({ 50, 0 })
-                                       .button_style({ { 0.9, 0.2, 0.2, 1.0 } })
-                                       .background({ 0.1, 0.1, 0.1, 1.0 })];
+  auto close =
+      slot().auto_width()[create<Button>(IconId::Close)
+                              .min_size({ 50, 0 })
+                              .button_style({ { 0.9, 0.2, 0.2, 1.0 } })
+                              .background({ 0.1, 0.1, 0.1, 1.0 })
+                              .on_clicked([]() {
+                                auto event =
+                                    Event { .kind = Event::WindowClose };
+                                Application::get().on_event(event);
+                              })];
   auto minimize = slot().auto_width()[create<Button>(IconId::Minimize)
                                           .min_size({ 50, 0 })
                                           .background({ 0.1, 0.1, 0.1, 1.0 })];
@@ -66,10 +73,21 @@ Editor::Editor()
         [create<Menu>().min_size({ 40, 0 }).padding({ 8, 8, 0, 0 }).name(name)];
   };
 
-  auto menus = create<HorizontalBox>() +
-               slot().fixed_height(
-                   25)[create<HorizontalBox>() + menu("File") + menu("Edit")];
-  auto spread = slot()[create<Box>()];
+  auto menus =
+      create<HorizontalBox>() +
+      slot()
+          .fixed_height(25)
+          .auto_width()[create<HorizontalBox>() + menu("File") + menu("Edit")];
+  auto spread = slot()[create<Box>()
+#if defined(PLATFORM_LINUX)
+                           .on_mouse_down([](const Event& event) {
+                             if (event.button == MouseButton::Left) {
+                               Application::get().active_window().drag_start();
+                             }
+                             return EventResponse::handled();
+                           })
+#endif
+  ];
 
   auto logo = GPUBackend::get().create_texture(
       { .name = "zod-logo", .path = "./logo.png" });
@@ -80,8 +98,9 @@ Editor::Editor()
   constexpr auto padding = 4.0f;
   auto titlebar =
       create<HorizontalBox>().background(dark) +
-      slot().fixed_width(40)[create<Image>(logo).background(light)] +
-      slot()[menus] + spread + window_buttons;
+      slot().fixed_width(
+          Window::TitleBarHeight)[create<Image>(logo).background(light)] +
+      slot().auto_width()[menus] + spread + window_buttons;
 
   auto status_bar = create<Box>().background(light).name("StatusBar");
 
@@ -98,7 +117,8 @@ Editor::Editor()
   // slot().fixed_width(200)[create<Box>().background(light).name("C")];
 
   auto window =
-      create<VerticalBox>() + slot().fixed_height(40)[titlebar] +
+      create<VerticalBox>() +
+      slot().fixed_height(Window::TitleBarHeight)[titlebar] +
       slot()[create<VerticalBox>().padding(padding).gap(padding) +
              slot()[tabs]] +
       slot().padding({ padding, padding, 0, 0 }).fixed_height(30)[status_bar];
@@ -165,6 +185,11 @@ auto Editor::on_event(Event& event) -> void {
     m_widget->compute_desired_size(size);
     m_widget->arrange({ { 0, 0 }, size });
     // editor_gui().layout({ { 0.0f, 0.0f }, event.size });
+  }
+
+  auto reply = m_widget->event(event);
+  if (reply) {
+    event.hanging = false;
   }
 
   // editor_gui().on_event(event);

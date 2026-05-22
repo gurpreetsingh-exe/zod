@@ -6,10 +6,16 @@
 
 namespace zod {
 
+enum class cursor_shape_t {
+  Arrow,
+  ResizeHorizontal,
+  ResizeVertical,
+};
+
 class Window {
 public:
   using EventCallbackFn = std::function<void(Event&)>;
-  static constexpr auto TitleBarHeight = 30.f;
+  static constexpr auto TitleBarHeight = 40.f;
 
   Window(const String& /* name */);
   ~Window();
@@ -27,6 +33,7 @@ public:
   auto get_size() -> vec2;
   auto set_vsync(bool) -> void;
   auto get_native_handle() -> void* { return m_window; }
+  auto drag_start() -> void;
 
 private:
   GLFWwindow* m_window;

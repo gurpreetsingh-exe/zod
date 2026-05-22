@@ -704,7 +704,146 @@ auto measure_stack_children(const Vector<Container::Slot>& children,
   return used + style.padding.combined();
 }
 
-auto Widget::event(const Event& event) -> bool { TODO(); }
+static auto event_reply(EventResponse widget_reply, EventResponse child_reply,
+                        bool handled) -> EventResponse {
+  if (widget_reply) {
+    return widget_reply;
+  }
+  if (child_reply) {
+    return child_reply;
+  }
+  if (handled) {
+    return EventResponse::handled();
+  }
+  return EventResponse::unhandled();
+}
+
+auto Widget::event(const Event& event) -> EventResponse {
+  if (m_visibility == Visibility::Hidden or
+      m_visibility == Visibility::Collapsed) {
+    m_hovered = false;
+    return EventResponse::unhandled();
+  }
+
+  auto child_reply = EventResponse::unhandled();
+  for (auto child : get_children()) {
+    if (child) {
+      auto reply = child->event(event);
+      if (reply) {
+        child_reply = reply;
+      }
+    }
+  }
+
+  // TODO: key events on hover??
+  m_hovered = m_visibility != Visibility::SelfHitTestInvisible and
+              m_frame.intersect(event.mouse);
+  if (not m_hovered) {
+    return EventResponse::handled();
+  }
+
+  switch (event.kind) {
+    case Event::MouseDown:
+      return event_reply(apply_event_reply(event, on_mouse_down(event)),
+                         child_reply, m_hovered);
+    case Event::MouseUp:
+      return event_reply(apply_event_reply(event, on_mouse_up(event)),
+                         child_reply, m_hovered);
+    case Event::MouseMove: {
+      auto widget_reply = drag_detected_reply(event);
+      if (not widget_reply) {
+        widget_reply = on_mouse_move(event);
+      }
+      return event_reply(widget_reply, child_reply, m_hovered);
+    }
+    case Event::KeyDown:
+      return event_reply(on_key_down(event), child_reply, false);
+    case Event::KeyUp:
+      return event_reply(on_key_up(event), child_reply, false);
+    case Event::KeyRepeat:
+      return event_reply(on_key_repeat(event), child_reply, false);
+    case Event::WindowResize:
+      return event_reply(on_window_resize(event), child_reply, false);
+    case Event::WindowClose:
+      return event_reply(on_window_close(event), child_reply, false);
+    case Event::None:
+      break;
+  }
+
+  return child_reply;
+}
+
+auto Widget::apply_event_reply(const Event& event, EventResponse reply)
+    -> EventResponse {
+  if (event.kind == Event::MouseDown and reply.wants_drag_detection and
+      event.button == reply.drag_button and m_hovered) {
+    m_detecting_drag = true;
+    m_drag_detected = false;
+    m_drag_button = reply.drag_button;
+    m_drag_start = event.mouse;
+  }
+
+  if (event.kind == Event::MouseUp and event.button == m_drag_button) {
+    m_detecting_drag = false;
+    m_drag_detected = false;
+    m_drag_button = MouseButton::None;
+  }
+
+  return reply;
+}
+
+auto Widget::drag_detected_reply(const Event& event) -> EventResponse {
+  if (event.kind != Event::MouseMove or not m_detecting_drag or
+      m_drag_detected) {
+    return EventResponse::unhandled();
+  }
+
+  auto delta = event.mouse - m_drag_start;
+  auto moved = delta.x * delta.x + delta.y * delta.y >
+               m_drag_threshold * m_drag_threshold;
+  if (not moved) {
+    return EventResponse::unhandled();
+  }
+
+  m_drag_detected = true;
+  return on_drag_detected(event);
+}
+
+auto Widget::on_mouse_down(const Event& event) -> EventResponse {
+  if (auto metadata = get_metadata<WidgetMouseEventsMetaData>()) {
+    if (metadata->mouse_down) {
+      return metadata->mouse_down.execute(event);
+    }
+  }
+  return EventResponse::unhandled();
+}
+
+auto Widget::on_mouse_up(const Event& event) -> EventResponse {
+  if (auto metadata = get_metadata<WidgetMouseEventsMetaData>()) {
+    if (metadata->mouse_up) {
+      return metadata->mouse_up.execute(event);
+    }
+  }
+  return EventResponse::unhandled();
+}
+
+auto Widget::on_mouse_move(const Event& event) -> EventResponse {
+  if (auto metadata = get_metadata<WidgetMouseEventsMetaData>()) {
+    if (metadata->mouse_move) {
+      return metadata->mouse_move.execute(event);
+    }
+  }
+  return EventResponse::unhandled();
+}
+
+auto Widget::on_drag_detected(const Event& event) -> EventResponse {
+  if (auto metadata = get_metadata<WidgetMouseEventsMetaData>()) {
+    if (metadata->drag_detected) {
+      return metadata->drag_detected.execute(event);
+    }
+  }
+  return EventResponse::unhandled();
+}
 
 auto Widget::push_self_draws(PaintCx& cx) const -> void {
   if (m_visibility == Visibility::Hidden or
@@ -734,9 +873,6 @@ auto Widget::push_self_draws(PaintCx& cx) const -> void {
     push_filled_rect(cx, inner, m_style.background);
   }
 }
-
-CompoundWidget::CompoundWidget()
-    : m_children_view(shared<SingleSlotChild>(this, &m_child_slot)) {}
 
 auto CompoundWidget::set_child(SharedPtr<Widget> child, const SlotStyle& style)
     -> SingleChildSlot& {
@@ -823,6 +959,56 @@ auto Image::paint(PaintCx& cx) const -> void {
 
 constexpr f32 FontSizeInMenu = 12;
 
+auto Button::on_mouse_down(const Event& event) -> EventResponse {
+  if (not m_enabled) {
+    m_hovered = false;
+    m_pressed = false;
+    return EventResponse::unhandled();
+  }
+
+  if (event.button == MouseButton::Left and m_hovered) {
+    m_pressed = true;
+    return EventResponse::handled();
+  }
+
+  return EventResponse::unhandled();
+}
+
+auto Button::on_mouse_up(const Event& event) -> EventResponse {
+  if (not m_enabled) {
+    m_hovered = false;
+    m_pressed = false;
+    return EventResponse::unhandled();
+  }
+
+  if (event.button == MouseButton::Left) {
+    auto was_pressed = m_pressed;
+    m_pressed = false;
+    if (was_pressed) {
+      if (m_hovered and m_on_clicked) {
+        m_on_clicked();
+      }
+      return EventResponse::handled();
+    }
+  }
+
+  return EventResponse::unhandled();
+}
+
+auto Button::on_mouse_move(const Event&) -> EventResponse {
+  if (not m_enabled) {
+    m_hovered = false;
+    m_pressed = false;
+    return EventResponse::unhandled();
+  }
+
+  if (m_hovered) {
+    return EventResponse::handled();
+  }
+
+  return EventResponse::unhandled();
+}
+
 auto Button::compute_desired_size(vec2 available) -> vec2 {
   auto width = Font::get().width(m_name, FontSizeInMenu);
   auto desired =
@@ -882,13 +1068,28 @@ auto Menu::paint(PaintCx& cx) const -> void {
 
 auto Menu::arrange(const Rect& bounds) -> void { m_frame = bounds; }
 
-Container::Container()
-    : m_children_view(shared<ContainerChildren>(this, &m_children)) {}
+auto Menu::get_children() const -> WidgetChildren {
+  auto children = WidgetChildren {};
+  children.reserve(m_buttons.size());
+  for (const auto& button : m_buttons) {
+    if (button) {
+      children.push_back(button);
+    }
+  }
+  return children;
+}
 
 auto Container::add_child(SharedPtr<Widget> child, const SlotStyle& style)
     -> Container::Slot& {
   m_children.push_back({ child, style });
   return m_children.back();
+}
+
+auto Container::get_children() const -> WidgetChildren {
+  auto children = WidgetChildren {};
+  children.reserve(m_children.size());
+  for (const auto& slot : m_children) { children.push_back(slot.child); }
+  return children;
 }
 
 auto BoxContainer::compute_desired_size(vec2 available) -> vec2 {
@@ -1166,10 +1367,6 @@ auto DPIScaler::arrange(const Rect& bounds) -> void {
   m_frame = bounds;
 }
 
-Overlay::Overlay()
-    : m_overlay_children_view(
-          shared<ContainerChild<OverlaySlot>>(this, &m_overlay_children)) {}
-
 auto Overlay::add_overlay_child(SharedPtr<Widget> child, const SlotStyle& style,
                                 int layer) -> Overlay::OverlaySlot& {
   m_overlay_children.push_back({ child, style, layer });
@@ -1247,6 +1444,15 @@ auto Overlay::paint(PaintCx& cx) const -> void {
       slot->child->paint(cx);
     }
   }
+}
+
+auto Overlay::get_children() const -> WidgetChildren {
+  auto children = Container::get_children();
+  children.reserve(children.size() + m_overlay_children.size());
+  for (const auto& slot : m_overlay_children) {
+    children.push_back(slot.child);
+  }
+  return children;
 }
 
 // auto title_button(String name, vec4 image_color, vec4 button_color)

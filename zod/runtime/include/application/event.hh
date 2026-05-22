@@ -184,8 +184,16 @@ struct Event {
         return "MouseDown";
       case MouseUp:
         return "MouseUp";
+      case KeyDown:
+        return "KeyDown";
+      case KeyUp:
+        return "KeyUp";
+      case KeyRepeat:
+        return "KeyRepeat";
       case WindowResize:
         return "WindowResize";
+      case WindowClose:
+        return "WindowClose";
       case None:
         return "None";
       default:

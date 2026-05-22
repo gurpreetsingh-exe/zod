@@ -176,17 +176,96 @@ struct DrawRect {
 class SlotBuilder;
 class Widget;
 
-class Children {
+using WidgetChildren = Vector<SharedPtr<Widget>>;
+
+struct EventResponse {
+  bool is_handled = false;
+  bool wants_drag_detection = false;
+  MouseButton drag_button = MouseButton::None;
+
+  static auto handled() -> EventResponse { return { .is_handled = true }; }
+  static auto unhandled() -> EventResponse { return {}; }
+
+  explicit operator bool() const { return is_handled; }
+
+  auto detect_drag(MouseButton button) -> EventResponse {
+    wants_drag_detection = true;
+    drag_button = button;
+    is_handled = true;
+    return *this;
+  }
+};
+
+class EventHandler {
 public:
-  explicit Children(Widget* owner = nullptr) : m_owner(owner) {}
-  virtual ~Children() = default;
+  EventHandler() = default;
 
-  auto owner() const -> Widget* { return m_owner; }
-  virtual auto size() const -> usize = 0;
-  virtual auto at(usize index) const -> Widget* = 0;
+  template <class Fn>
+  EventHandler(Fn callback) : m_callback(shared<Callback<Fn>>(callback)) {}
 
-protected:
-  Widget* m_owner = nullptr;
+  template <class Fn>
+  auto bind(Fn callback) -> void {
+    m_callback = shared<Callback<Fn>>(callback);
+  }
+
+  auto is_bound() const -> bool { return bool(m_callback); }
+  explicit operator bool() const { return is_bound(); }
+
+  auto execute(const Event& event) const -> EventResponse {
+    if (m_callback) {
+      return m_callback->execute(event);
+    }
+    return EventResponse::unhandled();
+  }
+
+private:
+  class CallbackBase {
+  public:
+    virtual ~CallbackBase() = default;
+    virtual auto execute(const Event&) const -> EventResponse = 0;
+  };
+
+  template <class Fn>
+  class Callback : public CallbackBase {
+  public:
+    explicit Callback(Fn callback) : m_callback(callback) {}
+
+    auto execute(const Event& event) const -> EventResponse override {
+      return m_callback(event);
+    }
+
+  private:
+    Fn m_callback;
+  };
+
+  SharedPtr<CallbackBase> m_callback = nullptr;
+};
+
+class IWidgetMetaData {
+public:
+  virtual ~IWidgetMetaData() = default;
+  virtual auto type() const -> const std::type_info& = 0;
+
+  template <class MetaDataT>
+  auto is_of_type() const -> bool {
+    return type() == typeid(MetaDataT);
+  }
+};
+
+template <class MetaDataT>
+class WidgetMetaData : public IWidgetMetaData {
+public:
+  auto type() const -> const std::type_info& override {
+    return typeid(MetaDataT);
+  }
+};
+
+struct WidgetMouseEventsMetaData
+    : public WidgetMetaData<WidgetMouseEventsMetaData> {
+  EventHandler mouse_down = {};
+  EventHandler mouse_up = {};
+  EventHandler mouse_move = {};
+  EventHandler drag_detected = {};
 };
 
 class Widget {
@@ -207,12 +286,69 @@ public:
   }
   auto set_min_size(vec2 size) -> void { m_min_size = size; }
 
-  virtual auto event(const Event&) -> bool;
+  auto add_metadata(SharedPtr<IWidgetMetaData> metadata) -> void {
+    m_metadata.push_back(std::move(metadata));
+  }
+
+  template <class MetaDataT>
+  auto get_metadata() const -> SharedPtr<MetaDataT> {
+    for (const auto& metadata : m_metadata) {
+      if (metadata and metadata->is_of_type<MetaDataT>()) {
+        return std::static_pointer_cast<MetaDataT>(metadata);
+      }
+    }
+    return nullptr;
+  }
+
+  template <class MetaDataT>
+  auto find_or_add_metadata() -> SharedPtr<MetaDataT> {
+    if (auto metadata = get_metadata<MetaDataT>()) {
+      return metadata;
+    }
+
+    auto metadata = shared<MetaDataT>();
+    add_metadata(metadata);
+    return metadata;
+  }
+
+  auto set_on_mouse_down(EventHandler callback) -> void {
+    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_down = callback;
+  }
+  auto set_on_mouse_up(EventHandler callback) -> void {
+    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_up = callback;
+  }
+  auto set_on_mouse_move(EventHandler callback) -> void {
+    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_move = callback;
+  }
+  auto set_on_drag_detected(EventHandler callback) -> void {
+    find_or_add_metadata<WidgetMouseEventsMetaData>()->drag_detected = callback;
+  }
+
+  virtual auto event(const Event&) -> EventResponse;
+  virtual auto on_mouse_down(const Event&) -> EventResponse;
+  virtual auto on_mouse_up(const Event&) -> EventResponse;
+  virtual auto on_mouse_move(const Event&) -> EventResponse;
+  virtual auto on_drag_detected(const Event&) -> EventResponse;
+  virtual auto on_key_down(const Event&) -> EventResponse {
+    return EventResponse::unhandled();
+  }
+  virtual auto on_key_up(const Event&) -> EventResponse {
+    return EventResponse::unhandled();
+  }
+  virtual auto on_key_repeat(const Event&) -> EventResponse {
+    return EventResponse::unhandled();
+  }
+  virtual auto on_window_resize(const Event&) -> EventResponse {
+    return EventResponse::unhandled();
+  }
+  virtual auto on_window_close(const Event&) -> EventResponse {
+    return EventResponse::unhandled();
+  }
   virtual auto set_desired_size(vec2 size) -> void { m_desired_size = size; }
   virtual auto compute_desired_size(vec2) -> vec2 = 0;
   virtual auto arrange(const Rect&) -> void = 0;
   virtual auto paint(PaintCx&) const -> void = 0;
-  virtual auto get_children() const -> const Children* { return nullptr; }
+  virtual auto get_children() const -> WidgetChildren { return {}; }
 
 protected:
   auto cache_desired_size(vec2 desired) const -> vec2 {
@@ -220,6 +356,8 @@ protected:
     return m_desired_size;
   }
 
+  auto apply_event_reply(const Event&, EventResponse) -> EventResponse;
+  auto drag_detected_reply(const Event&) -> EventResponse;
   auto push_self_draws(PaintCx&) const -> void;
 
   String m_name;
@@ -229,6 +367,12 @@ protected:
   mutable vec2 m_min_size {};
   Visibility m_visibility = Visibility::Visible;
   bool m_hovered = false;
+  bool m_detecting_drag = false;
+  bool m_drag_detected = false;
+  MouseButton m_drag_button = MouseButton::None;
+  vec2 m_drag_start = {};
+  f32 m_drag_threshold = 2.0f;
+  Vector<SharedPtr<IWidgetMetaData>> m_metadata = {};
 };
 
 struct SingleChildSlot {
@@ -236,32 +380,9 @@ struct SingleChildSlot {
   SlotStyle style {};
 };
 
-class SingleSlotChild : public Children {
-public:
-  SingleSlotChild(Widget* owner, const SingleChildSlot* slot)
-      : Children(owner), m_slot(slot) {}
-
-  auto size() const -> usize override {
-    if (m_slot and m_slot->child) {
-      return 1u;
-    }
-    return 0u;
-  }
-
-  auto at(usize index) const -> Widget* override {
-    if (index == 0 and m_slot and m_slot->child) {
-      return m_slot->child.get();
-    }
-    return nullptr;
-  }
-
-private:
-  const SingleChildSlot* m_slot = nullptr;
-};
-
 class CompoundWidget : public Widget {
 public:
-  CompoundWidget();
+  CompoundWidget() = default;
 
   auto set_child(SharedPtr<Widget> child, const SlotStyle& style = {})
       -> SingleChildSlot&;
@@ -269,13 +390,15 @@ public:
   auto compute_desired_size(vec2) -> vec2 override;
   auto arrange(const Rect&) -> void override;
   auto paint(PaintCx&) const -> void override;
-  auto get_children() const -> const Children* override {
-    return m_children_view.get();
+  auto get_children() const -> WidgetChildren override {
+    if (m_child_slot.child) {
+      return { m_child_slot.child };
+    }
+    return {};
   }
 
 protected:
   SingleChildSlot m_child_slot;
-  SharedPtr<SingleSlotChild> m_children_view;
 };
 
 class Box : public CompoundWidget {
@@ -318,18 +441,32 @@ public:
   auto set_focusable(bool focusable) -> void { m_focusable = focusable; }
   auto set_enabled(bool enabled) -> void { m_enabled = enabled; }
   auto set_button_style(Style style) -> void { m_button_style = style; }
+  auto set_on_clicked(std::function<void()> callback) -> void {
+    m_on_clicked = std::move(callback);
+  }
+
+  template <class ObjectT>
+  auto set_on_clicked(ObjectT* object, void (ObjectT::*method)()) -> void {
+    m_on_clicked = [object, method]() { (object->*method)(); };
+  }
+
   auto set_content_padding(Padding padding) -> void {
     m_style.padding = padding;
   }
 
+  auto on_mouse_down(const Event&) -> EventResponse override;
+  auto on_mouse_up(const Event&) -> EventResponse override;
+  auto on_mouse_move(const Event&) -> EventResponse override;
   auto compute_desired_size(vec2) -> vec2 override;
   auto paint(PaintCx&) const -> void override;
 
 private:
   bool m_focusable = true;
   bool m_enabled = true;
+  bool m_pressed = false;
   IconId m_icon = IconId::None;
   Style m_button_style = {};
+  std::function<void()> m_on_clicked = {};
 };
 
 class Menu : public Widget {
@@ -339,6 +476,7 @@ public:
   auto compute_desired_size(vec2) -> vec2 override;
   auto paint(PaintCx&) const -> void override;
   auto arrange(const Rect&) -> void override;
+  auto get_children() const -> WidgetChildren override;
 
 private:
   bool m_open = false;
@@ -347,7 +485,7 @@ private:
 
 class Container : public Widget {
 public:
-  Container();
+  Container() = default;
 
   struct Slot {
     SharedPtr<Widget> child;
@@ -356,40 +494,11 @@ public:
 
   auto add_child(SharedPtr<Widget> child, const SlotStyle& style = {}) -> Slot&;
   auto child_count() const -> usize { return m_children.size(); }
-  auto get_children() const -> const Children* override {
-    return m_children_view.get();
-  }
+  auto get_children() const -> WidgetChildren override;
 
 protected:
   Vector<Slot> m_children;
-  SharedPtr<Children> m_children_view;
 };
-
-template <class SlotT>
-class ContainerChild : public Children {
-public:
-  ContainerChild(Widget* owner, const Vector<SlotT>* slots)
-      : Children(owner), m_slots(slots) {}
-
-  auto size() const -> usize override {
-    if (m_slots) {
-      return m_slots->size();
-    }
-    return 0u;
-  }
-
-  auto at(usize index) const -> Widget* override {
-    if (not m_slots or index >= m_slots->size()) {
-      return nullptr;
-    }
-    return (*m_slots)[index].child.get();
-  }
-
-private:
-  const Vector<SlotT>* m_slots = nullptr;
-};
-
-using ContainerChildren = ContainerChild<Container::Slot>;
 
 class BoxContainer : public Container {
 public:
@@ -463,7 +572,7 @@ private:
 
 class Overlay : public Container {
 public:
-  Overlay();
+  Overlay() = default;
 
   struct OverlaySlot {
     SharedPtr<Widget> child;
@@ -477,13 +586,10 @@ public:
   auto compute_desired_size(vec2) -> vec2 override;
   auto arrange(const Rect&) -> void override;
   auto paint(PaintCx&) const -> void override;
-  auto get_children() const -> const Children* override {
-    return m_overlay_children_view.get();
-  }
+  auto get_children() const -> WidgetChildren override;
 
 private:
   Vector<OverlaySlot> m_overlay_children;
-  SharedPtr<ContainerChild<OverlaySlot>> m_overlay_children_view;
 };
 
 template <class WidgetT>
@@ -650,6 +756,46 @@ public:
     return *this;
   }
 
+  auto on_mouse_down(EventHandler callback) -> WidgetBuilder& {
+    m_widget->set_on_mouse_down(callback);
+    return *this;
+  }
+
+  template <class Fn>
+  auto on_mouse_down(Fn callback) -> WidgetBuilder& {
+    return on_mouse_down(EventHandler(callback));
+  }
+
+  auto on_mouse_up(EventHandler callback) -> WidgetBuilder& {
+    m_widget->set_on_mouse_up(callback);
+    return *this;
+  }
+
+  template <class Fn>
+  auto on_mouse_up(Fn&& callback) -> WidgetBuilder& {
+    return on_mouse_up(EventHandler(std::forward<Fn>(callback)));
+  }
+
+  auto on_mouse_move(EventHandler callback) -> WidgetBuilder& {
+    m_widget->set_on_mouse_move(callback);
+    return *this;
+  }
+
+  template <class Fn>
+  auto on_mouse_move(Fn&& callback) -> WidgetBuilder& {
+    return on_mouse_move(EventHandler(std::forward<Fn>(callback)));
+  }
+
+  auto on_drag_detected(EventHandler callback) -> WidgetBuilder& {
+    m_widget->set_on_drag_detected(callback);
+    return *this;
+  }
+
+  template <class Fn>
+  auto on_drag_detected(Fn&& callback) -> WidgetBuilder& {
+    return on_drag_detected(EventHandler(std::forward<Fn>(callback)));
+  }
+
   auto is_focusable(bool focusable) -> WidgetBuilder&
     requires std::is_base_of_v<Button, WidgetT>
   {
@@ -682,6 +828,21 @@ public:
     requires std::is_base_of_v<Button, WidgetT>
   {
     m_widget->set_button_style(style);
+    return *this;
+  }
+
+  auto on_clicked(std::function<void()> callback) -> WidgetBuilder&
+    requires std::is_base_of_v<Button, WidgetT>
+  {
+    m_widget->set_on_clicked(std::move(callback));
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_clicked(ObjectT* object, void (ObjectT::*method)()) -> WidgetBuilder&
+    requires std::is_base_of_v<Button, WidgetT>
+  {
+    m_widget->set_on_clicked(object, method);
     return *this;
   }
 

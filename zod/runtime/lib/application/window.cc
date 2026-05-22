@@ -80,12 +80,6 @@ Window::Window(const String& name) {
         f64 x, y;
         glfwGetCursorPos(win, &x, &y);
         if (action == GLFW_PRESS) {
-#if defined(PLATFORM_LINUX)
-          if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            auto size = window->get_size();
-            x11::mouse_down_event(win, x, y, size.x, size.y);
-          }
-#endif
           kind = Event::MouseDown;
         } else if (action == GLFW_RELEASE) {
           kind = Event::MouseUp;
@@ -144,6 +138,14 @@ auto Window::get_size() -> vec2 {
 }
 
 auto Window::set_vsync(bool vsync) -> void { glfwSwapInterval(vsync); }
+
+
+auto Window::drag_start() -> void {
+  auto size = get_size();
+  f64 x, y;
+  glfwGetCursorPos(m_window, &x, &y);
+  x11::mouse_down_event(m_window, x, y, size.x, size.y);
+}
 
 Window::~Window() {
   glfwDestroyWindow(m_window);
