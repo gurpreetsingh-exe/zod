@@ -163,7 +163,8 @@ struct SlotStyle {
   SizeRule horizontal_rule = SizeRule::Stretch;
   SizeRule vertical_rule = SizeRule::Stretch;
   vec2 size = {};
-  f32 stretch_weight = 1.0f;
+  f32 horizontal_stretch_weight = 1.0f;
+  f32 vertical_stretch_weight = 1.0f;
   Align horizontal_alignment = Align::Stretch;
   Align vertical_alignment = Align::Stretch;
 };
@@ -178,10 +179,28 @@ class Widget;
 
 using WidgetChildren = Vector<SharedPtr<Widget>>;
 
+class WidgetPath {
+public:
+  auto size() const -> usize { return m_widgets.size(); }
+  auto empty() const -> bool { return m_widgets.empty(); }
+  auto clear() -> void { m_widgets.clear(); }
+  auto resize(usize size) -> void { m_widgets.resize(size); }
+  auto push(Widget* widget) -> void { m_widgets.push_back(widget); }
+  auto contains(const Widget* widget) const -> bool;
+  auto operator[](usize index) const -> Widget* { return m_widgets[index]; }
+  auto begin() const { return m_widgets.begin(); }
+  auto end() const { return m_widgets.end(); }
+
+private:
+  Vector<Widget*> m_widgets = {};
+};
+
 struct EventResponse {
   bool is_handled = false;
   bool wants_drag_detection = false;
+  bool wants_mouse_capture = false;
   MouseButton drag_button = MouseButton::None;
+  MouseButton capture_button = MouseButton::None;
 
   static auto handled() -> EventResponse { return { .is_handled = true }; }
   static auto unhandled() -> EventResponse { return {}; }
@@ -191,6 +210,13 @@ struct EventResponse {
   auto detect_drag(MouseButton button) -> EventResponse {
     wants_drag_detection = true;
     drag_button = button;
+    is_handled = true;
+    return *this;
+  }
+
+  auto capture_mouse(MouseButton button) -> EventResponse {
+    wants_mouse_capture = true;
+    capture_button = button;
     is_handled = true;
     return *this;
   }
@@ -265,6 +291,8 @@ struct WidgetMouseEventsMetaData
   EventHandler mouse_down = {};
   EventHandler mouse_up = {};
   EventHandler mouse_move = {};
+  EventHandler mouse_enter = {};
+  EventHandler mouse_leave = {};
   EventHandler drag_detected = {};
 };
 
@@ -320,6 +348,12 @@ public:
   auto set_on_mouse_move(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_move = callback;
   }
+  auto set_on_mouse_enter(EventHandler callback) -> void {
+    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_enter = callback;
+  }
+  auto set_on_mouse_leave(EventHandler callback) -> void {
+    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_leave = callback;
+  }
   auto set_on_drag_detected(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->drag_detected = callback;
   }
@@ -328,6 +362,8 @@ public:
   virtual auto on_mouse_down(const Event&) -> EventResponse;
   virtual auto on_mouse_up(const Event&) -> EventResponse;
   virtual auto on_mouse_move(const Event&) -> EventResponse;
+  virtual auto on_mouse_enter(const Event&) -> void;
+  virtual auto on_mouse_leave(const Event&) -> void;
   virtual auto on_drag_detected(const Event&) -> EventResponse;
   virtual auto on_key_down(const Event&) -> EventResponse {
     return EventResponse::unhandled();
@@ -349,6 +385,9 @@ public:
   virtual auto arrange(const Rect&) -> void = 0;
   virtual auto paint(PaintCx&) const -> void = 0;
   virtual auto get_children() const -> WidgetChildren { return {}; }
+  auto invalidate_layout() -> void { m_layout_invalidated = true; }
+  auto needs_layout() const -> bool;
+  auto clear_layout_invalidated() -> void;
 
 protected:
   auto cache_desired_size(vec2 desired) const -> vec2 {
@@ -358,6 +397,10 @@ protected:
 
   auto apply_event_reply(const Event&, EventResponse) -> EventResponse;
   auto drag_detected_reply(const Event&) -> EventResponse;
+  auto find_path_at(vec2, WidgetPath&) -> bool;
+  auto update_hover_path(const WidgetPath&, const Event&) -> void;
+  auto route_pointer_event(const Event&, const WidgetPath&) -> EventResponse;
+  auto route_tree_event(const Event&) -> EventResponse;
   auto push_self_draws(PaintCx&) const -> void;
 
   String m_name;
@@ -372,6 +415,10 @@ protected:
   MouseButton m_drag_button = MouseButton::None;
   vec2 m_drag_start = {};
   f32 m_drag_threshold = 2.0f;
+  WidgetPath m_hovered_path = {};
+  Widget* m_mouse_captor = nullptr;
+  MouseButton m_mouse_capture_button = MouseButton::None;
+  bool m_layout_invalidated = false;
   Vector<SharedPtr<IWidgetMetaData>> m_metadata = {};
 };
 
@@ -406,7 +453,41 @@ public:
   Box() = default;
   explicit Box(String name) { set_name(std::move(name)); }
 
+  auto set_width_override(f32 width) -> void { m_width_override = some(width); }
+  auto set_height_override(f32 height) -> void {
+    m_height_override = some(height);
+  }
+  auto set_min_desired_width(f32 width) -> void {
+    m_min_desired_width = some(width);
+  }
+  auto set_min_desired_height(f32 height) -> void {
+    m_min_desired_height = some(height);
+  }
+  auto set_max_desired_width(f32 width) -> void {
+    m_max_desired_width = some(width);
+  }
+  auto set_max_desired_height(f32 height) -> void {
+    m_max_desired_height = some(height);
+  }
+  auto set_content_halign(Align align) -> void { m_content_halign = align; }
+  auto set_content_valign(Align align) -> void { m_content_valign = align; }
+
   auto compute_desired_size(vec2) -> vec2 override;
+  auto arrange(const Rect&) -> void override;
+
+private:
+  auto constrained_desired_size(vec2, vec2 padding = {}) const -> vec2;
+  auto content_alignment(Axis) const -> Align;
+
+private:
+  Option<f32> m_width_override;
+  Option<f32> m_height_override;
+  Option<f32> m_min_desired_width;
+  Option<f32> m_min_desired_height;
+  Option<f32> m_max_desired_width;
+  Option<f32> m_max_desired_height;
+  Option<Align> m_content_halign;
+  Option<Align> m_content_valign;
 };
 
 class Image : public Widget {
@@ -509,6 +590,7 @@ public:
   explicit BoxContainer(Axis axis = Axis::Vertical) : m_axis(axis) {}
 
   auto set_axis(Axis axis) -> void { m_axis = axis; }
+  auto get_slot(usize idx) -> Slot& { return m_children[idx]; }
 
   auto compute_desired_size(vec2) -> vec2 override;
   auto arrange(const Rect&) -> void override;
@@ -607,6 +689,9 @@ struct SlotContent {
 
 class SlotBuilder {
 public:
+  SlotBuilder() = default;
+  SlotBuilder(SlotStyle style) : m_style(style) {}
+
   auto dock(Dock dock) -> SlotBuilder& {
     m_style.dock = dock;
     return *this;
@@ -648,14 +733,22 @@ public:
 
   auto stretch_width(f32 weight = 1.0f) -> SlotBuilder& {
     m_style.horizontal_rule = SizeRule::Stretch;
-    m_style.stretch_weight = weight;
+    m_style.horizontal_stretch_weight = weight;
     return *this;
   }
 
   auto stretch_height(f32 weight = 1.0f) -> SlotBuilder& {
     m_style.vertical_rule = SizeRule::Stretch;
-    m_style.stretch_weight = weight;
+    m_style.vertical_stretch_weight = weight;
     return *this;
+  }
+
+  auto fill_width(f32 weight = 1.0f) -> SlotBuilder& {
+    return stretch_width(weight);
+  }
+
+  auto fill_height(f32 weight = 1.0f) -> SlotBuilder& {
+    return stretch_height(weight);
   }
 
   auto halign(Align align) -> SlotBuilder& {
@@ -691,7 +784,7 @@ private:
   int m_layer = 0;
 };
 
-inline auto slot() -> SlotBuilder { return {}; }
+inline auto slot(SlotStyle style = {}) -> SlotBuilder { return { style }; }
 
 template <class WidgetT>
 class WidgetBuilder {
@@ -738,6 +831,62 @@ public:
 
   auto min_size(vec2 size) -> WidgetBuilder& {
     m_widget->set_min_size(size);
+    return *this;
+  }
+
+  auto width_override(f32 width) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_width_override(width);
+    return *this;
+  }
+
+  auto height_override(f32 height) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_height_override(height);
+    return *this;
+  }
+
+  auto min_desired_width(f32 width) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_min_desired_width(width);
+    return *this;
+  }
+
+  auto min_desired_height(f32 height) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_min_desired_height(height);
+    return *this;
+  }
+
+  auto max_desired_width(f32 width) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_max_desired_width(width);
+    return *this;
+  }
+
+  auto max_desired_height(f32 height) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_max_desired_height(height);
+    return *this;
+  }
+
+  auto content_halign(Align align) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_content_halign(align);
+    return *this;
+  }
+
+  auto content_valign(Align align) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_content_valign(align);
     return *this;
   }
 
@@ -788,6 +937,26 @@ public:
   template <class Fn>
   auto on_mouse_move(Fn&& callback) -> WidgetBuilder& {
     return on_mouse_move(EventHandler(std::forward<Fn>(callback)));
+  }
+
+  auto on_mouse_enter(EventHandler callback) -> WidgetBuilder& {
+    m_widget->set_on_mouse_enter(callback);
+    return *this;
+  }
+
+  template <class Fn>
+  auto on_mouse_enter(Fn&& callback) -> WidgetBuilder& {
+    return on_mouse_enter(EventHandler(std::forward<Fn>(callback)));
+  }
+
+  auto on_mouse_leave(EventHandler callback) -> WidgetBuilder& {
+    m_widget->set_on_mouse_leave(callback);
+    return *this;
+  }
+
+  template <class Fn>
+  auto on_mouse_leave(Fn&& callback) -> WidgetBuilder& {
+    return on_mouse_leave(EventHandler(std::forward<Fn>(callback)));
   }
 
   auto on_drag_detected(EventHandler callback) -> WidgetBuilder& {

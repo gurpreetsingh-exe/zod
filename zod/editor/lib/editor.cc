@@ -9,7 +9,6 @@
 #include "loaders.hh"
 #include "outliner.hh"
 #include "properties.hh"
-#include "sodium/custom_gui.hh"
 #include "sodium/theme.hh"
 #include "viewport.hh"
 
@@ -32,14 +31,14 @@ static auto preferences = false;
 
 auto Editor::get() -> Editor& { return *g_editor; }
 
+auto light = vec4 { 0.127, 0.131, 0.14, 1 };
+auto dark = vec4 { 0.0825, 0.084, 0.09, 1 };
+
 Editor::Editor()
     : ILayer(), m_renderer(new ForwardRenderer()),
       m_node_tree(shared<NodeTree>()) {
   g_editor = this;
   // m_widget = sodium::create<sodium::container>().background();
-
-  auto light = vec4 { 0.127, 0.131, 0.14, 1 };
-  auto dark = vec4 { 0.0825, 0.084, 0.09, 1 };
 
   using namespace sodium;
 
@@ -105,17 +104,85 @@ Editor::Editor()
 
   auto status_bar = create<Box>().background(light).name("StatusBar");
 
-  auto tabs =
-      create<HorizontalBox>().gap(padding) +
-      slot()[create<VerticalBox>().gap(padding) +
-             slot()[create<HorizontalBox>().gap(padding) +
-                    slot().fixed_width(250)[create<Box>().background(light)] +
-                    slot()[create<Box>().background(light)]] +
-             slot().fixed_height(250)[create<Box>().background(light)]] +
-      slot().fixed_width(320)[create<Box>().background(light)];
-  // slot().fixed_width(200)[create<Box>().background(light).name("A")] +
-  // slot()[create<Box>().background(light).name("B")] +
-  // slot().fixed_width(200)[create<Box>().background(light).name("C")];
+  // TABS OLD
+  // auto tabs =
+  //     create<HorizontalBox>().gap(padding) +
+  //     slot()[create<VerticalBox>().gap(padding) +
+  //            slot()[create<HorizontalBox>().gap(padding) +
+  //                   slot().fixed_width(250)[create<Box>().background(light)]
+  //                   + slot()[create<Box>().background(light)]] +
+  //            slot().fixed_height(250)[create<Box>().background(light)]] +
+  //     slot().fixed_width(320)[create<Box>().background(light)];
+
+  struct Split {
+    struct ResizeState {
+      bool resizing = false;
+      vec2 start_mouse = {};
+      f32 start_split = 0.5f;
+      f32 split = 0.5f;
+    };
+
+    Split(f32 s = 0.5f)
+        : split(s), splitter(create<Box>().build()),
+          inner(
+              create<HorizontalBox>() +
+              slot().fill_width(split)[create<Box>().background(light)] +
+              slot().fixed_width(4)[splitter] +
+              slot().fill_width(1.0f - split)[create<Box>().background(light)]),
+          first(inner->get_slot(0)), second(inner->get_slot(2)) {
+      auto state = shared<ResizeState>();
+      state->split = split;
+      auto inner_box = inner.get();
+      auto first_slot = &first;
+      auto second_slot = &second;
+
+      auto apply_split = [state, inner_box, first_slot,
+                          second_slot](f32 value) {
+        state->split = glm::clamp(value, 0.05f, 0.95f);
+        first_slot->style.horizontal_stretch_weight = state->split;
+        second_slot->style.horizontal_stretch_weight = 1.0f - state->split;
+        inner_box->invalidate_layout();
+      };
+
+      splitter->set_on_mouse_down([state](const Event& event) {
+        if (event.button != MouseButton::Left) {
+          return EventResponse::unhandled();
+        }
+        state->resizing = true;
+        state->start_mouse = event.mouse;
+        state->start_split = state->split;
+        return EventResponse::handled().capture_mouse(MouseButton::Left);
+      });
+
+      splitter->set_on_mouse_move(
+          [state, inner_box, apply_split](const Event& event) {
+            if (not state->resizing) {
+              return EventResponse::unhandled();
+            }
+
+            auto width = std::max(1.0f, inner_box->frame().size.x);
+            auto delta = event.mouse.x - state->start_mouse.x;
+            apply_split(state->start_split + delta / width);
+            return EventResponse::handled();
+          });
+
+      splitter->set_on_mouse_up([state](const Event& event) {
+        if (event.button == MouseButton::Left and state->resizing) {
+          state->resizing = false;
+          return EventResponse::handled();
+        }
+        return EventResponse::unhandled();
+      });
+    }
+
+    f32 split = 0.5f;
+    SharedPtr<Widget> splitter = nullptr;
+    SharedPtr<HorizontalBox> inner = nullptr;
+    Container::Slot& first;
+    Container::Slot& second;
+  };
+
+  auto tabs = Split().inner;
 
   auto window =
       create<VerticalBox>() +
@@ -185,6 +252,7 @@ auto Editor::on_event(Event& event) -> void {
     sodium::resize(size);
     m_widget->compute_desired_size(size);
     m_widget->arrange({ { 0, 0 }, size });
+    m_widget->clear_layout_invalidated();
     // editor_gui().layout({ { 0.0f, 0.0f }, event.size });
   }
 
@@ -218,6 +286,11 @@ auto Editor::update() -> void {
   GPU_TIME("main-loop", {
     auto& app = Application::get();
     auto size = app.active_window().get_size();
+    if (m_widget->needs_layout()) {
+      m_widget->compute_desired_size(size);
+      m_widget->arrange({ { 0, 0 }, size });
+      m_widget->clear_layout_invalidated();
+    }
 
     GPUState::get().set_blend(Blend::Alpha);
     m_widget->paint(cx);

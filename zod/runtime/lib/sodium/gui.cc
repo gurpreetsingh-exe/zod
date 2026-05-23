@@ -589,6 +589,13 @@ auto axis_alignment(const SlotStyle& style, Axis axis) -> Align {
   return style.vertical_alignment;
 }
 
+auto axis_stretch_weight(const SlotStyle& style, Axis axis) -> f32 {
+  if (axis == Axis::Horizontal) {
+    return style.horizontal_stretch_weight;
+  }
+  return style.vertical_stretch_weight;
+}
+
 auto auto_or_fixed_size(SizeRule rule, f32 fixed, f32 desired) -> f32 {
   if (rule == SizeRule::Fixed) {
     return fixed;
@@ -718,10 +725,142 @@ static auto event_reply(EventResponse widget_reply, EventResponse child_reply,
   return EventResponse::unhandled();
 }
 
+auto WidgetPath::contains(const Widget* widget) const -> bool {
+  return std::find(m_widgets.begin(), m_widgets.end(), widget) !=
+         m_widgets.end();
+}
+
+static auto is_pointer_event(const Event& event) -> bool {
+  return event.kind == Event::MouseDown or event.kind == Event::MouseUp or
+         event.kind == Event::MouseMove;
+}
+
 auto Widget::event(const Event& event) -> EventResponse {
+  if (not is_pointer_event(event)) {
+    return route_tree_event(event);
+  }
+
+  auto path = WidgetPath {};
+  find_path_at(event.mouse, path);
+  update_hover_path(path, event);
+  return route_pointer_event(event, path);
+}
+
+auto Widget::find_path_at(vec2 mouse, WidgetPath& path) -> bool {
   if (m_visibility == Visibility::Hidden or
       m_visibility == Visibility::Collapsed) {
-    m_hovered = false;
+    return false;
+  }
+
+  if (not m_frame.intersect(mouse)) {
+    return false;
+  }
+
+  auto start = path.size();
+  auto self_hit_testable = m_visibility != Visibility::SelfHitTestInvisible;
+  if (self_hit_testable) {
+    path.push(this);
+  }
+
+  auto children = get_children();
+  for (auto it = children.rbegin(); it != children.rend(); ++it) {
+    if (*it and (*it)->find_path_at(mouse, path)) {
+      return true;
+    }
+  }
+
+  if (self_hit_testable) {
+    return true;
+  }
+
+  path.resize(start);
+  return false;
+}
+
+auto Widget::update_hover_path(const WidgetPath& path, const Event& event)
+    -> void {
+  auto common = usize(0);
+  while (common < m_hovered_path.size() and common < path.size() and
+         m_hovered_path[common] == path[common]) {
+    ++common;
+  }
+
+  for (auto i = m_hovered_path.size(); i > common; --i) {
+    auto* widget = m_hovered_path[i - 1];
+    widget->m_hovered = false;
+    widget->on_mouse_leave(event);
+  }
+
+  for (auto i = common; i < path.size(); ++i) {
+    auto* widget = path[i];
+    widget->m_hovered = true;
+    widget->on_mouse_enter(event);
+  }
+
+  for (auto* widget : path) { widget->m_hovered = true; }
+  m_hovered_path = path;
+}
+
+auto Widget::route_pointer_event(const Event& event, const WidgetPath& path)
+    -> EventResponse {
+  auto route_to = [&](Widget* widget) {
+    auto reply = EventResponse::unhandled();
+    switch (event.kind) {
+      case Event::MouseDown:
+        reply = widget->apply_event_reply(event, widget->on_mouse_down(event));
+        break;
+      case Event::MouseUp:
+        reply = widget->apply_event_reply(event, widget->on_mouse_up(event));
+        break;
+      case Event::MouseMove:
+        reply = widget->drag_detected_reply(event);
+        if (not reply) {
+          reply = widget->on_mouse_move(event);
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (event.kind == Event::MouseDown and reply.wants_mouse_capture and
+        event.button == reply.capture_button) {
+      m_mouse_captor = widget;
+      m_mouse_capture_button = reply.capture_button;
+    }
+
+    return reply;
+  };
+
+  auto reply = EventResponse::unhandled();
+  auto had_captor = m_mouse_captor != nullptr;
+  if (m_mouse_captor) {
+    reply = route_to(m_mouse_captor);
+  } else {
+    for (auto i = path.size(); i > 0; --i) {
+      reply = route_to(path[i - 1]);
+      if (reply) {
+        break;
+      }
+    }
+  }
+
+  if (event.kind == Event::MouseUp and event.button == m_mouse_capture_button) {
+    m_mouse_captor = nullptr;
+    m_mouse_capture_button = MouseButton::None;
+  }
+
+  if (reply) {
+    return reply;
+  }
+  if (had_captor) {
+    return EventResponse::handled();
+  }
+  return path.empty() ? EventResponse::unhandled() : EventResponse::handled();
+}
+
+auto Widget::route_tree_event(const Event& event) -> EventResponse {
+  if (m_visibility == Visibility::Hidden or
+      m_visibility == Visibility::Collapsed) {
     return EventResponse::unhandled();
   }
 
@@ -735,27 +874,7 @@ auto Widget::event(const Event& event) -> EventResponse {
     }
   }
 
-  // TODO: key events on hover??
-  m_hovered = m_visibility != Visibility::SelfHitTestInvisible and
-              m_frame.intersect(event.mouse);
-  if (not m_hovered) {
-    return EventResponse::handled();
-  }
-
   switch (event.kind) {
-    case Event::MouseDown:
-      return event_reply(apply_event_reply(event, on_mouse_down(event)),
-                         child_reply, m_hovered);
-    case Event::MouseUp:
-      return event_reply(apply_event_reply(event, on_mouse_up(event)),
-                         child_reply, m_hovered);
-    case Event::MouseMove: {
-      auto widget_reply = drag_detected_reply(event);
-      if (not widget_reply) {
-        widget_reply = on_mouse_move(event);
-      }
-      return event_reply(widget_reply, child_reply, m_hovered);
-    }
     case Event::KeyDown:
       return event_reply(on_key_down(event), child_reply, false);
     case Event::KeyUp:
@@ -766,11 +885,36 @@ auto Widget::event(const Event& event) -> EventResponse {
       return event_reply(on_window_resize(event), child_reply, false);
     case Event::WindowClose:
       return event_reply(on_window_close(event), child_reply, false);
+    case Event::MouseDown:
+    case Event::MouseUp:
+    case Event::MouseMove:
     case Event::None:
       break;
   }
 
   return child_reply;
+}
+
+auto Widget::needs_layout() const -> bool {
+  if (m_layout_invalidated) {
+    return true;
+  }
+
+  for (auto child : get_children()) {
+    if (child and child->needs_layout()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto Widget::clear_layout_invalidated() -> void {
+  m_layout_invalidated = false;
+  for (auto child : get_children()) {
+    if (child) {
+      child->clear_layout_invalidated();
+    }
+  }
 }
 
 auto Widget::apply_event_reply(const Event& event, EventResponse reply)
@@ -834,6 +978,22 @@ auto Widget::on_mouse_move(const Event& event) -> EventResponse {
     }
   }
   return EventResponse::unhandled();
+}
+
+auto Widget::on_mouse_enter(const Event& event) -> void {
+  if (auto metadata = get_metadata<WidgetMouseEventsMetaData>()) {
+    if (metadata->mouse_enter) {
+      metadata->mouse_enter.execute(event);
+    }
+  }
+}
+
+auto Widget::on_mouse_leave(const Event& event) -> void {
+  if (auto metadata = get_metadata<WidgetMouseEventsMetaData>()) {
+    if (metadata->mouse_leave) {
+      metadata->mouse_leave.execute(event);
+    }
+  }
 }
 
 auto Widget::on_drag_detected(const Event& event) -> EventResponse {
@@ -926,15 +1086,77 @@ auto Box::compute_desired_size(vec2 available) -> vec2 {
   if (m_visibility == Visibility::Collapsed) {
     return cache_desired_size({});
   }
-  auto child_desired = CompoundWidget::compute_desired_size(available);
-  auto desired = child_desired;
+  auto desired = CompoundWidget::compute_desired_size(available);
+  auto padding = vec2 {};
+  if (m_child_slot.child) {
+    padding =
+        m_style.padding.combined() + m_child_slot.style.padding.combined();
+    if (m_child_slot.style.horizontal_rule == SizeRule::Fixed) {
+      desired.x = m_child_slot.style.size.x + padding.x;
+    }
+    if (m_child_slot.style.vertical_rule == SizeRule::Fixed) {
+      desired.y = m_child_slot.style.size.y + padding.y;
+    }
+  }
   if (m_desired_size.x > 0.0f) {
     desired.x = m_desired_size.x;
   }
   if (m_desired_size.y > 0.0f) {
     desired.y = m_desired_size.y;
   }
-  return cache_desired_size(desired);
+  return cache_desired_size(constrained_desired_size(desired, padding));
+}
+
+auto Box::arrange(const Rect& bounds) -> void {
+  m_frame = bounds;
+  if (not m_child_slot.child) {
+    return;
+  }
+
+  auto child_outer =
+      m_frame.padding(m_style.padding).padding(m_child_slot.style.padding);
+  auto desired = m_child_slot.child->desired_size();
+  if (m_child_slot.style.horizontal_rule == SizeRule::Fixed) {
+    desired.x = m_child_slot.style.size.x;
+  }
+  if (m_child_slot.style.vertical_rule == SizeRule::Fixed) {
+    desired.y = m_child_slot.style.size.y;
+  }
+  desired = constrained_desired_size(desired);
+
+  auto aligned =
+      align_within(child_outer, desired, content_alignment(Axis::Horizontal),
+                   content_alignment(Axis::Vertical));
+  m_child_slot.child->arrange(aligned);
+}
+
+auto Box::constrained_desired_size(vec2 desired, vec2 padding) const -> vec2 {
+  if (m_width_override) {
+    desired.x = *m_width_override + padding.x;
+  }
+  if (m_height_override) {
+    desired.y = *m_height_override + padding.y;
+  }
+  if (m_min_desired_width) {
+    desired.x = std::max(desired.x, *m_min_desired_width + padding.x);
+  }
+  if (m_min_desired_height) {
+    desired.y = std::max(desired.y, *m_min_desired_height + padding.y);
+  }
+  if (m_max_desired_width) {
+    desired.x = std::min(desired.x, *m_max_desired_width + padding.x);
+  }
+  if (m_max_desired_height) {
+    desired.y = std::min(desired.y, *m_max_desired_height + padding.y);
+  }
+  return desired;
+}
+
+auto Box::content_alignment(Axis axis) const -> Align {
+  if (axis == Axis::Horizontal) {
+    return m_content_halign.value_or(m_child_slot.style.horizontal_alignment);
+  }
+  return m_content_valign.value_or(m_child_slot.style.vertical_alignment);
 }
 
 auto Image::compute_desired_size(vec2 available) -> vec2 {
@@ -968,7 +1190,7 @@ auto Button::on_mouse_down(const Event& event) -> EventResponse {
 
   if (event.button == MouseButton::Left and m_hovered) {
     m_pressed = true;
-    return EventResponse::handled();
+    return EventResponse::handled().capture_mouse(MouseButton::Left);
   }
 
   return EventResponse::unhandled();
@@ -1120,7 +1342,8 @@ auto BoxContainer::arrange(const Rect& bounds) -> void {
 
     fixed_layout_size += layout_padding;
     if (layout_rule == SizeRule::Stretch) {
-      stretch_weight_sum += std::max(0.0f, slot.style.stretch_weight);
+      stretch_weight_sum +=
+          std::max(0.0f, axis_stretch_weight(slot.style, layout_axis));
     } else if (layout_rule == SizeRule::Fixed) {
       fixed_layout_size += slot.style.size[layout_axis];
     } else {
@@ -1167,7 +1390,8 @@ auto BoxContainer::arrange(const Rect& bounds) -> void {
     } else if (layout_rule == SizeRule::Stretch) {
       auto weight = 1.0f / std::max(1ul, visible);
       if (stretch_weight_sum > 0.0f) {
-        weight = std::max(0.0f, slot.style.stretch_weight) / stretch_weight_sum;
+        weight = std::max(0.0f, axis_stretch_weight(slot.style, layout_axis)) /
+                 stretch_weight_sum;
       }
       layout_size = remaining_layout_size * weight;
     } else {
