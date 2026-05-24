@@ -103,16 +103,6 @@ Editor::Editor()
 
   auto status_bar = create<Box>().background(light).name("StatusBar");
 
-  // TABS OLD
-  // auto tabs =
-  //     create<HorizontalBox>().gap(padding) +
-  //     slot()[create<VerticalBox>().gap(padding) +
-  //            slot()[create<HorizontalBox>().gap(padding) +
-  //                   slot().fixed_width(250)[create<Box>().background(light)]
-  //                   + slot()[create<Box>().background(light)]] +
-  //            slot().fixed_height(250)[create<Box>().background(light)]] +
-  //     slot().fixed_width(320)[create<Box>().background(light)];
-
   struct Split : BoxContainer {
     struct ResizeState {
       f32 split = 0.5f;
@@ -121,18 +111,48 @@ Editor::Editor()
       f32 start_split = 0.5f;
     };
 
-    Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s = 0.5f)
-        : BoxContainer(Axis::Horizontal), state({ s }) {
-      add_child(first_, slot().fill_width(state.split));
+    Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_,
+          Axis axis = Axis::Horizontal, f32 s = 0.5f)
+        : BoxContainer(axis), m_axis(axis), state({ s }) {
+      add_child(first_, split_slot(state.split));
       add_child(*create<Box>()
-                     .hit_test_margin(Padding { 8, 8, 0, 0 })
+                     .hit_test_margin(get_hit_test_margin())
                      .hit_test_priority(10)
-                     .cursor(cursor_shape_t::ResizeHorizontal)
+                     .cursor(cursor())
                      .on_mouse_down(this, &Split::on_mouse_down)
                      .on_mouse_move(this, &Split::on_mouse_move)
                      .on_mouse_up(this, &Split::on_mouse_up),
-                slot().fixed_width(padding));
-      add_child(second_, slot().fill_width(1.0f - state.split));
+                handle_slot());
+      add_child(second_, split_slot(1.0f - state.split));
+    }
+
+    Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s)
+        : Split(first_, second_, Axis::Horizontal, s) {}
+
+    auto split_slot(f32 weight) const -> SlotStyle {
+      if (m_axis == Axis::Horizontal) {
+        return slot().fill_width(weight);
+      }
+      return slot().fill_height(weight);
+    }
+
+    auto handle_slot() const -> SlotStyle {
+      if (m_axis == Axis::Horizontal) {
+        return slot().fixed_width(padding);
+      }
+      return slot().fixed_height(padding);
+    }
+
+    auto get_hit_test_margin() const -> Padding {
+      return m_axis == Axis::Horizontal ? Padding { 8, 8, 0, 0 }
+                                        : Padding { 0, 0, 8, 8 };
+    }
+
+    auto cursor() const -> cursor_shape_t {
+      if (m_axis == Axis::Horizontal) {
+        return cursor_shape_t::ResizeHorizontal;
+      }
+      return cursor_shape_t::ResizeVertical;
     }
 
     auto on_mouse_down(const Event& event) -> EventResponse {
@@ -150,12 +170,13 @@ Editor::Editor()
         return EventResponse::unhandled();
       }
 
-      auto width = std::max(1.0f, frame().size.x - padding);
-      auto delta = event.mouse.x - state.start_mouse.x;
+      auto resizable_size = std::max(1.0f, frame().size[m_axis] - padding);
+      auto delta = event.mouse[m_axis] - state.start_mouse[m_axis];
+      auto fac = state.start_split + delta / resizable_size;
 
-      state.split = glm::clamp(state.start_split + delta / width, 0.05f, 0.95f);
-      get_slot(0).style.horizontal_stretch_weight = state.split;
-      get_slot(2).style.horizontal_stretch_weight = 1.0f - state.split;
+      state.split = glm::clamp(fac, 0.05f, 0.95f);
+      set_split_weight(get_slot(0).style, state.split);
+      set_split_weight(get_slot(2).style, 1.0f - state.split);
       invalidate_layout();
 
       return EventResponse::handled();
@@ -169,11 +190,23 @@ Editor::Editor()
       return EventResponse::unhandled();
     }
 
+    auto set_split_weight(SlotStyle& style, f32 weight) const -> void {
+      if (m_axis == Axis::Horizontal) {
+        style.horizontal_stretch_weight = weight;
+      } else {
+        style.vertical_stretch_weight = weight;
+      }
+    }
+
+    Axis m_axis = Axis::Horizontal;
     ResizeState state = {};
   };
 
-  auto tabs = create<Split>(*create<Box>().background(light),
-                            *create<Box>().background(light));
+  auto tabs = create<Split>(
+      *create<Split>(*create<Split>(*create<Box>().background(light),
+                                    *create<Box>().background(light), 0.2f),
+                     *create<Box>().background(light), Axis::Vertical, 0.75f),
+      *create<Box>().background(light), 0.8f);
 
   auto window =
       create<VerticalBox>() +
