@@ -6,6 +6,7 @@
 namespace zod::sodium {
 
 auto init_gui() -> void;
+auto resize(vec2) -> void;
 auto submit(PaintCx&) -> void;
 auto submit(PaintCx&, SharedPtr<GPUTexture>) -> void;
 auto draw_images() -> void;

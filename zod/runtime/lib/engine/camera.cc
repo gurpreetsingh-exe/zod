@@ -19,7 +19,7 @@ auto OrthographicCamera::pan(vec2 delta) -> void {
   m_view = translate(m_view, vec3(delta.x, -delta.y, 0.0f) / get_zoom());
 }
 
-auto OrthographicCamera::update(Event& event) -> bool {
+auto OrthographicCamera::update(const Event& event) -> bool {
   vec2 delta = event.mouse - event.last_mouse;
   switch (m_mode) {
     case Navigation::Zoom: {
@@ -58,7 +58,7 @@ auto PerspectiveCamera::rotate(vec2 delta) -> void {
   m_direction = normalize(-m_position);
 }
 
-auto PerspectiveCamera::update(Event& event) -> bool {
+auto PerspectiveCamera::update(const Event& event) -> bool {
   vec2 delta = (event.mouse - event.last_mouse) * 0.28f;
   switch (m_mode) {
     case Navigation::Zoom: {

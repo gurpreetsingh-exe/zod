@@ -20,10 +20,6 @@
 namespace zod {
 
 Editor* g_editor;
-namespace sodium {
-extern mat4 projection;
-auto resize(vec2) -> void;
-} // namespace sodium
 
 static constexpr usize MAX_PATH = 256;
 static auto preferences = false;
@@ -119,9 +115,9 @@ Editor::Editor()
                      .hit_test_margin(get_hit_test_margin())
                      .hit_test_priority(10)
                      .cursor(cursor())
-                     .on_mouse_down(this, &Split::on_mouse_down)
-                     .on_mouse_move(this, &Split::on_mouse_move)
-                     .on_mouse_up(this, &Split::on_mouse_up),
+                     .on_mouse_down(this, &Split::begin_resize)
+                     .on_mouse_move(this, &Split::update_resize)
+                     .on_mouse_up(this, &Split::end_resize),
                 handle_slot());
       add_child(second_, split_slot(1.0f - state.split));
     }
@@ -155,7 +151,7 @@ Editor::Editor()
       return cursor_shape_t::ResizeVertical;
     }
 
-    auto on_mouse_down(const Event& event) -> EventResponse {
+    auto begin_resize(const Event& event) -> EventResponse {
       if (event.button != MouseButton::Left) {
         return EventResponse::unhandled();
       }
@@ -165,7 +161,7 @@ Editor::Editor()
       return EventResponse::handled().capture_mouse(MouseButton::Left);
     }
 
-    auto on_mouse_move(const Event& event) -> EventResponse {
+    auto update_resize(const Event& event) -> EventResponse {
       if (not state.resizing) {
         return EventResponse::unhandled();
       }
@@ -182,7 +178,7 @@ Editor::Editor()
       return EventResponse::handled();
     }
 
-    auto on_mouse_up(const Event& event) -> EventResponse {
+    auto end_resize(const Event& event) -> EventResponse {
       if (event.button == MouseButton::Left and state.resizing) {
         state.resizing = false;
         return EventResponse::handled();
@@ -202,9 +198,12 @@ Editor::Editor()
     ResizeState state = {};
   };
 
+  m_editor_viewport = *create<EditorViewport>(*m_renderer);
+  m_editor_viewport->set_name("Viewport");
+
   auto tabs = create<Split>(
       *create<Split>(*create<Split>(*create<Box>().background(light),
-                                    *create<Box>().background(light), 0.2f),
+                                    m_editor_viewport, 0.2f),
                      *create<Box>().background(light), Axis::Vertical, 0.75f),
       *create<Box>().background(light), 0.8f);
 
@@ -312,6 +311,8 @@ auto Editor::update() -> void {
       m_widget->arrange({ { 0, 0 }, size });
       m_widget->clear_layout_invalidated();
     }
+
+    m_editor_viewport->render();
 
     GPUState::get().set_blend(Blend::Alpha);
     m_widget->paint(cx);

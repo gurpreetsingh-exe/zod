@@ -59,7 +59,7 @@ public:
     return inverse(m_view_projection) * ndc;
   }
 
-  virtual auto update(Event&) -> bool = 0;
+  virtual auto update(const Event&) -> bool = 0;
 
 private:
   virtual auto update_model() -> void = 0;
@@ -91,7 +91,7 @@ public:
   ~OrthographicCamera() = default;
 
 public:
-  auto update(Event&) -> bool override;
+  auto update(const Event&) -> bool override;
   auto get_zoom() -> f32 { return m_zoom * 0.5f; }
 
 private:
@@ -131,7 +131,7 @@ public:
     return { m_clip_near, m_clip_far };
   }
 
-  auto update(Event&) -> bool override;
+  auto update(const Event&) -> bool override;
 
   auto set_fov(f32 fov) -> void {
     m_fov = fov;

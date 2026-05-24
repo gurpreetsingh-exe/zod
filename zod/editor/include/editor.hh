@@ -3,6 +3,7 @@
 #include "application/application.hh"
 #include "application/event.hh"
 #include "asset_manager.hh"
+#include "editor_viewport.hh"
 #include "engine/entity.hh"
 #include "engine/environment.hh"
 #include "engine/node_types.hh"
@@ -32,6 +33,7 @@ private:
 
 private:
   Renderer* m_renderer;
+  SharedPtr<EditorViewport> m_editor_viewport;
   SharedPtr<sodium::Widget> m_widget;
   // UniquePtr<ImGuiLayer> m_imgui_layer;
   SharedPtr<NodeTree> m_node_tree;
