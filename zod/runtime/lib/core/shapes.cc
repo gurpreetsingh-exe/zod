@@ -37,6 +37,10 @@ auto Rect::padding(vec2 p) const -> Rect {
 
 auto Rect::padding(f32 p) const -> Rect { return padding({ p, p }); }
 
+auto Rect::margin(Padding p) const -> Rect {
+  return { { position.x - p.left, position.y - p.top }, size + p.combined() };
+}
+
 auto Rect::margin(vec2 m) const -> Rect {
   return { position - m, size + m * 2.0f };
 }

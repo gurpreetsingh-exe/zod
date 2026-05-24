@@ -122,7 +122,12 @@ Editor::Editor()
     };
 
     Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s = 0.5f)
-        : split(s), splitter(create<Box>().build()),
+        : split(s),
+          splitter(create<Box>()
+                       .hit_test_margin(Padding { 8, 8, 0, 0 })
+                       .hit_test_priority(10)
+                       .cursor(cursor_shape_t::ResizeHorizontal)
+                       .build()),
           inner(create<HorizontalBox>() + slot().fill_width(split)[first_] +
                 slot().fixed_width(padding)[splitter] +
                 slot().fill_width(1.0f - split)[second_]),

@@ -26,6 +26,9 @@ Window::Window(const String& name) {
   if (not m_window) {
     eprintln("GLFW window creation failed");
   }
+  m_arrow_cursor = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+  m_hresize_cursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
+  m_vresize_cursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 
   glfwSetWindowSizeLimits(m_window, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
 #ifdef OPENGL_BACKEND
@@ -139,6 +142,19 @@ auto Window::get_size() -> vec2 {
 
 auto Window::set_vsync(bool vsync) -> void { glfwSwapInterval(vsync); }
 
+auto Window::set_cursor(cursor_shape_t shape) -> void {
+  switch (shape) {
+    case cursor_shape_t::Arrow:
+      glfwSetCursor(m_window, m_arrow_cursor);
+      break;
+    case cursor_shape_t::ResizeHorizontal:
+      glfwSetCursor(m_window, m_hresize_cursor);
+      break;
+    case cursor_shape_t::ResizeVertical:
+      glfwSetCursor(m_window, m_vresize_cursor);
+      break;
+  }
+}
 
 auto Window::drag_start() -> void {
   auto size = get_size();
@@ -148,6 +164,9 @@ auto Window::drag_start() -> void {
 }
 
 Window::~Window() {
+  glfwDestroyCursor(m_arrow_cursor);
+  glfwDestroyCursor(m_hresize_cursor);
+  glfwDestroyCursor(m_vresize_cursor);
   glfwDestroyWindow(m_window);
   glfwTerminate();
 }

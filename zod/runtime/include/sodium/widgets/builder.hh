@@ -57,6 +57,26 @@ public:
     return *this;
   }
 
+  auto hit_test_margin(Padding padding) -> WidgetBuilder& {
+    m_widget->set_hit_test_margin(padding);
+    return *this;
+  }
+
+  auto hit_test_layer(i32 layer) -> WidgetBuilder& {
+    m_widget->set_hit_test_layer(layer);
+    return *this;
+  }
+
+  auto hit_test_priority(i32 priority) -> WidgetBuilder& {
+    m_widget->set_hit_test_priority(priority);
+    return *this;
+  }
+
+  auto cursor(cursor_shape_t cursor) -> WidgetBuilder& {
+    m_widget->set_cursor(cursor);
+    return *this;
+  }
+
   auto width_override(f32 width) -> WidgetBuilder&
     requires std::is_base_of_v<Box, WidgetT>
   {

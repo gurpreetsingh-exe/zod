@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/shapes.hh"
+#include "sodium/cursor_reply.hh"
 #include "sodium/layout.hh"
 #include "sodium/metadata.hh"
 #include "sodium/paint.hh"
@@ -51,6 +52,23 @@ public:
     m_visibility = visibility;
   }
   auto set_min_size(vec2 size) -> void { m_min_size = size; }
+  auto set_hit_test_margin(Padding padding) -> void {
+    m_hit_test_margin = padding;
+  }
+  auto set_hit_test_layer(i32 layer) -> void { m_hit_test_layer = layer; }
+  auto set_hit_test_priority(i32 priority) -> void {
+    m_hit_test_priority = priority;
+  }
+  auto set_cursor(cursor_shape_t cursor) -> void {
+    m_has_cursor = true;
+    m_cursor = cursor;
+  }
+  auto clear_cursor() -> void { m_has_cursor = false; }
+  auto hit_test_layer() const -> i32 { return m_hit_test_layer; }
+  auto hit_test_priority() const -> i32 { return m_hit_test_priority; }
+  auto hit_test_bounds() const -> Rect {
+    return m_frame.margin(m_hit_test_margin);
+  }
 
   auto add_metadata(SharedPtr<IWidgetMetaData> metadata) -> void {
     m_metadata.push_back(std::move(metadata));
@@ -103,6 +121,7 @@ public:
   virtual auto on_mouse_enter(const Event&) -> void;
   virtual auto on_mouse_leave(const Event&) -> void;
   virtual auto on_drag_detected(const Event&) -> EventResponse;
+  virtual auto on_cursor_query(const Event&) const -> CursorReply;
   virtual auto on_key_down(const Event&) -> EventResponse {
     return EventResponse::unhandled();
   }
@@ -135,15 +154,20 @@ protected:
 
   auto apply_event_reply(const Event&, EventResponse) -> EventResponse;
   auto drag_detected_reply(const Event&) -> EventResponse;
-  auto find_path_at(vec2, WidgetPath&) -> bool;
   auto update_hover_path(const WidgetPath&, const Event&) -> void;
   auto route_pointer_event(const Event&, const WidgetPath&) -> EventResponse;
+  auto update_cursor(const Event&, const WidgetPath&) -> void;
   auto route_tree_event(const Event&) -> EventResponse;
   auto push_self_draws(PaintCx&) const -> void;
 
   String m_name;
   WidgetStyle m_style {};
   Rect m_frame {};
+  Padding m_hit_test_margin = {};
+  i32 m_hit_test_layer = 0;
+  i32 m_hit_test_priority = 0;
+  bool m_has_cursor = false;
+  cursor_shape_t m_cursor = cursor_shape_t::Arrow;
   mutable vec2 m_desired_size {};
   mutable vec2 m_min_size {};
   Visibility m_visibility = Visibility::Visible;

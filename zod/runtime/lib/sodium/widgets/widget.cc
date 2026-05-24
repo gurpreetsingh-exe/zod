@@ -1,4 +1,6 @@
 #include "sodium/widgets/widget.hh"
+#include "application/application.hh"
+#include "sodium/hit_test.hh"
 
 namespace zod::sodium {
 
@@ -31,41 +33,13 @@ auto Widget::event(const Event& event) -> EventResponse {
     return route_tree_event(event);
   }
 
-  auto path = WidgetPath {};
-  find_path_at(event.mouse, path);
+  auto hit_test = HitTestList {};
+  hit_test.build_from(*this);
+  auto path = hit_test.path_at(event.mouse);
   update_hover_path(path, event);
-  return route_pointer_event(event, path);
-}
-
-auto Widget::find_path_at(vec2 mouse, WidgetPath& path) -> bool {
-  if (m_visibility == Visibility::Hidden or
-      m_visibility == Visibility::Collapsed) {
-    return false;
-  }
-
-  if (not m_frame.intersect(mouse)) {
-    return false;
-  }
-
-  auto start = path.size();
-  auto self_hit_testable = m_visibility != Visibility::SelfHitTestInvisible;
-  if (self_hit_testable) {
-    path.push(this);
-  }
-
-  auto children = get_children();
-  for (auto it = children.rbegin(); it != children.rend(); ++it) {
-    if (*it and (*it)->find_path_at(mouse, path)) {
-      return true;
-    }
-  }
-
-  if (self_hit_testable) {
-    return true;
-  }
-
-  path.resize(start);
-  return false;
+  auto reply = route_pointer_event(event, path);
+  update_cursor(event, path);
+  return reply;
 }
 
 auto Widget::update_hover_path(const WidgetPath& path, const Event& event)
@@ -147,6 +121,27 @@ auto Widget::route_pointer_event(const Event& event, const WidgetPath& path)
     return EventResponse::handled();
   }
   return path.empty() ? EventResponse::unhandled() : EventResponse::handled();
+}
+
+auto Widget::update_cursor(const Event& event, const WidgetPath& path) -> void {
+  auto shape = cursor_shape_t::Arrow;
+  if (m_mouse_captor) {
+    auto reply = m_mouse_captor->on_cursor_query(event);
+    if (reply) {
+      Application::get().active_window().set_cursor(reply.shape());
+      return;
+    }
+  }
+
+  for (auto i = path.size(); i > 0; --i) {
+    auto reply = path[i - 1]->on_cursor_query(event);
+    if (reply) {
+      shape = reply.shape();
+      break;
+    }
+  }
+
+  Application::get().active_window().set_cursor(shape);
 }
 
 auto Widget::route_tree_event(const Event& event) -> EventResponse {
@@ -294,6 +289,13 @@ auto Widget::on_drag_detected(const Event& event) -> EventResponse {
     }
   }
   return EventResponse::unhandled();
+}
+
+auto Widget::on_cursor_query(const Event&) const -> CursorReply {
+  if (m_has_cursor) {
+    return CursorReply::cursor(m_cursor);
+  }
+  return CursorReply::unhandled();
 }
 
 auto Widget::push_self_draws(PaintCx& cx) const -> void {

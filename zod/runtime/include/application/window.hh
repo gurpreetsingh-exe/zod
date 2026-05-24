@@ -32,11 +32,15 @@ public:
   auto set_window_position(vec2) -> void;
   auto get_size() -> vec2;
   auto set_vsync(bool) -> void;
+  auto set_cursor(cursor_shape_t) -> void;
   auto get_native_handle() -> void* { return m_window; }
   auto drag_start() -> void;
 
 private:
   GLFWwindow* m_window;
+  GLFWcursor* m_arrow_cursor = nullptr;
+  GLFWcursor* m_hresize_cursor = nullptr;
+  GLFWcursor* m_vresize_cursor = nullptr;
   SharedPtr<GPUContext> m_gcx;
   EventCallbackFn m_event_callback;
   vec<2, i32> m_size;

@@ -49,6 +49,7 @@ struct Rect {
   auto padding(vec2 /* padding */) const -> Rect;
   auto padding(f32 /* padding */) const -> Rect;
 
+  auto margin(Padding /* margin */) const -> Rect;
   auto margin(vec2 /* margin */) const -> Rect;
   auto margin(f32 /* margin */) const -> Rect;
 
