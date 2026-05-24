@@ -152,161 +152,36 @@ public:
     return *this;
   }
 
-  auto on_mouse_down(EventHandler callback) -> WidgetBuilder& {
-    m_widget->set_on_mouse_down(callback);
-    return *this;
+#define SODIUM_BUILDER_EVENT(Name)                                             \
+  WidgetBuilder& Name(EventHandler callback) {                                 \
+    m_widget->set_##Name(callback);                                            \
+    return *this;                                                              \
+  }                                                                            \
+  template <class Fn>                                                          \
+  WidgetBuilder& Name(Fn&& callback) {                                         \
+    return Name(EventHandler(std::forward<Fn>(callback)));                     \
+  }                                                                            \
+  template <class ObjectT>                                                     \
+  WidgetBuilder& Name(ObjectT* object,                                         \
+                      EventResponse (ObjectT::*method)(const Event&)) {        \
+    m_widget->set_##Name(object, method);                                      \
+    return *this;                                                              \
+  }                                                                            \
+  template <class ObjectT>                                                     \
+  WidgetBuilder& Name(const ObjectT* object,                                   \
+                      EventResponse (ObjectT::*method)(const Event&) const) {  \
+    m_widget->set_##Name(object, method);                                      \
+    return *this;                                                              \
   }
 
-  template <class Fn>
-  auto on_mouse_down(Fn callback) -> WidgetBuilder& {
-    return on_mouse_down(EventHandler(callback));
-  }
+  SODIUM_BUILDER_EVENT(on_mouse_down)
+  SODIUM_BUILDER_EVENT(on_mouse_up)
+  SODIUM_BUILDER_EVENT(on_mouse_move)
+  SODIUM_BUILDER_EVENT(on_mouse_enter)
+  SODIUM_BUILDER_EVENT(on_mouse_leave)
+  SODIUM_BUILDER_EVENT(on_drag_detected)
 
-  template <class ObjectT>
-  auto on_mouse_down(ObjectT* object,
-                     EventResponse (ObjectT::*method)(const Event&))
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_down(object, method);
-    return *this;
-  }
-
-  template <class ObjectT>
-  auto on_mouse_down(const ObjectT* object,
-                     EventResponse (ObjectT::*method)(const Event&) const)
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_down(object, method);
-    return *this;
-  }
-
-  auto on_mouse_up(EventHandler callback) -> WidgetBuilder& {
-    m_widget->set_on_mouse_up(callback);
-    return *this;
-  }
-
-  template <class Fn>
-  auto on_mouse_up(Fn&& callback) -> WidgetBuilder& {
-    return on_mouse_up(EventHandler(std::forward<Fn>(callback)));
-  }
-
-  template <class ObjectT>
-  auto on_mouse_up(ObjectT* object,
-                   EventResponse (ObjectT::*method)(const Event&))
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_up(object, method);
-    return *this;
-  }
-
-  template <class ObjectT>
-  auto on_mouse_up(const ObjectT* object,
-                   EventResponse (ObjectT::*method)(const Event&) const)
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_up(object, method);
-    return *this;
-  }
-
-  auto on_mouse_move(EventHandler callback) -> WidgetBuilder& {
-    m_widget->set_on_mouse_move(callback);
-    return *this;
-  }
-
-  template <class Fn>
-  auto on_mouse_move(Fn&& callback) -> WidgetBuilder& {
-    return on_mouse_move(EventHandler(std::forward<Fn>(callback)));
-  }
-
-  template <class ObjectT>
-  auto on_mouse_move(ObjectT* object,
-                     EventResponse (ObjectT::*method)(const Event&))
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_move(object, method);
-    return *this;
-  }
-
-  template <class ObjectT>
-  auto on_mouse_move(const ObjectT* object,
-                     EventResponse (ObjectT::*method)(const Event&) const)
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_move(object, method);
-    return *this;
-  }
-
-  auto on_mouse_enter(EventHandler callback) -> WidgetBuilder& {
-    m_widget->set_on_mouse_enter(callback);
-    return *this;
-  }
-
-  template <class Fn>
-  auto on_mouse_enter(Fn&& callback) -> WidgetBuilder& {
-    return on_mouse_enter(EventHandler(std::forward<Fn>(callback)));
-  }
-
-  template <class ObjectT>
-  auto on_mouse_enter(ObjectT* object,
-                      EventResponse (ObjectT::*method)(const Event&))
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_enter(object, method);
-    return *this;
-  }
-
-  template <class ObjectT>
-  auto on_mouse_enter(const ObjectT* object,
-                      EventResponse (ObjectT::*method)(const Event&) const)
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_enter(object, method);
-    return *this;
-  }
-
-  auto on_mouse_leave(EventHandler callback) -> WidgetBuilder& {
-    m_widget->set_on_mouse_leave(callback);
-    return *this;
-  }
-
-  template <class Fn>
-  auto on_mouse_leave(Fn&& callback) -> WidgetBuilder& {
-    return on_mouse_leave(EventHandler(std::forward<Fn>(callback)));
-  }
-
-  template <class ObjectT>
-  auto on_mouse_leave(ObjectT* object,
-                      EventResponse (ObjectT::*method)(const Event&))
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_leave(object, method);
-    return *this;
-  }
-
-  template <class ObjectT>
-  auto on_mouse_leave(const ObjectT* object,
-                      EventResponse (ObjectT::*method)(const Event&) const)
-      -> WidgetBuilder& {
-    m_widget->set_on_mouse_leave(object, method);
-    return *this;
-  }
-
-  auto on_drag_detected(EventHandler callback) -> WidgetBuilder& {
-    m_widget->set_on_drag_detected(callback);
-    return *this;
-  }
-
-  template <class Fn>
-  auto on_drag_detected(Fn&& callback) -> WidgetBuilder& {
-    return on_drag_detected(EventHandler(std::forward<Fn>(callback)));
-  }
-
-  template <class ObjectT>
-  auto on_drag_detected(ObjectT* object,
-                        EventResponse (ObjectT::*method)(const Event&))
-      -> WidgetBuilder& {
-    m_widget->set_on_drag_detected(object, method);
-    return *this;
-  }
-
-  template <class ObjectT>
-  auto on_drag_detected(const ObjectT* object,
-                        EventResponse (ObjectT::*method)(const Event&) const)
-      -> WidgetBuilder& {
-    m_widget->set_on_drag_detected(object, method);
-    return *this;
-  }
+#undef SODIUM_BUILDER_EVENT
 
   auto is_focusable(bool focusable) -> WidgetBuilder&
     requires std::is_base_of_v<Button, WidgetT>
@@ -343,32 +218,33 @@ public:
     return *this;
   }
 
-  auto on_clicked(EventHandler callback) -> WidgetBuilder&
-    requires std::is_base_of_v<Button, WidgetT>
-  {
-    m_widget->set_on_clicked(callback);
-    return *this;
+#define SODIUM_BUILDER_BUTTON_EVENT(Name)                                      \
+  WidgetBuilder& Name(EventHandler callback)                                   \
+    requires std::is_base_of_v<Button, WidgetT>                                \
+  {                                                                            \
+    m_widget->set_##Name(callback);                                            \
+    return *this;                                                              \
+  }                                                                            \
+  template <class ObjectT>                                                     \
+  WidgetBuilder& Name(ObjectT* object,                                         \
+                      EventResponse (ObjectT::*method)(const Event&))          \
+    requires std::is_base_of_v<Button, WidgetT>                                \
+  {                                                                            \
+    m_widget->set_##Name(object, method);                                      \
+    return *this;                                                              \
+  }                                                                            \
+  template <class ObjectT>                                                     \
+  WidgetBuilder& Name(const ObjectT* object,                                   \
+                      EventResponse (ObjectT::*method)(const Event&) const)    \
+    requires std::is_base_of_v<Button, WidgetT>                                \
+  {                                                                            \
+    m_widget->set_##Name(object, method);                                      \
+    return *this;                                                              \
   }
 
-  template <class ObjectT>
-  auto on_clicked(ObjectT* object,
-                  EventResponse (ObjectT::*method)(const Event&))
-      -> WidgetBuilder&
-    requires std::is_base_of_v<Button, WidgetT>
-  {
-    m_widget->set_on_clicked(object, method);
-    return *this;
-  }
+  SODIUM_BUILDER_BUTTON_EVENT(on_clicked)
 
-  template <class ObjectT>
-  auto on_clicked(const ObjectT* object,
-                  EventResponse (ObjectT::*method)(const Event&) const)
-      -> WidgetBuilder&
-    requires std::is_base_of_v<Button, WidgetT>
-  {
-    m_widget->set_on_clicked(object, method);
-    return *this;
-  }
+#undef SODIUM_BUILDER_BUTTON_EVENT
 
   auto slot(SharedPtr<Widget> child, const SlotStyle& style = {})
       -> WidgetBuilder&

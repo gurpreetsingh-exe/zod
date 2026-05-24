@@ -17,16 +17,23 @@ public:
   auto set_focusable(bool focusable) -> void { m_focusable = focusable; }
   auto set_enabled(bool enabled) -> void { m_enabled = enabled; }
   auto set_button_style(Style style) -> void { m_button_style = style; }
-  auto set_on_clicked(EventHandler callback) -> void {
-    m_on_clicked = callback;
+
+#define SODIUM_BUTTON_EVENT_SETTER(Name, Field)                                \
+  void set_##Name(EventHandler callback) { Field = callback; }                 \
+  template <class ObjectT>                                                     \
+  void set_##Name(ObjectT* object,                                             \
+                  EventResponse (ObjectT::*method)(const Event&)) {            \
+    Field = EventHandler(object, method);                                      \
+  }                                                                            \
+  template <class ObjectT>                                                     \
+  void set_##Name(const ObjectT* object,                                       \
+                  EventResponse (ObjectT::*method)(const Event&) const) {      \
+    Field = EventHandler(object, method);                                      \
   }
 
-  template <class ObjectT>
-  auto set_on_clicked(const ObjectT* object,
-                      EventResponse (ObjectT::*method)(const Event&) const)
-      -> void {
-    m_on_clicked = EventHandler(object, method);
-  }
+  SODIUM_BUTTON_EVENT_SETTER(on_clicked, m_on_clicked)
+
+#undef SODIUM_BUTTON_EVENT_SETTER
 
   auto set_content_padding(Padding padding) -> void {
     m_style.padding = padding;

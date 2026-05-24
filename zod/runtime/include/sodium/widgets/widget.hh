@@ -95,95 +95,29 @@ public:
     return metadata;
   }
 
-  auto set_on_mouse_down(EventHandler callback) -> void {
-    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_down = callback;
+#define SODIUM_WIDGET_EVENT_SETTER(Name, Field)                                \
+  void set_##Name(EventHandler callback) {                                     \
+    find_or_add_metadata<WidgetMouseEventsMetaData>()->Field = callback;       \
+  }                                                                            \
+  template <class ObjectT>                                                     \
+  void set_##Name(ObjectT* object,                                             \
+                  EventResponse (ObjectT::*method)(const Event&)) {            \
+    set_##Name(EventHandler(object, method));                                  \
+  }                                                                            \
+  template <class ObjectT>                                                     \
+  void set_##Name(const ObjectT* object,                                       \
+                  EventResponse (ObjectT::*method)(const Event&) const) {      \
+    set_##Name(EventHandler(object, method));                                  \
   }
-  template <class ObjectT>
-  auto set_on_mouse_down(ObjectT* object,
-                         EventResponse (ObjectT::*method)(const Event&))
-      -> void {
-    set_on_mouse_down(EventHandler(object, method));
-  }
-  template <class ObjectT>
-  auto set_on_mouse_down(const ObjectT* object,
-                         EventResponse (ObjectT::*method)(const Event&) const)
-      -> void {
-    set_on_mouse_down(EventHandler(object, method));
-  }
-  auto set_on_mouse_up(EventHandler callback) -> void {
-    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_up = callback;
-  }
-  template <class ObjectT>
-  auto set_on_mouse_up(ObjectT* object,
-                       EventResponse (ObjectT::*method)(const Event&)) -> void {
-    set_on_mouse_up(EventHandler(object, method));
-  }
-  template <class ObjectT>
-  auto set_on_mouse_up(const ObjectT* object,
-                       EventResponse (ObjectT::*method)(const Event&) const)
-      -> void {
-    set_on_mouse_up(EventHandler(object, method));
-  }
-  auto set_on_mouse_move(EventHandler callback) -> void {
-    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_move = callback;
-  }
-  template <class ObjectT>
-  auto set_on_mouse_move(ObjectT* object,
-                         EventResponse (ObjectT::*method)(const Event&))
-      -> void {
-    set_on_mouse_move(EventHandler(object, method));
-  }
-  template <class ObjectT>
-  auto set_on_mouse_move(const ObjectT* object,
-                         EventResponse (ObjectT::*method)(const Event&) const)
-      -> void {
-    set_on_mouse_move(EventHandler(object, method));
-  }
-  auto set_on_mouse_enter(EventHandler callback) -> void {
-    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_enter = callback;
-  }
-  template <class ObjectT>
-  auto set_on_mouse_enter(ObjectT* object,
-                          EventResponse (ObjectT::*method)(const Event&))
-      -> void {
-    set_on_mouse_enter(EventHandler(object, method));
-  }
-  template <class ObjectT>
-  auto set_on_mouse_enter(const ObjectT* object,
-                          EventResponse (ObjectT::*method)(const Event&) const)
-      -> void {
-    set_on_mouse_enter(EventHandler(object, method));
-  }
-  auto set_on_mouse_leave(EventHandler callback) -> void {
-    find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_leave = callback;
-  }
-  template <class ObjectT>
-  auto set_on_mouse_leave(ObjectT* object,
-                          EventResponse (ObjectT::*method)(const Event&))
-      -> void {
-    set_on_mouse_leave(EventHandler(object, method));
-  }
-  template <class ObjectT>
-  auto set_on_mouse_leave(const ObjectT* object,
-                          EventResponse (ObjectT::*method)(const Event&) const)
-      -> void {
-    set_on_mouse_leave(EventHandler(object, method));
-  }
-  auto set_on_drag_detected(EventHandler callback) -> void {
-    find_or_add_metadata<WidgetMouseEventsMetaData>()->drag_detected = callback;
-  }
-  template <class ObjectT>
-  auto set_on_drag_detected(ObjectT* object,
-                            EventResponse (ObjectT::*method)(const Event&))
-      -> void {
-    set_on_drag_detected(EventHandler(object, method));
-  }
-  template <class ObjectT>
-  auto set_on_drag_detected(const ObjectT* object,
-                            EventResponse (ObjectT::*method)(const Event&)
-                                const) -> void {
-    set_on_drag_detected(EventHandler(object, method));
-  }
+
+  SODIUM_WIDGET_EVENT_SETTER(on_mouse_down, mouse_down)
+  SODIUM_WIDGET_EVENT_SETTER(on_mouse_up, mouse_up)
+  SODIUM_WIDGET_EVENT_SETTER(on_mouse_move, mouse_move)
+  SODIUM_WIDGET_EVENT_SETTER(on_mouse_enter, mouse_enter)
+  SODIUM_WIDGET_EVENT_SETTER(on_mouse_leave, mouse_leave)
+  SODIUM_WIDGET_EVENT_SETTER(on_drag_detected, drag_detected)
+
+#undef SODIUM_WIDGET_EVENT_SETTER
 
   virtual auto event(const Event&) -> EventResponse;
   virtual auto on_mouse_down(const Event&) -> EventResponse;
