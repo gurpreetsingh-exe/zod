@@ -1,22 +1,21 @@
 #include "editor.hh"
 #include "core/platform/macros.hh"
 
-#include "application/platform.hh"
-#include "content_browser.hh"
-#include "engine/components.hh"
 #include "engine/project.hh"
 #include "gpu/timer.hh"
-#include "loaders.hh"
-#include "outliner.hh"
-#include "properties.hh"
 #include "sodium/theme.hh"
-#include "viewport.hh"
-
-#include "application/input.hh"
 
 #include "core/option.hh"
 
+#include "sodium/font.hh"
 #include "sodium/gui.hh"
+#include "sodium/icon.hh"
+#include "sodium/style.hh"
+
+#include "sodium/widgets/box_container.hh"
+#include "sodium/widgets/builder.hh"
+#include "sodium/widgets/button.hh"
+#include "sodium/widgets/menu.hh"
 
 namespace zod {
 
@@ -122,13 +121,11 @@ Editor::Editor()
       f32 split = 0.5f;
     };
 
-    Split(f32 s = 0.5f)
+    Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s = 0.5f)
         : split(s), splitter(create<Box>().build()),
-          inner(
-              create<HorizontalBox>() +
-              slot().fill_width(split)[create<Box>().background(light)] +
-              slot().fixed_width(4)[splitter] +
-              slot().fill_width(1.0f - split)[create<Box>().background(light)]),
+          inner(create<HorizontalBox>() + slot().fill_width(split)[first_] +
+                slot().fixed_width(padding)[splitter] +
+                slot().fill_width(1.0f - split)[second_]),
           first(inner->get_slot(0)), second(inner->get_slot(2)) {
       auto state = shared<ResizeState>();
       state->split = split;
@@ -182,7 +179,9 @@ Editor::Editor()
     Container::Slot& second;
   };
 
-  auto tabs = Split().inner;
+  auto tabs = Split(create<Box>().background(light).build(),
+                    create<Box>().background(light).build())
+                  .inner;
 
   auto window =
       create<VerticalBox>() +

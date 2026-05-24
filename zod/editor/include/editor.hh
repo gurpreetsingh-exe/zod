@@ -7,10 +7,8 @@
 #include "engine/environment.hh"
 #include "engine/node_types.hh"
 #include "engine/renderer.hh"
-// #include "imgui_layer.hh"
-// #include "sodium/widgets/layout.hh"
 
-#include "sodium/gui.hh"
+#include "sodium/widgets/widget.hh"
 
 namespace zod {
 

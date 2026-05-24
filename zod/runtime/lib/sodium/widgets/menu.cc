@@ -1,32 +1,47 @@
-// #include "widgets/menu.hh"
+#include "sodium/widgets/menu.hh"
+#include "sodium/font.hh"
+#include "sodium/style.hh"
 
-namespace zod {
+namespace zod::sodium {
 
-// auto SMenu::on_event(Event&) -> void {}
-//
-// auto SMenu::draw_imp(Geometry& g) -> void {
-//   // auto rect = Rect(m_position, m_size, { 0.1f, 0.1f, 0.1f, 1.0f });
-//   auto rect =
-//       Rect(m_position - 1.0f, m_size + 2.0f, { 0.2f, 0.2f, 0.2f, 1.0f });
-//   rect.draw(g);
-//   for (auto& child : m_children) { child->draw(g); }
-// }
-//
-// auto SMenu::compute_desired_size() -> void {
-//   m_size = {};
-//   for (usize i = 0; i < m_children.size(); ++i) {
-//     auto child = m_children[i];
-//     child->compute_desired_size();
-//     auto size = child->get_size();
-//     auto location = vec2(m_position.x, m_position.y + i * size.y);
-//     m_size.x = std::max(m_size.x, size.x);
-//     m_size.y += size.y;
-//     child->set_position(location);
-//   }
-//
-//   for (auto& child : m_children) {
-//     child->set_size(vec2(m_size.x, m_size.y / m_children.size()));
-//   }
-// }
+auto Menu::compute_desired_size(vec2 available) -> vec2 {
+  auto width = Font::get().width(m_name, FontSizeInMenu);
+  auto desired =
+      max(vec2(width, FontSizeInMenu) + m_style.padding.combined(), m_min_size);
+  set_desired_size(desired);
+  if (m_open) {
+    auto desired_size = vec2();
+    for (auto button : m_buttons) {
+      desired_size = max(button->compute_desired_size(available), desired_size);
+    }
+  }
 
-} // namespace zod
+  return desired;
+}
+
+auto Menu::paint(PaintCx& cx) const -> void {
+  if (m_visibility == Visibility::Hidden or
+      m_visibility == Visibility::Collapsed) {
+    return;
+  }
+  rect(m_frame, m_style.background).paint(cx);
+  auto w = Font::get().width(m_name, FontSizeInMenu);
+  auto center = m_frame.position + m_frame.size * 0.5f;
+  Font::get().render_text_center(m_name.c_str(), center.x - w * 0.5, center.y,
+                                 FontSizeInMenu);
+}
+
+auto Menu::arrange(const Rect& bounds) -> void { m_frame = bounds; }
+
+auto Menu::get_children() const -> WidgetChildren {
+  auto children = WidgetChildren {};
+  children.reserve(m_buttons.size());
+  for (const auto& button : m_buttons) {
+    if (button) {
+      children.push_back(button);
+    }
+  }
+  return children;
+}
+
+} // namespace zod::sodium

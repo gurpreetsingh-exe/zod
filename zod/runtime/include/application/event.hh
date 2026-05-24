@@ -176,30 +176,21 @@ struct Event {
     return kind == MouseDown and b == button;
   }
 
-  const char* name() {
-    switch (kind) {
-      case MouseMove:
-        return "MouseMove";
-      case MouseDown:
-        return "MouseDown";
-      case MouseUp:
-        return "MouseUp";
-      case KeyDown:
-        return "KeyDown";
-      case KeyUp:
-        return "KeyUp";
-      case KeyRepeat:
-        return "KeyRepeat";
-      case WindowResize:
-        return "WindowResize";
-      case WindowClose:
-        return "WindowClose";
-      case None:
-        return "None";
-      default:
-        UNREACHABLE();
-    }
-  }
+  auto name() -> const char*;
+};
+
+struct EventResponse {
+  bool is_handled = false;
+  bool wants_drag_detection = false;
+  bool wants_mouse_capture = false;
+  MouseButton drag_button = MouseButton::None;
+  MouseButton capture_button = MouseButton::None;
+
+  static auto handled() -> EventResponse { return { .is_handled = true }; }
+  static auto unhandled() -> EventResponse { return {}; }
+  explicit operator bool() const { return is_handled; }
+  auto detect_drag(MouseButton) -> EventResponse;
+  auto capture_mouse(MouseButton) -> EventResponse;
 };
 
 }; // namespace zod

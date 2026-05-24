@@ -1,5 +1,6 @@
 #include "application/application.hh"
 #include "sodium/gui.hh"
+#include "sodium/font.hh"
 
 namespace zod {
 

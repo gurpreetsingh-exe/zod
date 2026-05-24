@@ -1,24 +1,21 @@
 #pragma once
 
-namespace zod {
+#include "sodium/widgets/widget.hh"
 
-// class SMenu : public widget {
-// public:
-//   SMenu(String n) : widget(std::move(n)) {}
-//
-// public:
-//   auto on_event(Event&) -> void override;
-//   auto draw_imp(Geometry&) -> void override;
-//
-// public:
-//   auto compute_desired_size() -> void override;
-//   auto add_button(String name) -> void {
-//     auto button = shared<button>(name);
-//     m_children.push_back(button);
-//   }
-//
-// private:
-//   Vector<SharedPtr<widget>> m_children = {};
-// };
+namespace zod::sodium {
 
-} // namespace zod
+class Menu : public Widget {
+public:
+  Menu() = default;
+
+  auto compute_desired_size(vec2) -> vec2 override;
+  auto paint(PaintCx&) const -> void override;
+  auto arrange(const Rect&) -> void override;
+  auto get_children() const -> WidgetChildren override;
+
+private:
+  bool m_open = false;
+  Vector<SharedPtr<Widget>> m_buttons;
+};
+
+} // namespace zod::sodium
