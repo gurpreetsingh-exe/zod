@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sodium/widgets/compound_widget.hh"
 #include "sodium/icon.hh"
+#include "sodium/widgets/compound_widget.hh"
 
 namespace zod::sodium {
 
@@ -22,12 +22,10 @@ public:
   }
 
   template <class ObjectT>
-  auto set_on_clicked(ObjectT* object,
-                      EventResponse (ObjectT::*method)(const Event&)) -> void {
-    m_on_clicked =
-        EventHandler([object, method](const Event& event) -> EventResponse {
-          return (object->*method)(event);
-        });
+  auto set_on_clicked(const ObjectT* object,
+                      EventResponse (ObjectT::*method)(const Event&) const)
+      -> void {
+    m_on_clicked = EventHandler(object, method);
   }
 
   auto set_content_padding(Padding padding) -> void {

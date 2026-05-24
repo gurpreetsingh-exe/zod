@@ -98,20 +98,91 @@ public:
   auto set_on_mouse_down(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_down = callback;
   }
+  template <class ObjectT>
+  auto set_on_mouse_down(ObjectT* object,
+                         EventResponse (ObjectT::*method)(const Event&))
+      -> void {
+    set_on_mouse_down(EventHandler(object, method));
+  }
+  template <class ObjectT>
+  auto set_on_mouse_down(const ObjectT* object,
+                         EventResponse (ObjectT::*method)(const Event&) const)
+      -> void {
+    set_on_mouse_down(EventHandler(object, method));
+  }
   auto set_on_mouse_up(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_up = callback;
+  }
+  template <class ObjectT>
+  auto set_on_mouse_up(ObjectT* object,
+                       EventResponse (ObjectT::*method)(const Event&)) -> void {
+    set_on_mouse_up(EventHandler(object, method));
+  }
+  template <class ObjectT>
+  auto set_on_mouse_up(const ObjectT* object,
+                       EventResponse (ObjectT::*method)(const Event&) const)
+      -> void {
+    set_on_mouse_up(EventHandler(object, method));
   }
   auto set_on_mouse_move(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_move = callback;
   }
+  template <class ObjectT>
+  auto set_on_mouse_move(ObjectT* object,
+                         EventResponse (ObjectT::*method)(const Event&))
+      -> void {
+    set_on_mouse_move(EventHandler(object, method));
+  }
+  template <class ObjectT>
+  auto set_on_mouse_move(const ObjectT* object,
+                         EventResponse (ObjectT::*method)(const Event&) const)
+      -> void {
+    set_on_mouse_move(EventHandler(object, method));
+  }
   auto set_on_mouse_enter(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_enter = callback;
+  }
+  template <class ObjectT>
+  auto set_on_mouse_enter(ObjectT* object,
+                          EventResponse (ObjectT::*method)(const Event&))
+      -> void {
+    set_on_mouse_enter(EventHandler(object, method));
+  }
+  template <class ObjectT>
+  auto set_on_mouse_enter(const ObjectT* object,
+                          EventResponse (ObjectT::*method)(const Event&) const)
+      -> void {
+    set_on_mouse_enter(EventHandler(object, method));
   }
   auto set_on_mouse_leave(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->mouse_leave = callback;
   }
+  template <class ObjectT>
+  auto set_on_mouse_leave(ObjectT* object,
+                          EventResponse (ObjectT::*method)(const Event&))
+      -> void {
+    set_on_mouse_leave(EventHandler(object, method));
+  }
+  template <class ObjectT>
+  auto set_on_mouse_leave(const ObjectT* object,
+                          EventResponse (ObjectT::*method)(const Event&) const)
+      -> void {
+    set_on_mouse_leave(EventHandler(object, method));
+  }
   auto set_on_drag_detected(EventHandler callback) -> void {
     find_or_add_metadata<WidgetMouseEventsMetaData>()->drag_detected = callback;
+  }
+  template <class ObjectT>
+  auto set_on_drag_detected(ObjectT* object,
+                            EventResponse (ObjectT::*method)(const Event&))
+      -> void {
+    set_on_drag_detected(EventHandler(object, method));
+  }
+  template <class ObjectT>
+  auto set_on_drag_detected(const ObjectT* object,
+                            EventResponse (ObjectT::*method)(const Event&)
+                                const) -> void {
+    set_on_drag_detected(EventHandler(object, method));
   }
 
   virtual auto event(const Event&) -> EventResponse;

@@ -113,80 +113,67 @@ Editor::Editor()
   //            slot().fixed_height(250)[create<Box>().background(light)]] +
   //     slot().fixed_width(320)[create<Box>().background(light)];
 
-  struct Split {
+  struct Split : BoxContainer {
     struct ResizeState {
+      f32 split = 0.5f;
       bool resizing = false;
       vec2 start_mouse = {};
       f32 start_split = 0.5f;
-      f32 split = 0.5f;
     };
 
     Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s = 0.5f)
-        : split(s),
-          splitter(create<Box>()
-                       .hit_test_margin(Padding { 8, 8, 0, 0 })
-                       .hit_test_priority(10)
-                       .cursor(cursor_shape_t::ResizeHorizontal)
-                       .build()),
-          inner(create<HorizontalBox>() + slot().fill_width(split)[first_] +
-                slot().fixed_width(padding)[splitter] +
-                slot().fill_width(1.0f - split)[second_]),
-          first(inner->get_slot(0)), second(inner->get_slot(2)) {
-      auto state = shared<ResizeState>();
-      state->split = split;
-      auto inner_box = inner.get();
-      auto first_slot = &first;
-      auto second_slot = &second;
-
-      auto apply_split = [state, inner_box, first_slot,
-                          second_slot](f32 value) {
-        state->split = glm::clamp(value, 0.05f, 0.95f);
-        first_slot->style.horizontal_stretch_weight = state->split;
-        second_slot->style.horizontal_stretch_weight = 1.0f - state->split;
-        inner_box->invalidate_layout();
-      };
-
-      splitter->set_on_mouse_down([state](const Event& event) {
-        if (event.button != MouseButton::Left) {
-          return EventResponse::unhandled();
-        }
-        state->resizing = true;
-        state->start_mouse = event.mouse;
-        state->start_split = state->split;
-        return EventResponse::handled().capture_mouse(MouseButton::Left);
-      });
-
-      splitter->set_on_mouse_move(
-          [state, inner_box, apply_split](const Event& event) {
-            if (not state->resizing) {
-              return EventResponse::unhandled();
-            }
-
-            auto width = std::max(1.0f, inner_box->frame().size.x);
-            auto delta = event.mouse.x - state->start_mouse.x;
-            apply_split(state->start_split + delta / width);
-            return EventResponse::handled();
-          });
-
-      splitter->set_on_mouse_up([state](const Event& event) {
-        if (event.button == MouseButton::Left and state->resizing) {
-          state->resizing = false;
-          return EventResponse::handled();
-        }
-        return EventResponse::unhandled();
-      });
+        : BoxContainer(Axis::Horizontal), state({ s }) {
+      add_child(first_, slot().fill_width(state.split));
+      add_child(*create<Box>()
+                     .hit_test_margin(Padding { 8, 8, 0, 0 })
+                     .hit_test_priority(10)
+                     .cursor(cursor_shape_t::ResizeHorizontal)
+                     .on_mouse_down(this, &Split::on_mouse_down)
+                     .on_mouse_move(this, &Split::on_mouse_move)
+                     .on_mouse_up(this, &Split::on_mouse_up),
+                slot().fixed_width(padding));
+      add_child(second_, slot().fill_width(1.0f - state.split));
     }
 
-    f32 split = 0.5f;
-    SharedPtr<Widget> splitter = nullptr;
-    SharedPtr<HorizontalBox> inner = nullptr;
-    Container::Slot& first;
-    Container::Slot& second;
+    auto on_mouse_down(const Event& event) -> EventResponse {
+      if (event.button != MouseButton::Left) {
+        return EventResponse::unhandled();
+      }
+      state.resizing = true;
+      state.start_mouse = event.mouse;
+      state.start_split = state.split;
+      return EventResponse::handled().capture_mouse(MouseButton::Left);
+    }
+
+    auto on_mouse_move(const Event& event) -> EventResponse {
+      if (not state.resizing) {
+        return EventResponse::unhandled();
+      }
+
+      auto width = std::max(1.0f, frame().size.x - padding);
+      auto delta = event.mouse.x - state.start_mouse.x;
+
+      state.split = glm::clamp(state.start_split + delta / width, 0.05f, 0.95f);
+      get_slot(0).style.horizontal_stretch_weight = state.split;
+      get_slot(2).style.horizontal_stretch_weight = 1.0f - state.split;
+      invalidate_layout();
+
+      return EventResponse::handled();
+    }
+
+    auto on_mouse_up(const Event& event) -> EventResponse {
+      if (event.button == MouseButton::Left and state.resizing) {
+        state.resizing = false;
+        return EventResponse::handled();
+      }
+      return EventResponse::unhandled();
+    }
+
+    ResizeState state = {};
   };
 
-  auto tabs = Split(create<Box>().background(light).build(),
-                    create<Box>().background(light).build())
-                  .inner;
+  auto tabs = create<Split>(*create<Box>().background(light),
+                            *create<Box>().background(light));
 
   auto window =
       create<VerticalBox>() +
@@ -195,11 +182,8 @@ Editor::Editor()
              slot()[tabs]] +
       slot().padding({ padding, padding, 0, 0 }).fixed_height(30)[status_bar];
 
-  m_widget =
-      create<CompoundWidget>()
-          .background(light)[create<CompoundWidget>().padding(2).background(
-              dark)[window]]
-          .build();
+  m_widget = *create<CompoundWidget>().background(
+      light)[create<CompoundWidget>().padding(2).background(dark)[window]];
 }
 
 Editor::~Editor() { delete m_renderer; }

@@ -162,6 +162,22 @@ public:
     return on_mouse_down(EventHandler(callback));
   }
 
+  template <class ObjectT>
+  auto on_mouse_down(ObjectT* object,
+                     EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_down(object, method);
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_mouse_down(const ObjectT* object,
+                     EventResponse (ObjectT::*method)(const Event&) const)
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_down(object, method);
+    return *this;
+  }
+
   auto on_mouse_up(EventHandler callback) -> WidgetBuilder& {
     m_widget->set_on_mouse_up(callback);
     return *this;
@@ -170,6 +186,22 @@ public:
   template <class Fn>
   auto on_mouse_up(Fn&& callback) -> WidgetBuilder& {
     return on_mouse_up(EventHandler(std::forward<Fn>(callback)));
+  }
+
+  template <class ObjectT>
+  auto on_mouse_up(ObjectT* object,
+                   EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_up(object, method);
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_mouse_up(const ObjectT* object,
+                   EventResponse (ObjectT::*method)(const Event&) const)
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_up(object, method);
+    return *this;
   }
 
   auto on_mouse_move(EventHandler callback) -> WidgetBuilder& {
@@ -182,6 +214,22 @@ public:
     return on_mouse_move(EventHandler(std::forward<Fn>(callback)));
   }
 
+  template <class ObjectT>
+  auto on_mouse_move(ObjectT* object,
+                     EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_move(object, method);
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_mouse_move(const ObjectT* object,
+                     EventResponse (ObjectT::*method)(const Event&) const)
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_move(object, method);
+    return *this;
+  }
+
   auto on_mouse_enter(EventHandler callback) -> WidgetBuilder& {
     m_widget->set_on_mouse_enter(callback);
     return *this;
@@ -190,6 +238,22 @@ public:
   template <class Fn>
   auto on_mouse_enter(Fn&& callback) -> WidgetBuilder& {
     return on_mouse_enter(EventHandler(std::forward<Fn>(callback)));
+  }
+
+  template <class ObjectT>
+  auto on_mouse_enter(ObjectT* object,
+                      EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_enter(object, method);
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_mouse_enter(const ObjectT* object,
+                      EventResponse (ObjectT::*method)(const Event&) const)
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_enter(object, method);
+    return *this;
   }
 
   auto on_mouse_leave(EventHandler callback) -> WidgetBuilder& {
@@ -202,6 +266,22 @@ public:
     return on_mouse_leave(EventHandler(std::forward<Fn>(callback)));
   }
 
+  template <class ObjectT>
+  auto on_mouse_leave(ObjectT* object,
+                      EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_leave(object, method);
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_mouse_leave(const ObjectT* object,
+                      EventResponse (ObjectT::*method)(const Event&) const)
+      -> WidgetBuilder& {
+    m_widget->set_on_mouse_leave(object, method);
+    return *this;
+  }
+
   auto on_drag_detected(EventHandler callback) -> WidgetBuilder& {
     m_widget->set_on_drag_detected(callback);
     return *this;
@@ -210,6 +290,22 @@ public:
   template <class Fn>
   auto on_drag_detected(Fn&& callback) -> WidgetBuilder& {
     return on_drag_detected(EventHandler(std::forward<Fn>(callback)));
+  }
+
+  template <class ObjectT>
+  auto on_drag_detected(ObjectT* object,
+                        EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder& {
+    m_widget->set_on_drag_detected(object, method);
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_drag_detected(const ObjectT* object,
+                        EventResponse (ObjectT::*method)(const Event&) const)
+      -> WidgetBuilder& {
+    m_widget->set_on_drag_detected(object, method);
+    return *this;
   }
 
   auto is_focusable(bool focusable) -> WidgetBuilder&
@@ -257,6 +353,16 @@ public:
   template <class ObjectT>
   auto on_clicked(ObjectT* object,
                   EventResponse (ObjectT::*method)(const Event&))
+      -> WidgetBuilder&
+    requires std::is_base_of_v<Button, WidgetT>
+  {
+    m_widget->set_on_clicked(object, method);
+    return *this;
+  }
+
+  template <class ObjectT>
+  auto on_clicked(const ObjectT* object,
+                  EventResponse (ObjectT::*method)(const Event&) const)
       -> WidgetBuilder&
     requires std::is_base_of_v<Button, WidgetT>
   {
