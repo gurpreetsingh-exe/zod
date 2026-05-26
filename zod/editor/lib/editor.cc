@@ -203,16 +203,16 @@ Editor::Editor()
 
   auto tabs = create<Split>(
       *create<Split>(*create<Split>(*create<Box>().background(light),
-                                    m_editor_viewport, 0.2f),
+                                    m_editor_viewport, 0.25f),
                      *create<Box>().background(light), Axis::Vertical, 0.75f),
-      *create<Box>().background(light), 0.8f);
+      *create<Box>().background(light), 0.75f);
 
   auto window =
       create<VerticalBox>() +
       slot().fixed_height(Window::TitleBarHeight)[titlebar] +
       slot()[create<VerticalBox>().padding(padding).gap(padding) +
              slot()[tabs]] +
-      slot().padding({ padding, padding, 0, 0 }).fixed_height(30)[status_bar];
+      slot().padding({ padding, padding, 0, 0 }).fixed_height(25)[status_bar];
 
   m_widget = *create<CompoundWidget>().background(
       light)[create<CompoundWidget>().padding(2).background(dark)[window]];

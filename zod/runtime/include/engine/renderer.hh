@@ -43,6 +43,16 @@ public:
 
 private:
   SharedPtr<GPUFrameBuffer> m_gbuffer = nullptr;
+  SharedPtr<GPUFrameBuffer> m_ssgi = nullptr;
+};
+
+class PathTracer : public Renderer {
+public:
+  PathTracer();
+  ~PathTracer() = default;
+
+public:
+  auto tick() -> void override;
 };
 
 } // namespace zod

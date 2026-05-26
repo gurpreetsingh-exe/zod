@@ -5,8 +5,6 @@
 #include "engine/entity.hh"
 #include "engine/registry.hh"
 
-#include <fstream>
-
 #include <yaml-cpp/yaml.h>
 
 namespace YAML {

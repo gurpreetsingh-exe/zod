@@ -71,6 +71,7 @@ private:
   friend class Renderer;
   friend class ForwardRenderer;
   friend class DeferredRenderer;
+  friend class PathTracer;
 };
 
 }; // namespace zod

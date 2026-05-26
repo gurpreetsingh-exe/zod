@@ -26,6 +26,10 @@ GPUShaderCreateInfo pbr = GPUShaderCreateInfo("pbr")
                               .vertex_source(g_fullscreen_src)
                               .fragment_source(g_pbr_frag_src);
 
+GPUShaderCreateInfo ssgi = GPUShaderCreateInfo("ssgi")
+                               .vertex_source(g_fullscreen_src)
+                               .fragment_source(g_ssgi_frag_src);
+
 Renderer::Renderer()
     : m_framebuffer(GPUBackend::get().create_framebuffer(
           { "main_framebuffer", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })) {
@@ -42,6 +46,7 @@ Renderer::Renderer()
   GPUBackend::get().create_shader(gbuffer);
   GPUBackend::get().create_shader(cubemap);
   GPUBackend::get().create_shader(pbr);
+  GPUBackend::get().create_shader(ssgi);
 }
 
 auto Renderer::resize(f32 w, f32 h) -> void {
@@ -66,8 +71,8 @@ auto ForwardRenderer::tick() -> void {
   scene->m_camera_buffer->bind(6);
 
   m_framebuffer->bind();
-  m_framebuffer->clear();
   m_framebuffer->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+  m_framebuffer->clear();
   GPUState::get().set_depth_test(Depth::Less);
   GPUState::get().set_blend(Blend::Alpha);
   GPU_TIME("mesh", {
@@ -100,38 +105,71 @@ auto ForwardRenderer::tick() -> void {
   GPUState::get().set_depth_test(Depth::None);
   GPUState::get().set_blend(Blend::None);
   m_framebuffer->unbind();
-  scene.m_camera_buffer->unbind();
+  // scene.m_camera_buffer->unbind();
 }
 
 /// DeferredRenderer
 DeferredRenderer::DeferredRenderer()
     : Renderer(), m_gbuffer(GPUBackend::get().create_framebuffer(
-                      DEFAULT_FB_SIZE, DEFAULT_FB_SIZE)) {
+                      { "gbuffer", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })),
+      m_ssgi(GPUBackend::get().create_framebuffer(
+          { "ssgi", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })) {
   m_gbuffer->bind();
+  /// COLOR
   m_gbuffer->add_color_attachment(GPUBackend::get().create_texture({
-      .width = i32(DEFAULT_FB_SIZE),
-      .height = i32(DEFAULT_FB_SIZE),
+      .name = "gbuffer.color",
+      .width = DEFAULT_FB_SIZE,
+      .height = DEFAULT_FB_SIZE,
       .format = GPUTextureFormat::RGB8,
+      .mips = 4,
   }));
+  /// POSITION
   m_gbuffer->add_color_attachment(GPUBackend::get().create_texture({
-      .width = i32(DEFAULT_FB_SIZE),
-      .height = i32(DEFAULT_FB_SIZE),
+      .name = "gbuffer.position",
+      .width = DEFAULT_FB_SIZE,
+      .height = DEFAULT_FB_SIZE,
       .format = GPUTextureFormat::RGB32F,
       .data = GPUTextureData::Float,
+      .mips = 4,
   }));
+  /// NORMAL
   m_gbuffer->add_color_attachment(GPUBackend::get().create_texture({
-      .width = i32(DEFAULT_FB_SIZE),
-      .height = i32(DEFAULT_FB_SIZE),
+      .name = "gbuffer.normal",
+      .width = DEFAULT_FB_SIZE,
+      .height = DEFAULT_FB_SIZE,
+      .format = GPUTextureFormat::RGB32F,
+      .data = GPUTextureData::Float,
+      .mips = 4,
+  }));
+  /// METAL & ROUGHNESS
+  m_gbuffer->add_color_attachment(GPUBackend::get().create_texture({
+      .name = "gbuffer.m&r",
+      .width = DEFAULT_FB_SIZE,
+      .height = DEFAULT_FB_SIZE,
       .format = GPUTextureFormat::RG32F,
       .data = GPUTextureData::Float,
+      .mips = 4,
   }));
   m_gbuffer->add_depth_attachment();
   m_gbuffer->check();
   m_gbuffer->unbind();
+
+  m_ssgi->bind();
+  /// COLOR
+  m_ssgi->add_color_attachment(GPUBackend::get().create_texture({
+      .name = "ssgi",
+      .width = DEFAULT_FB_SIZE,
+      .height = DEFAULT_FB_SIZE,
+      .format = GPUTextureFormat::RGB8,
+      .mips = 4,
+  }));
+  m_ssgi->check();
+  m_ssgi->unbind();
 }
 
 auto DeferredRenderer::resize(f32 w, f32 h) -> void {
   m_gbuffer->resize(w, h);
+  m_ssgi->resize(w, h);
   m_framebuffer->resize(w, h);
   auto scene = g_project->active_scene();
   if (scene->m_camera == entt::null) {
@@ -151,8 +189,8 @@ auto DeferredRenderer::tick() -> void {
   scene->m_camera_buffer->bind(6);
 
   m_gbuffer->bind();
-  m_gbuffer->clear();
   m_gbuffer->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+  m_gbuffer->clear();
   GPUState::get().set_depth_test(Depth::Less);
   GPUState::get().set_blend(Blend::Alpha);
   GPU_TIME("GBuffer", {
@@ -161,11 +199,16 @@ auto DeferredRenderer::tick() -> void {
     shader->uniform_int("u_mega_texture", ADDR(0));
     batch->batch().draw_indirect(shader);
   });
+  for (int i = 0; i < 4; ++i) {
+    auto tex = m_gbuffer->get_slot(i);
+    tex->bind();
+    tex->generate_mipmap();
+  }
   m_gbuffer->unbind();
 
-  m_framebuffer->bind();
-  m_framebuffer->clear();
-  m_framebuffer->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+  m_ssgi->bind();
+  m_ssgi->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+  m_ssgi->clear();
   GPUState::get().set_depth_test(Depth::None);
   GPUState::get().set_blend(Blend::None);
   GPU_TIME("PBR", {
@@ -174,18 +217,41 @@ auto DeferredRenderer::tick() -> void {
     m_gbuffer->get_slot(0)->bind();
     shader->uniform_int("u_albedo", ADDR(0));
     m_gbuffer->get_slot(1)->bind(1);
-    shader->uniform_int("u_normal", ADDR(1));
+    shader->uniform_int("u_position", ADDR(1));
     m_gbuffer->get_slot(2)->bind(2);
-    shader->uniform_int("u_roughness", ADDR(2));
-    m_gbuffer->bind_depth(3);
-    shader->uniform_int("u_depth", ADDR(3));
+    shader->uniform_int("u_normal", ADDR(2));
+    m_gbuffer->get_slot(3)->bind(3);
+    shader->uniform_int("u_roughness", ADDR(3));
+    m_gbuffer->bind_depth(4);
+    shader->uniform_int("u_depth", ADDR(4));
     GPUState::get().draw_immediate(3);
   });
 
   GPUState::get().set_depth_test(Depth::None);
   GPUState::get().set_blend(Blend::None);
+  m_ssgi->unbind();
+
+  m_ssgi->get_slot(0)->bind();
+  m_ssgi->get_slot(0)->generate_mipmap();
+  m_ssgi->get_slot(0)->unbind();
+
+  m_framebuffer->bind();
+  m_framebuffer->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+  m_framebuffer->clear();
+  GPU_TIME("SSGI", {
+    auto shader = GPUBackend::get().get_shader("ssgi");
+    shader->bind();
+    m_ssgi->get_slot(0)->bind();
+    shader->uniform_int("u_indirect", ADDR(0));
+    GPUState::get().draw_immediate(3);
+  });
   m_framebuffer->unbind();
-  scene.m_camera_buffer->unbind();
+
+  // scene.m_camera_buffer->unbind();
 }
+
+PathTracer::PathTracer() : Renderer() {}
+
+auto PathTracer::tick() -> void {}
 
 } // namespace zod
