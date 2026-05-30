@@ -16,6 +16,7 @@
 #include "sodium/widgets/builder.hh"
 #include "sodium/widgets/button.hh"
 #include "sodium/widgets/menu.hh"
+#include "sodium/widgets/text.hh"
 
 namespace zod {
 
@@ -28,6 +29,21 @@ auto Editor::get() -> Editor& { return *g_editor; }
 
 auto light = vec4 { 0.127, 0.131, 0.14, 1 };
 auto dark = vec4 { 0.0825, 0.084, 0.09, 1 };
+
+static auto gpu_frame_timing_text() -> String {
+  const auto& timings = GPUTimer::get().timings();
+  auto it = timings.find("main-loop");
+  if (it == timings.end()) {
+    return "GPU: -- ms";
+  }
+
+  static auto smoothed_time = 0.0f;
+  auto raw_time = it->second;
+  constexpr auto alpha = 0.05f;
+  smoothed_time += (raw_time - smoothed_time) * alpha;
+
+  return fmt::format("GPU: {:.3f} ms", smoothed_time);
+}
 
 Editor::Editor()
     : ILayer(), m_renderer(new ForwardRenderer()),
@@ -97,7 +113,13 @@ Editor::Editor()
           Window::TitleBarHeight)[create<Image>(logo).background(light)] +
       slot().auto_width()[menus] + spread + window_buttons;
 
-  auto status_bar = create<Box>().background(light).name("StatusBar");
+  auto status_bar =
+      create<HorizontalBox>().gap(padding).name("StatusBar") +
+      slot()[create<Box>().background(light)] +
+      slot().auto_width()[create<Box>().background(light).min_desired_width(
+          120)[create<Text>()
+                  .text(Attribute<String>([] { return gpu_frame_timing_text(); }))
+                  .justification(TextJustify::Center)]];
 
   struct Split : BoxContainer {
     struct ResizeState {

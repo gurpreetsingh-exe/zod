@@ -6,6 +6,7 @@
 #include "sodium/widgets/container.hh"
 #include "sodium/widgets/image.hh"
 #include "sodium/widgets/overlay.hh"
+#include "sodium/widgets/text.hh"
 
 namespace zod::sodium {
 
@@ -144,6 +145,34 @@ public:
     requires std::is_base_of_v<Image, WidgetT>
   {
     m_widget->set_accessible_text(std::move(text));
+    return *this;
+  }
+
+  auto text(String text) -> WidgetBuilder&
+    requires std::is_base_of_v<Text, WidgetT>
+  {
+    m_widget->set_text(std::move(text));
+    return *this;
+  }
+
+  auto text(Attribute<String> text) -> WidgetBuilder&
+    requires std::is_base_of_v<Text, WidgetT>
+  {
+    m_widget->set_text(std::move(text));
+    return *this;
+  }
+
+  auto font_size(f32 font_size) -> WidgetBuilder&
+    requires std::is_base_of_v<Text, WidgetT>
+  {
+    m_widget->set_font_size(font_size);
+    return *this;
+  }
+
+  auto justification(TextJustify justification) -> WidgetBuilder&
+    requires std::is_base_of_v<Text, WidgetT>
+  {
+    m_widget->set_justification(justification);
     return *this;
   }
 
