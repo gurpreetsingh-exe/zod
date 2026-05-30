@@ -41,21 +41,26 @@ auto OrthographicCamera::update(const Event& event) -> bool {
 }
 
 auto PerspectiveCamera::zoom(f32 delta) -> void {
-  m_position += m_direction * delta * 0.06f;
+  auto movement = m_direction * delta * 0.06f;
+  m_position += movement;
+  m_target += movement;
 }
 
 auto PerspectiveCamera::pan(vec2 delta) -> void {
   auto right = m_right * delta.x * 0.02f;
   auto _up = cross(m_right, m_direction) * -delta.y * 0.02f;
-  m_position += right;
-  m_position += _up;
+  auto movement = right + _up;
+  m_position += movement;
+  m_target += movement;
 }
 
 auto PerspectiveCamera::rotate(vec2 delta) -> void {
+  auto offset = m_position - m_target;
   auto rot_mat = zod::rotate(m_model, radians(-delta.x), up);
   rot_mat = zod::rotate(rot_mat, radians(delta.y), m_right);
-  m_position = vec3(rot_mat * vec4(m_position, 1.0f));
-  m_direction = normalize(-m_position);
+  offset = vec3(rot_mat * vec4(offset, 1.0f));
+  m_position = m_target + offset;
+  m_direction = normalize(m_target - m_position);
 }
 
 auto PerspectiveCamera::update(const Event& event) -> bool {

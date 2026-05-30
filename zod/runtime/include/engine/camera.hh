@@ -72,7 +72,8 @@ protected:
   vec2 m_window_position = vec2(0.0f);
   Navigation m_mode = Navigation::None;
   vec3 m_position = vec3(0.0f, 0.0f, 1.0f);
-  vec3 m_direction = normalize(-m_position);
+  vec3 m_target = vec3(0.0);
+  vec3 m_direction = normalize(m_target - m_position);
   mat4 m_model = {};
   mat4 m_view = {};
   mat4 m_projection = {};
