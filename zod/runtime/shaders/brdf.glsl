@@ -30,7 +30,8 @@ vec3 F_Schlick(float cosTheta, vec3 F0) {
   return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-vec3 get_color(vec3 P, vec3 v, vec3 base_color, vec3 n, float metallic, float roughness) {
+vec3 get_color(vec3 P, vec3 v, vec3 base_color, vec3 n, float metallic,
+               float roughness) {
   vec3 base_reflectivity = mix(vec3(0.04f), base_color, metallic);
 
   vec3 Lo = vec3(0.0f);
@@ -44,7 +45,8 @@ vec3 get_color(vec3 P, vec3 v, vec3 base_color, vec3 n, float metallic, float ro
     float distance = length(light_position - P);
     float linear = linfo.a;
     float quadratic = linfo.b;
-    float attenuation = 1.0f / (1.0f + linear * distance + quadratic * distance * distance);
+    float attenuation =
+        1.0f / (1.0f + linear * distance + quadratic * distance * distance);
     vec3 radiance = vec3(10.0f) * attenuation;
 
     float NoV = max(dot(n, v), 0.000001f);

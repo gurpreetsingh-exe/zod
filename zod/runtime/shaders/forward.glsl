@@ -27,15 +27,17 @@ vec3 fetch_color(uint texture_index, vec3 otherwise) {
 
 void main(void) {
   MeshInfo mesh_info = minfo[ID];
-  vec3 v = normalize(ro.xyz - P);
+  vec3 V = normalize(ro.xyz - P);
   vec3 n = N * (gl_FrontFacing ? 1.0f : -1.0f);
 
-  vec3 base_color = fetch_color(mesh_info.base_color_texture_index, vec3(0, 1, 0));
-  vec3 normal = fetch_color(mesh_info.normal_texture_index, n);
+  vec3 base_color =
+      fetch_color(mesh_info.base_color_texture_index, vec3(0, 1, 0));
+  // vec3 normal = fetch_color(mesh_info.normal_texture_index, n);
   vec3 r = fetch_color(mesh_info.roughness_texture_index, vec3(0.5f));
 
   float metallic = r.b;
   float roughness = r.g;
-  vec3 color = get_color(P, v, base_color, n, metallic, roughness);
+  vec3 color = get_color(P, V, base_color, n, metallic, roughness);
+  // O_color = vec4(color, 1.0f);
   O_color = vec4(tonemap(color), 1.0f);
 }

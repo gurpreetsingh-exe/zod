@@ -1,11 +1,7 @@
 #include "buffers.glsl"
 
-const vec3 positions[4] = vec3[](
-    vec3(-1, -1, 0),
-    vec3(-1, 1, 0),
-    vec3(1, -1, 0),
-    vec3(1, 1, 0)
-    );
+const vec3 positions[4] =
+    vec3[](vec3(-1, -1, 0), vec3(-1, 1, 0), vec3(1, -1, 0), vec3(1, 1, 0));
 
 out vec2 V_tex_coords;
 

@@ -41,8 +41,20 @@ public:
   auto tick() -> void override;
   auto resize(f32, f32) -> void override;
 
-private:
+protected:
   SharedPtr<GPUFrameBuffer> m_gbuffer = nullptr;
+};
+
+class SSGIRenderer : public DeferredRenderer {
+public:
+  SSGIRenderer();
+  ~SSGIRenderer() = default;
+
+public:
+  auto tick() -> void override;
+  auto resize(f32, f32) -> void override;
+
+private:
   SharedPtr<GPUFrameBuffer> m_ssgi = nullptr;
 };
 

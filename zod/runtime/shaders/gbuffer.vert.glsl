@@ -14,7 +14,9 @@ void main(void) {
   MeshInfo inf = minfo[gl_DrawID];
   Matrix mtx = matrix[inf.matrix_index];
   P = vec3(mtx.model * vec4(p, 1.0f));
+  // P = vec3(view * mtx.model * vec4(p, 1.0f));
   N = normalize(mat3(mtx.inv_model) * n);
+  // N = normalize(transpose(mat3(mtx.inv_model * inv_view)) * n);
   uv = buffer_uv[gl_VertexID];
   ID = gl_DrawID;
   gl_Position = projection * view * mtx.model * vec4(p, 1.f);

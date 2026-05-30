@@ -172,6 +172,7 @@ auto process_nodes(const fs::path& save_dir, const tinygltf::Model& model,
   auto ar = Archive();
   mesh.write(ar);
   auto name = me.name.empty() ? "0" : me.name;
+  std::replace(name.begin(), name.end(), '.', '_');
   ar.save(save_dir / "Meshes" / name, ".zmesh");
 
   for (const auto& idx : node.children) {

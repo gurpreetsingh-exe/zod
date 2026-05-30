@@ -111,9 +111,7 @@ auto ForwardRenderer::tick() -> void {
 /// DeferredRenderer
 DeferredRenderer::DeferredRenderer()
     : Renderer(), m_gbuffer(GPUBackend::get().create_framebuffer(
-                      { "gbuffer", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })),
-      m_ssgi(GPUBackend::get().create_framebuffer(
-          { "ssgi", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })) {
+                      { "gbuffer", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })) {
   m_gbuffer->bind();
   /// COLOR
   m_gbuffer->add_color_attachment(GPUBackend::get().create_texture({
@@ -121,15 +119,7 @@ DeferredRenderer::DeferredRenderer()
       .width = DEFAULT_FB_SIZE,
       .height = DEFAULT_FB_SIZE,
       .format = GPUTextureFormat::RGB8,
-      .mips = 4,
-  }));
-  /// POSITION
-  m_gbuffer->add_color_attachment(GPUBackend::get().create_texture({
-      .name = "gbuffer.position",
-      .width = DEFAULT_FB_SIZE,
-      .height = DEFAULT_FB_SIZE,
-      .format = GPUTextureFormat::RGB32F,
-      .data = GPUTextureData::Float,
+      .wrap = GPUTextureWrap::Clamp,
       .mips = 4,
   }));
   /// NORMAL
@@ -139,6 +129,7 @@ DeferredRenderer::DeferredRenderer()
       .height = DEFAULT_FB_SIZE,
       .format = GPUTextureFormat::RGB32F,
       .data = GPUTextureData::Float,
+      .wrap = GPUTextureWrap::Clamp,
       .mips = 4,
   }));
   /// METAL & ROUGHNESS
@@ -148,12 +139,70 @@ DeferredRenderer::DeferredRenderer()
       .height = DEFAULT_FB_SIZE,
       .format = GPUTextureFormat::RG32F,
       .data = GPUTextureData::Float,
+      .wrap = GPUTextureWrap::Clamp,
       .mips = 4,
   }));
   m_gbuffer->add_depth_attachment();
   m_gbuffer->check();
   m_gbuffer->unbind();
+}
 
+auto DeferredRenderer::resize(f32 w, f32 h) -> void {
+  Renderer::resize(w, h);
+  m_gbuffer->resize(w, h);
+}
+
+auto DeferredRenderer::tick() -> void {
+  auto scene = g_project->active_scene();
+  auto batch = scene->m_mesh_batch;
+  batch->bind();
+  scene->m_camera_buffer->bind(6);
+
+  m_gbuffer->bind();
+  m_gbuffer->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+  m_gbuffer->clear();
+  GPUState::get().set_depth_test(Depth::Less);
+  GPUState::get().set_blend(Blend::Alpha);
+  GPU_TIME("GBuffer", {
+    auto shader = GPUBackend::get().get_shader("gbuffer");
+    shader->bind();
+    shader->uniform_int("u_mega_texture", ADDR(0));
+    batch->batch().draw_indirect(shader);
+  });
+  for (int i = 0; i < 3; ++i) {
+    auto tex = m_gbuffer->get_slot(i);
+    tex->bind();
+    tex->generate_mipmap();
+  }
+  m_gbuffer->unbind();
+
+  m_framebuffer->bind();
+  m_framebuffer->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
+  m_framebuffer->clear();
+  GPUState::get().set_depth_test(Depth::None);
+  GPUState::get().set_blend(Blend::None);
+  GPU_TIME("PBR", {
+    auto shader = GPUBackend::get().get_shader("pbr");
+    shader->bind();
+    m_gbuffer->get_slot(0)->bind();
+    shader->uniform_int("u_albedo", ADDR(0));
+    m_gbuffer->get_slot(1)->bind(1);
+    shader->uniform_int("u_normal", ADDR(1));
+    m_gbuffer->get_slot(2)->bind(2);
+    shader->uniform_int("u_roughness", ADDR(2));
+    m_gbuffer->bind_depth(3);
+    shader->uniform_int("u_depth", ADDR(3));
+    GPUState::get().draw_immediate(3);
+  });
+
+  GPUState::get().set_depth_test(Depth::None);
+  GPUState::get().set_blend(Blend::None);
+  m_framebuffer->unbind();
+}
+
+SSGIRenderer::SSGIRenderer()
+    : DeferredRenderer(), m_ssgi(GPUBackend::get().create_framebuffer(
+                              { "ssgi", DEFAULT_FB_SIZE, DEFAULT_FB_SIZE })) {
   m_ssgi->bind();
   /// COLOR
   m_ssgi->add_color_attachment(GPUBackend::get().create_texture({
@@ -161,28 +210,19 @@ DeferredRenderer::DeferredRenderer()
       .width = DEFAULT_FB_SIZE,
       .height = DEFAULT_FB_SIZE,
       .format = GPUTextureFormat::RGB8,
+      .wrap = GPUTextureWrap::Clamp,
       .mips = 4,
   }));
   m_ssgi->check();
   m_ssgi->unbind();
 }
 
-auto DeferredRenderer::resize(f32 w, f32 h) -> void {
-  m_gbuffer->resize(w, h);
+auto SSGIRenderer::resize(f32 w, f32 h) -> void {
+  DeferredRenderer::resize(w, h);
   m_ssgi->resize(w, h);
-  m_framebuffer->resize(w, h);
-  auto scene = g_project->active_scene();
-  if (scene->m_camera == entt::null) {
-    return;
-  }
-  auto& component =
-      Entity(scene->m_camera, scene.get()).get_component<CameraComponent>();
-  auto camera = component.camera;
-  camera->resize(w, h);
-  camera->update_matrix();
 }
 
-auto DeferredRenderer::tick() -> void {
+auto SSGIRenderer::tick() -> void {
   auto scene = g_project->active_scene();
   auto batch = scene->m_mesh_batch;
   batch->bind();
@@ -217,13 +257,11 @@ auto DeferredRenderer::tick() -> void {
     m_gbuffer->get_slot(0)->bind();
     shader->uniform_int("u_albedo", ADDR(0));
     m_gbuffer->get_slot(1)->bind(1);
-    shader->uniform_int("u_position", ADDR(1));
+    shader->uniform_int("u_normal", ADDR(1));
     m_gbuffer->get_slot(2)->bind(2);
-    shader->uniform_int("u_normal", ADDR(2));
-    m_gbuffer->get_slot(3)->bind(3);
-    shader->uniform_int("u_roughness", ADDR(3));
-    m_gbuffer->bind_depth(4);
-    shader->uniform_int("u_depth", ADDR(4));
+    shader->uniform_int("u_roughness", ADDR(2));
+    m_gbuffer->bind_depth(3);
+    shader->uniform_int("u_depth", ADDR(3));
     GPUState::get().draw_immediate(3);
   });
 
@@ -231,9 +269,9 @@ auto DeferredRenderer::tick() -> void {
   GPUState::get().set_blend(Blend::None);
   m_ssgi->unbind();
 
-  m_ssgi->get_slot(0)->bind();
-  m_ssgi->get_slot(0)->generate_mipmap();
-  m_ssgi->get_slot(0)->unbind();
+  // m_ssgi->get_slot(0)->bind();
+  // m_ssgi->get_slot(0)->generate_mipmap();
+  // m_ssgi->get_slot(0)->unbind();
 
   m_framebuffer->bind();
   m_framebuffer->clear_color(vec4(0.1f, 0.1f, 0.1f, 1.0f));
@@ -241,8 +279,16 @@ auto DeferredRenderer::tick() -> void {
   GPU_TIME("SSGI", {
     auto shader = GPUBackend::get().get_shader("ssgi");
     shader->bind();
-    m_ssgi->get_slot(0)->bind();
-    shader->uniform_int("u_indirect", ADDR(0));
+    m_gbuffer->get_slot(0)->bind();
+    shader->uniform_int("u_albedo", ADDR(0));
+    m_gbuffer->get_slot(1)->bind(1);
+    shader->uniform_int("u_normal", ADDR(1));
+    m_gbuffer->get_slot(2)->bind(2);
+    shader->uniform_int("u_roughness", ADDR(2));
+    m_gbuffer->bind_depth(3);
+    shader->uniform_int("u_depth", ADDR(3));
+    m_ssgi->get_slot(0)->bind(4);
+    shader->uniform_int("u_indirect", ADDR(4));
     GPUState::get().draw_immediate(3);
   });
   m_framebuffer->unbind();

@@ -21,11 +21,8 @@ auto HitTestList::collect(Widget& widget, WidgetPath path, i32 layer) -> void {
   path.push(&widget);
   auto entry_layer = layer + widget.hit_test_layer();
   if (visibility != Visibility::SelfHitTestInvisible) {
-    m_entries.push_back({ path,
-                          widget.hit_test_bounds(),
-                          entry_layer,
-                          widget.hit_test_priority(),
-                          m_next_order++ });
+    m_entries.push_back({ path, widget.hit_test_bounds(), entry_layer,
+                          widget.hit_test_priority(), m_next_order++ });
   }
 
   for (auto child : widget.get_children()) {
