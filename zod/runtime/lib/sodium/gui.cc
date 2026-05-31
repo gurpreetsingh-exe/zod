@@ -7,6 +7,7 @@
 
 namespace zod::sodium {
 
+Cx S = {};
 DrawData* dcx = nullptr;
 
 auto resize(vec2 size) -> void {

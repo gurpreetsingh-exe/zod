@@ -1,47 +1,37 @@
 #pragma once
 
-#include "widget.hh"
+#include "sodium/widgets/box_container.hh"
 
-namespace zod {
+namespace zod::sodium {
 
-enum class SplitKind {
-  /// ┌───────┐
-  /// │       │
-  /// ├───────┤
-  /// │       │
-  /// └───────┘
-  Horizontal,
-
-  /// ┌───┬───┐
-  /// │   │   │
-  /// │   │   │
-  /// │   │   │
-  /// └───┴───┘
-  Vertical,
-};
-
-class Split : public Widget {
-public:
-  Split(SplitKind kind) : m_kind(kind), m_nodes(Vector<UniquePtr<Widget>>()) {}
+class Split : public BoxContainer {
+  struct ResizeState {
+    f32 split = 0.5f;
+    bool resizing = false;
+    vec2 start_mouse = {};
+    f32 start_split = 0.5f;
+  };
 
 public:
-  auto add_node(UniquePtr<Widget> widget, f32 size) -> void {
-    m_nodes.push_back(std::move(widget));
-    m_size_coefficients.push_back(size);
-  }
+  Split(SharedPtr<Widget>, SharedPtr<Widget>, Axis = Axis::Horizontal,
+        f32 = 0.5f);
 
-  auto on_event(Event& event) -> void override {
-    for (const auto& node : m_nodes) { node->on_event(event); }
-  }
-
-  auto draw() -> void override {
-    for (const auto& node : m_nodes) { node->draw(); }
-  }
+  Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s)
+      : Split(first_, second_, Axis::Horizontal, s) {}
 
 private:
-  SplitKind m_kind;
-  Vector<UniquePtr<Widget>> m_nodes;
-  Vector<f32> m_size_coefficients;
+  auto split_slot(f32) const -> SlotStyle;
+  auto handle_slot() const -> SlotStyle;
+  auto get_hit_test_margin() const -> Padding;
+  auto cursor() const -> cursor_shape_t;
+  auto begin_resize(const Event&) -> EventResponse;
+  auto update_resize(const Event&) -> EventResponse;
+  auto end_resize(const Event&) -> EventResponse;
+  auto set_split_weight(SlotStyle&, f32) const -> void;
+
+private:
+  Axis m_axis = Axis::Horizontal;
+  ResizeState state = {};
 };
 
-} // namespace zod
+} // namespace zod::sodium

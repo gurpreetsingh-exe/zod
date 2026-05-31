@@ -16,6 +16,7 @@
 #include "sodium/widgets/builder.hh"
 #include "sodium/widgets/button.hh"
 #include "sodium/widgets/menu.hh"
+#include "sodium/widgets/split.hh"
 #include "sodium/widgets/text.hh"
 
 namespace zod {
@@ -106,7 +107,6 @@ Editor::Editor()
   auto window_buttons = slot().auto_width().fixed_height(
       30)[create<HorizontalBox>() + minimize + maximize + close];
 
-  constexpr auto padding = 4.0f;
   auto titlebar =
       create<HorizontalBox>().background(dark) +
       slot().fixed_width(
@@ -114,127 +114,44 @@ Editor::Editor()
       slot().auto_width()[menus] + spread + window_buttons;
 
   auto status_bar =
-      create<HorizontalBox>().gap(padding).name("StatusBar") +
+      create<HorizontalBox>().gap(S.padding).name("StatusBar") +
       slot()[create<Box>().background(light)] +
       slot().auto_width()[create<Box>().background(light).min_desired_width(
           120)[create<Text>()
-                  .text(Attribute<String>([] { return gpu_frame_timing_text(); }))
-                  .justification(TextJustify::Center)]];
+                   .text(Attribute<String>(
+                       [] { return gpu_frame_timing_text(); }))
+                   .justification(TextJustify::Center)]];
 
-  struct Split : BoxContainer {
-    struct ResizeState {
-      f32 split = 0.5f;
-      bool resizing = false;
-      vec2 start_mouse = {};
-      f32 start_split = 0.5f;
-    };
-
-    Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_,
-          Axis axis = Axis::Horizontal, f32 s = 0.5f)
-        : BoxContainer(axis), m_axis(axis), state({ s }) {
-      add_child(first_, split_slot(state.split));
-      add_child(*create<Box>()
-                     .hit_test_margin(get_hit_test_margin())
-                     .hit_test_priority(10)
-                     .cursor(cursor())
-                     .on_mouse_down(this, &Split::begin_resize)
-                     .on_mouse_move(this, &Split::update_resize)
-                     .on_mouse_up(this, &Split::end_resize),
-                handle_slot());
-      add_child(second_, split_slot(1.0f - state.split));
-    }
-
-    Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s)
-        : Split(first_, second_, Axis::Horizontal, s) {}
-
-    auto split_slot(f32 weight) const -> SlotStyle {
-      if (m_axis == Axis::Horizontal) {
-        return slot().fill_width(weight);
-      }
-      return slot().fill_height(weight);
-    }
-
-    auto handle_slot() const -> SlotStyle {
-      if (m_axis == Axis::Horizontal) {
-        return slot().fixed_width(padding);
-      }
-      return slot().fixed_height(padding);
-    }
-
-    auto get_hit_test_margin() const -> Padding {
-      return m_axis == Axis::Horizontal ? Padding { 8, 8, 0, 0 }
-                                        : Padding { 0, 0, 8, 8 };
-    }
-
-    auto cursor() const -> cursor_shape_t {
-      if (m_axis == Axis::Horizontal) {
-        return cursor_shape_t::ResizeHorizontal;
-      }
-      return cursor_shape_t::ResizeVertical;
-    }
-
-    auto begin_resize(const Event& event) -> EventResponse {
-      if (event.button != MouseButton::Left) {
-        return EventResponse::unhandled();
-      }
-      state.resizing = true;
-      state.start_mouse = event.mouse;
-      state.start_split = state.split;
-      return EventResponse::handled().capture_mouse(MouseButton::Left);
-    }
-
-    auto update_resize(const Event& event) -> EventResponse {
-      if (not state.resizing) {
-        return EventResponse::unhandled();
-      }
-
-      auto resizable_size = std::max(1.0f, frame().size[m_axis] - padding);
-      auto delta = event.mouse[m_axis] - state.start_mouse[m_axis];
-      auto fac = state.start_split + delta / resizable_size;
-
-      state.split = glm::clamp(fac, 0.05f, 0.95f);
-      set_split_weight(get_slot(0).style, state.split);
-      set_split_weight(get_slot(2).style, 1.0f - state.split);
-      invalidate_layout();
-
-      return EventResponse::handled();
-    }
-
-    auto end_resize(const Event& event) -> EventResponse {
-      if (event.button == MouseButton::Left and state.resizing) {
-        state.resizing = false;
-        return EventResponse::handled();
-      }
-      return EventResponse::unhandled();
-    }
-
-    auto set_split_weight(SlotStyle& style, f32 weight) const -> void {
-      if (m_axis == Axis::Horizontal) {
-        style.horizontal_stretch_weight = weight;
-      } else {
-        style.vertical_stretch_weight = weight;
-      }
-    }
-
-    Axis m_axis = Axis::Horizontal;
-    ResizeState state = {};
+  auto panel = [](SharedPtr<Widget> widget) {
+    return *(create<VerticalBox>() +
+             slot().fixed_height(
+                 25)[create<HorizontalBox>() +
+                     slot().fixed_width(120)[create<Box>().background(
+                         light)[create<Text>()
+                                    .padding({ 12, 12, 0, 0 })
+                                    .text(widget->name())]] +
+                     slot()[create<CompoundWidget>()]] +
+             slot()[widget]);
   };
 
-  m_editor_viewport = *create<EditorViewport>(*m_renderer);
-  m_editor_viewport->set_name("Viewport");
+  m_editor_viewport = *create<EditorViewport>(*m_renderer).name("Viewport");
+  auto outliner = *create<Box>().background(light).name("Outliner");
+  auto content_browser =
+      *create<Box>().background(light).name("Content Browser");
+  auto properties = *create<Box>().background(light).name("Properties");
 
   auto tabs = create<Split>(
-      *create<Split>(*create<Split>(*create<Box>().background(light),
-                                    m_editor_viewport, 0.25f),
-                     *create<Box>().background(light), Axis::Vertical, 0.75f),
-      *create<Box>().background(light), 0.75f);
+      *create<Split>(*create<Split>(panel(outliner), m_editor_viewport, 0.25f),
+                     panel(content_browser), Axis::Vertical, 0.75f),
+      panel(properties), 0.75f);
 
-  auto window =
-      create<VerticalBox>() +
-      slot().fixed_height(Window::TitleBarHeight)[titlebar] +
-      slot()[create<VerticalBox>().padding(padding).gap(padding) +
-             slot()[tabs]] +
-      slot().padding({ padding, padding, 0, 0 }).fixed_height(25)[status_bar];
+  auto window = create<VerticalBox>() +
+                slot().fixed_height(Window::TitleBarHeight)[titlebar] +
+                slot()[create<VerticalBox>().padding(S.padding).gap(S.padding) +
+                       slot()[tabs]] +
+                slot()
+                    .padding({ S.padding, S.padding, 0, 0 })
+                    .fixed_height(25)[status_bar];
 
   m_widget = *create<CompoundWidget>().background(
       light)[create<CompoundWidget>().padding(2).background(dark)[window]];
