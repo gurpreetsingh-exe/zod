@@ -43,7 +43,8 @@ auto Text::paint(PaintCx& cx) const -> void {
   auto inner = m_frame.padding(m_style.padding);
   auto text_width = Font::get().width(text, font_size);
   auto baseline_y = inner.position.y + inner.size.y * 0.5f + font_size * 0.4f;
-  Font::get().render_text(text.c_str(), text_x(inner, text_width, m_justification),
+  Font::get().render_text(cx, text.c_str(),
+                          text_x(inner, text_width, m_justification),
                           baseline_y, font_size, font_size);
 }
 

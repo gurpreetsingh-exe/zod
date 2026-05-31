@@ -8,7 +8,6 @@
 namespace zod {
 
 class Entity;
-class Outliner;
 class Renderer;
 class GPUMeshBatch;
 
@@ -68,7 +67,6 @@ private:
   SceneStatistics m_stats = {};
 
   friend class Entity;
-  friend class Outliner;
   friend class Renderer;
   friend class ForwardRenderer;
   friend class DeferredRenderer;

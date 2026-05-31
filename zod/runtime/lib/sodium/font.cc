@@ -245,7 +245,16 @@ auto Font::width(const std::string& s, f32 sx) -> f32 {
   return x;
 }
 
-auto Font::render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void {
+static auto append_text_draw_list(TextDrawList& target,
+                                  const TextDrawList& source) -> void {
+  target.positions.insert(target.positions.end(), source.positions.begin(),
+                          source.positions.end());
+  target.uvs.insert(target.uvs.end(), source.uvs.begin(), source.uvs.end());
+}
+
+auto Font::render_text(PaintCx& cx, const char* text, f32 x, f32 y, f32 sx,
+                       f32 sy) -> void {
+  auto& draw_list = cx.active_text_draw_list();
   u8 previous = 0;
   for (const char* p = text; *p; p++) {
     auto codepoint = u8(*p);
@@ -267,60 +276,65 @@ auto Font::render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void {
     previous = codepoint;
 
     if (not glyph.visible or not w or not h or
-        m_nvert + 8 >= MAX_VERTICES * 2) {
+        draw_list.positions.size() + 8 >= MAX_VERTICES * 2) {
       continue;
     }
 
-    m_position[m_nvert] = x2;
-    m_position[m_nvert + 1] = y2;
+    draw_list.positions.push_back(x2);
+    draw_list.positions.push_back(y2);
 
-    m_position[m_nvert + 2] = x2 + w;
-    m_position[m_nvert + 3] = y2;
+    draw_list.positions.push_back(x2 + w);
+    draw_list.positions.push_back(y2);
 
-    m_position[m_nvert + 4] = x2;
-    m_position[m_nvert + 5] = y2 + h;
+    draw_list.positions.push_back(x2);
+    draw_list.positions.push_back(y2 + h);
 
-    m_position[m_nvert + 6] = x2 + w;
-    m_position[m_nvert + 7] = y2 + h;
+    draw_list.positions.push_back(x2 + w);
+    draw_list.positions.push_back(y2 + h);
 
-    m_uv[m_nvert] = glyph.uv_left;
-    m_uv[m_nvert + 1] = glyph.uv_top;
+    draw_list.uvs.push_back(glyph.uv_left);
+    draw_list.uvs.push_back(glyph.uv_top);
 
-    m_uv[m_nvert + 2] = glyph.uv_right;
-    m_uv[m_nvert + 3] = glyph.uv_top;
+    draw_list.uvs.push_back(glyph.uv_right);
+    draw_list.uvs.push_back(glyph.uv_top);
 
-    m_uv[m_nvert + 4] = glyph.uv_left;
-    m_uv[m_nvert + 5] = glyph.uv_bottom;
+    draw_list.uvs.push_back(glyph.uv_left);
+    draw_list.uvs.push_back(glyph.uv_bottom);
 
-    m_uv[m_nvert + 6] = glyph.uv_right;
-    m_uv[m_nvert + 7] = glyph.uv_bottom;
-
-    m_nvert += 8;
+    draw_list.uvs.push_back(glyph.uv_right);
+    draw_list.uvs.push_back(glyph.uv_bottom);
   }
 }
 
-auto Font::render_text_center(const char* text, f32 x, f32 y, f32 s) -> void {
-  render_text(text, x, y + s * 0.4, s, s);
+auto Font::render_text_center(PaintCx& cx, const char* text, f32 x, f32 y,
+                              f32 s) -> void {
+  render_text(cx, text, x, y + s * 0.4f, s, s);
 }
 
-auto Font::submit() -> void {
-  if (not m_texture or m_nvert == 0) {
-    m_nvert = 0;
+auto Font::submit(PaintCx& cx) -> void {
+  append_text_draw_list(cx.text_draw_list, cx.foreground_text_draw_list);
+  cx.foreground_text_draw_list.clear();
+
+  auto nvert = cx.text_draw_list.positions.size();
+  if (not m_texture or nvert == 0) {
+    cx.text_draw_list.clear();
     return;
   }
 
-  m_batch->update_binding(0, m_position, sizeof(f32) * m_nvert);
-  m_batch->update_binding(1, m_uv, sizeof(f32) * m_nvert);
+  m_batch->update_binding(0, cx.text_draw_list.positions.data(),
+                          sizeof(f32) * nvert);
+  m_batch->update_binding(1, cx.text_draw_list.uvs.data(),
+                          sizeof(f32) * cx.text_draw_list.uvs.size());
   m_text_shader->bind();
   m_texture->bind();
   m_text_shader->uniform_int("u_texture", ADDR(0));
   m_text_shader->uniform_float("u_projection", value_ptr(dcx->projection), 16);
   GPUState::get().set_blend(Blend::Alpha);
   dcx->framebuffer->bind();
-  m_batch->draw(m_text_shader, (m_nvert >> 3) * 6);
+  m_batch->draw(m_text_shader, (nvert >> 3) * 6);
   dcx->framebuffer->unbind();
   GPUState::get().set_blend(Blend::None);
-  m_nvert = 0;
+  cx.text_draw_list.clear();
 }
 
 Font::~Font() {

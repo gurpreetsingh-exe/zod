@@ -5,6 +5,7 @@
 #include "sodium/widgets/button.hh"
 #include "sodium/widgets/container.hh"
 #include "sodium/widgets/image.hh"
+#include "sodium/widgets/menu.hh"
 #include "sodium/widgets/overlay.hh"
 #include "sodium/widgets/text.hh"
 
@@ -192,6 +193,27 @@ public:
 
   auto visibility(Visibility visibility) -> WidgetBuilder& {
     m_widget->set_visibility(visibility);
+    return *this;
+  }
+
+  auto menu_entry(String label, Menu::Action action = {}) -> WidgetBuilder&
+    requires std::is_base_of_v<Menu, WidgetT>
+  {
+    m_widget->add_entry(std::move(label), std::move(action));
+    return *this;
+  }
+
+  auto menu_separator() -> WidgetBuilder&
+    requires std::is_base_of_v<Menu, WidgetT>
+  {
+    m_widget->add_separator();
+    return *this;
+  }
+
+  auto close_after_selection(bool close) -> WidgetBuilder&
+    requires std::is_base_of_v<Menu, WidgetT>
+  {
+    m_widget->set_close_after_selection(close);
     return *this;
   }
 

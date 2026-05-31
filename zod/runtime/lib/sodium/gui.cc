@@ -1,5 +1,7 @@
 #include "sodium/gui.hh"
 #include "gpu/backend.hh"
+#include "sodium/font.hh"
+#include "sodium/icon.hh"
 #include "sodium/paint.hh"
 #include "sodium/theme.hh"
 
@@ -18,38 +20,40 @@ auto resize(vec2 size) -> void {
 }
 
 auto rect_(PaintCx& pcx, vec4 col, vec2 a, vec2 b) -> void {
-  auto start = pcx.draw_list.draw_data.size();
+  auto& draw_list = pcx.active_draw_list();
+  auto start = draw_list.draw_data.size();
 
   auto a0 = vec2(a.x, a.y + b.y);
   auto a1 = a + b;
   auto a2 = vec2(a.x + b.x, a.y);
   auto a3 = a;
 
-  pcx.draw_list.draw_data.push_back({ a0, { 0, 0 } });
-  pcx.draw_list.draw_data.push_back({ a1, { 1, 0 } });
-  pcx.draw_list.draw_data.push_back({ a2, { 1, 1 } });
-  pcx.draw_list.draw_data.push_back({ a3, { 0, 1 } });
+  draw_list.draw_data.push_back({ a0, { 0, 0 } });
+  draw_list.draw_data.push_back({ a1, { 1, 0 } });
+  draw_list.draw_data.push_back({ a2, { 1, 1 } });
+  draw_list.draw_data.push_back({ a3, { 0, 1 } });
 
-  pcx.draw_list.indices.push_back(start);
-  pcx.draw_list.indices.push_back(start + 1);
-  pcx.draw_list.indices.push_back(start + 2);
-  pcx.draw_list.indices.push_back(start + 2);
-  pcx.draw_list.indices.push_back(start + 3);
-  pcx.draw_list.indices.push_back(start);
+  draw_list.indices.push_back(start);
+  draw_list.indices.push_back(start + 1);
+  draw_list.indices.push_back(start + 2);
+  draw_list.indices.push_back(start + 2);
+  draw_list.indices.push_back(start + 3);
+  draw_list.indices.push_back(start);
 
-  pcx.draw_list.colors.push_back(col);
-  pcx.draw_list.colors.push_back(col);
+  draw_list.colors.push_back(col);
+  draw_list.colors.push_back(col);
 }
 
 auto push_triangle(PaintCx& pcx, vec4 color, vec2 a, vec2 b, vec2 c) -> void {
-  auto start = pcx.draw_list.draw_data.size();
-  pcx.draw_list.draw_data.push_back({ a, { 0, 0 } });
-  pcx.draw_list.draw_data.push_back({ b, { 0, 0 } });
-  pcx.draw_list.draw_data.push_back({ c, { 0, 0 } });
-  pcx.draw_list.indices.push_back(start);
-  pcx.draw_list.indices.push_back(start + 1);
-  pcx.draw_list.indices.push_back(start + 2);
-  pcx.draw_list.colors.push_back(color);
+  auto& draw_list = pcx.active_draw_list();
+  auto start = draw_list.draw_data.size();
+  draw_list.draw_data.push_back({ a, { 0, 0 } });
+  draw_list.draw_data.push_back({ b, { 0, 0 } });
+  draw_list.draw_data.push_back({ c, { 0, 0 } });
+  draw_list.indices.push_back(start);
+  draw_list.indices.push_back(start + 1);
+  draw_list.indices.push_back(start + 2);
+  draw_list.colors.push_back(color);
 }
 
 auto has_rounding_flag(RoundingFlags flags, RoundingFlags flag) -> bool {
@@ -188,7 +192,22 @@ auto init_gui() -> void {
                      framebuffer);
 }
 
+static auto append_draw_list(DrawList& target, const DrawList& source) -> void {
+  auto draw_data_offset = u32(target.draw_data.size());
+  target.draw_data.insert(target.draw_data.end(), source.draw_data.begin(),
+                          source.draw_data.end());
+  target.colors.insert(target.colors.end(), source.colors.begin(),
+                       source.colors.end());
+
+  target.indices.reserve(target.indices.size() + source.indices.size());
+  for (auto index : source.indices) {
+    target.indices.push_back(index + draw_data_offset);
+  }
+}
+
 auto submit(PaintCx& cx, SharedPtr<GPUTexture> texture) -> void {
+  append_draw_list(cx.draw_list, cx.foreground_draw_list);
+
   dcx->draw_data->write(cx.draw_list.draw_data.data(),
                         cx.draw_list.draw_data.size() * sizeof(GPUDrawData));
   dcx->colors->write(cx.draw_list.colors.data(),
@@ -210,6 +229,10 @@ auto submit(PaintCx& cx, SharedPtr<GPUTexture> texture) -> void {
   cx.draw_list.draw_data.clear();
   cx.draw_list.colors.clear();
   cx.draw_list.indices.clear();
+  cx.foreground_draw_list.draw_data.clear();
+  cx.foreground_draw_list.colors.clear();
+  cx.foreground_draw_list.indices.clear();
+  cx.paint_foreground = false;
 }
 
 auto present() -> void {
@@ -220,5 +243,33 @@ auto present() -> void {
 }
 
 auto submit(PaintCx& cx) -> void { submit(cx, dcx->white_texture); }
+
+auto flush_foreground(PaintCx& cx) -> void {
+  if (cx.deferred_foreground_paints.empty() and
+      cx.foreground_draw_list.indices.empty() and
+      cx.foreground_text_draw_list.positions.empty()) {
+    return;
+  }
+
+  auto foreground_cx = PaintCx();
+  {
+    auto foreground = ScopedForegroundPaint(foreground_cx);
+    for (const auto& paint : cx.deferred_foreground_paints) {
+      paint(foreground_cx);
+    }
+  }
+
+  append_draw_list(foreground_cx.draw_list, cx.foreground_draw_list);
+  submit(foreground_cx);
+  flush_icons();
+  draw_images();
+  Font::get().submit(foreground_cx);
+
+  cx.deferred_foreground_paints.clear();
+  cx.foreground_draw_list.draw_data.clear();
+  cx.foreground_draw_list.colors.clear();
+  cx.foreground_draw_list.indices.clear();
+  cx.foreground_text_draw_list.clear();
+}
 
 } // namespace zod::sodium

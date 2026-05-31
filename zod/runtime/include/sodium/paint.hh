@@ -3,6 +3,8 @@
 #include "core/shapes.hh"
 #include "gpu/fwd.hh"
 
+#include <functional>
+
 namespace zod::sodium {
 
 enum RoundingFlags {
@@ -40,8 +42,51 @@ struct DrawList {
   Vector<u32> indices = {};
 };
 
+struct TextDrawList {
+  Vector<f32> positions = {};
+  Vector<f32> uvs = {};
+
+  auto clear() -> void {
+    positions.clear();
+    uvs.clear();
+  }
+};
+
 struct PaintCx {
+  using DeferredPaint = std::function<void(PaintCx&)>;
+
   DrawList draw_list = {};
+  DrawList foreground_draw_list = {};
+  TextDrawList text_draw_list = {};
+  TextDrawList foreground_text_draw_list = {};
+  Vector<DeferredPaint> deferred_foreground_paints = {};
+  bool paint_foreground = false;
+
+  auto active_draw_list() -> DrawList& {
+    return paint_foreground ? foreground_draw_list : draw_list;
+  }
+
+  auto active_text_draw_list() -> TextDrawList& {
+    return paint_foreground ? foreground_text_draw_list : text_draw_list;
+  }
+
+  auto defer_foreground(DeferredPaint paint) -> void {
+    deferred_foreground_paints.push_back(std::move(paint));
+  }
+};
+
+class ScopedForegroundPaint {
+public:
+  explicit ScopedForegroundPaint(PaintCx& cx)
+      : m_cx(cx), m_previous(cx.paint_foreground) {
+    m_cx.paint_foreground = true;
+  }
+
+  ~ScopedForegroundPaint() { m_cx.paint_foreground = m_previous; }
+
+private:
+  PaintCx& m_cx;
+  bool m_previous = false;
 };
 
 struct rect {

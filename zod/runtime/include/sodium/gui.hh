@@ -15,6 +15,7 @@ auto init_gui() -> void;
 auto resize(vec2) -> void;
 auto submit(PaintCx&) -> void;
 auto submit(PaintCx&, SharedPtr<GPUTexture>) -> void;
+auto flush_foreground(PaintCx&) -> void;
 auto draw_images() -> void;
 auto present() -> void;
 

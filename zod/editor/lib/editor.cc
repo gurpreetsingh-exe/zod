@@ -81,16 +81,36 @@ Editor::Editor()
                                           .min_size({ 50, 0 })
                                           .background({ 0.1, 0.1, 0.1, 1.0 })];
 
-  auto menu = [](const String& name) {
-    return slot().auto_width()
-        [create<Menu>().min_size({ 40, 0 }).padding({ 8, 8, 0, 0 }).name(name)];
-  };
+  auto file_menu = create<Menu>()
+                       .min_size({ 40, 0 })
+                       .padding({ 8, 8, 0, 0 })
+                       .name("File")
+                       .menu_entry("New")
+                       .menu_entry("Open")
+                       .menu_separator()
+                       .menu_entry("Save",
+                                   [] {
+                                     if (g_project) {
+                                       g_project->save();
+                                     }
+                                   })
+                       .menu_separator()
+                       .menu_entry("Quit", [] {
+                         auto event = Event { .kind = Event::WindowClose };
+                         Application::get().on_event(event);
+                       });
+
+  auto edit_menu = create<Menu>()
+                       .min_size({ 40, 0 })
+                       .padding({ 8, 8, 0, 0 })
+                       .name("Edit")
+                       .menu_entry("Preferences", [] { preferences = true; });
 
   auto menus =
       create<HorizontalBox>() +
-      slot()
-          .fixed_height(25)
-          .auto_width()[create<HorizontalBox>() + menu("File") + menu("Edit")];
+      slot().fixed_height(25).auto_width()[create<HorizontalBox>() +
+                                           slot().auto_width()[file_menu] +
+                                           slot().auto_width()[edit_menu]];
   auto spread = slot()[create<Box>()
 #if defined(PLATFORM_LINUX)
                            .on_mouse_down([](const Event& event) {
@@ -276,7 +296,8 @@ auto Editor::update() -> void {
     sodium::submit(cx);
     sodium::flush_icons();
     sodium::draw_images();
-    sodium::Font::get().submit();
+    sodium::Font::get().submit(cx);
+    sodium::flush_foreground(cx);
     sodium::present();
     GPUState::get().set_blend(Blend::None);
 

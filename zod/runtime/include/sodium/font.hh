@@ -4,6 +4,8 @@
 
 namespace zod::sodium {
 
+struct PaintCx;
+
 auto init_font(const fs::path&) -> void;
 
 class Font {
@@ -17,10 +19,12 @@ public:
   auto get_texture_atlas() -> void*;
   auto get_width() -> i32 { return m_width; }
   auto get_height() -> i32 { return m_height; }
-  auto render_text(const char* text, f32 x, f32 y, f32 sx, f32 sy) -> void;
-  auto render_text_center(const char* text, f32 x, f32 y, f32 size) -> void;
+  auto render_text(PaintCx&, const char* text, f32 x, f32 y, f32 sx, f32 sy)
+      -> void;
+  auto render_text_center(PaintCx&, const char* text, f32 x, f32 y, f32 size)
+      -> void;
   auto width(const String&, f32) -> f32;
-  auto submit() -> void;
+  auto submit(PaintCx&) -> void;
 
 private:
   struct GlyphInfo {
