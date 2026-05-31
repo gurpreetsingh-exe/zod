@@ -1,6 +1,8 @@
 #pragma once
 
 #include "sodium/widgets/box_container.hh"
+#include "sodium/widgets/compound_widget.hh"
+#include "sodium/gui.hh"
 
 namespace zod::sodium {
 
@@ -14,7 +16,7 @@ class Split : public BoxContainer {
 
 public:
   Split(SharedPtr<Widget>, SharedPtr<Widget>, Axis = Axis::Horizontal,
-        f32 = 0.5f);
+        f32 = 0.5f, f32 = S.padding, SharedPtr<Widget> = shared<CompoundWidget>());
 
   Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, f32 s)
       : Split(first_, second_, Axis::Horizontal, s) {}
@@ -31,6 +33,7 @@ private:
 
 private:
   Axis m_axis = Axis::Horizontal;
+  f32 m_splitter_thickness = S.padding;
   ResizeState state = {};
 };
 

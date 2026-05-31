@@ -8,6 +8,11 @@ auto Container::add_child(SharedPtr<Widget> child, const SlotStyle& style)
   return m_children.back();
 }
 
+auto Container::clear_children() -> void {
+  m_children.clear();
+  invalidate_layout();
+}
+
 auto Container::get_children() const -> WidgetChildren {
   auto children = WidgetChildren {};
   children.reserve(m_children.size());

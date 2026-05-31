@@ -43,6 +43,7 @@ public:
   auto update() -> void;
   auto active_camera() -> Entity;
   auto set_active_camera(Entity) -> void;
+  auto entities() -> Vector<Entity>;
   auto operator->() const -> const entt::registry* { return &m_registry; }
   auto serialize(const fs::path&) -> void;
   auto deserialize(const fs::path&) -> void;

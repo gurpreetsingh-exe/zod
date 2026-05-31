@@ -19,6 +19,8 @@
 #include "sodium/widgets/split.hh"
 #include "sodium/widgets/text.hh"
 
+#include "outliner.hh"
+
 namespace zod {
 
 Editor* g_editor;
@@ -27,9 +29,6 @@ static constexpr usize MAX_PATH = 256;
 static auto preferences = false;
 
 auto Editor::get() -> Editor& { return *g_editor; }
-
-auto light = vec4 { 0.127, 0.131, 0.14, 1 };
-auto dark = vec4 { 0.0825, 0.084, 0.09, 1 };
 
 static auto gpu_frame_timing_text() -> String {
   const auto& timings = GPUTimer::get().timings();
@@ -61,6 +60,8 @@ Editor::Editor()
                                    .content_padding({ 8, 8, 0, 0 })
                                    .name(name)];
   };
+
+  auto theme = Theme::get();
 
   auto close =
       slot().auto_width()[create<Button>(IconId::Close)
@@ -108,39 +109,52 @@ Editor::Editor()
       30)[create<HorizontalBox>() + minimize + maximize + close];
 
   auto titlebar = create<Box>().background(
-      dark)[create<HorizontalBox>() +
-            slot().fixed_width(
-                Window::TitleBarHeight)[create<Image>(logo).background(light)] +
-            slot().auto_width()[menus] + spread + window_buttons];
+      theme.background)[create<HorizontalBox>() +
+                        slot().fixed_width(Window::TitleBarHeight)
+                            [create<Image>(logo).background(theme.foreground)] +
+                        slot().auto_width()[menus] + spread + window_buttons];
 
   auto status_bar =
       create<HorizontalBox>().gap(2).name("StatusBar") +
-      slot()[create<Box>().background(light)] +
-      slot().auto_width()[create<Box>().background(light).min_desired_width(
-          120)[create<Text>()
-                   .text(Attribute<String>(
-                       [] { return gpu_frame_timing_text(); }))
-                   .justification(TextJustify::Center)]];
+      slot()[create<Box>().background(theme.foreground)] +
+      slot()
+          .auto_width()[create<Box>()
+                            .background(theme.foreground)
+                            .min_desired_width(
+                                120)[create<Text>()
+                                         .text(Attribute<String>([] {
+                                           return gpu_frame_timing_text();
+                                         }))
+                                         .justification(TextJustify::Center)]];
 
-  auto panel = [](SharedPtr<Widget> widget) {
+  auto panel = [&](SharedPtr<Widget> widget) {
     return *(
         create<VerticalBox>() +
-        slot().fixed_height(25)
-            [create<HorizontalBox>() +
-             slot().fixed_width(120)
-                 [create<Box>().background(light).rounding(5.0f).rounding_flags(
-                     RECT_ROUND_TOP)[create<Text>()
-                                         .padding({ 12, 12, 0, 0 })
-                                         .text(widget->name())]] +
-             slot()[create<Box>()]] +
+        slot().fixed_height(
+            25)[create<HorizontalBox>() +
+                slot().fixed_width(
+                    120)[create<Box>()
+                             .background(theme.foreground)
+                             .rounding(5.0f)
+                             .rounding_flags(
+                                 RECT_ROUND_TOP)[create<Text>()
+                                                     .padding({ 12, 12, 0, 0 })
+                                                     .text(widget->name())]] +
+                slot()[create<Box>()]] +
         slot()[widget]);
   };
 
   m_editor_viewport = *create<EditorViewport>(*m_renderer).name("Viewport");
-  auto outliner = *create<Box>().background(light).name("Outliner");
+
+  auto outliner = *create<Box>()
+                       .background(theme.foreground)
+                       .name("Outliner")[create<Box>().padding(2).background(
+                           theme.background)[create<Outliner>()]];
+
   auto content_browser =
-      *create<Box>().background(light).name("Content Browser");
-  auto properties = *create<Box>().background(light).name("Properties");
+      *create<Box>().background(theme.foreground).name("Content Browser");
+  auto properties =
+      *create<Box>().background(theme.foreground).name("Properties");
 
   auto tabs = create<Split>(
       *create<Split>(*create<Split>(panel(outliner), m_editor_viewport, 0.25f),
@@ -156,7 +170,8 @@ Editor::Editor()
                     .fixed_height(25)[status_bar];
 
   m_widget = *create<Box>().background(
-      light)[create<Box>().padding(2).background(dark)[window]];
+      theme.foreground)[create<Box>().padding(2).background(
+      theme.background)[window]];
 }
 
 Editor::~Editor() { delete m_renderer; }

@@ -1,20 +1,19 @@
 #include "sodium/widgets/split.hh"
-#include "sodium/gui.hh"
 #include "sodium/widgets/builder.hh"
 
 namespace zod::sodium {
 
 Split::Split(SharedPtr<Widget> first_, SharedPtr<Widget> second_, Axis axis,
-             f32 s)
-    : BoxContainer(axis), m_axis(axis), state({ s }) {
+             f32 s, f32 t, SharedPtr<Widget> custom_splitter)
+    : BoxContainer(axis), m_axis(axis), m_splitter_thickness(t), state({ s }) {
   add_child(first_, split_slot(state.split));
-  add_child(*create<Box>()
+  add_child(*create<CompoundWidget>()
                  .hit_test_margin(get_hit_test_margin())
                  .hit_test_priority(10)
                  .cursor(cursor())
                  .on_mouse_down(this, &Split::begin_resize)
                  .on_mouse_move(this, &Split::update_resize)
-                 .on_mouse_up(this, &Split::end_resize),
+                 .on_mouse_up(this, &Split::end_resize)[custom_splitter],
             handle_slot());
   add_child(second_, split_slot(1.0f - state.split));
 }
@@ -28,9 +27,9 @@ auto Split::split_slot(f32 weight) const -> SlotStyle {
 
 auto Split::handle_slot() const -> SlotStyle {
   if (m_axis == Axis::Horizontal) {
-    return slot().fixed_width(S.padding);
+    return slot().fixed_width(m_splitter_thickness);
   }
-  return slot().fixed_height(S.padding);
+  return slot().fixed_height(m_splitter_thickness);
 }
 
 auto Split::get_hit_test_margin() const -> Padding {
@@ -60,7 +59,8 @@ auto Split::update_resize(const Event& event) -> EventResponse {
     return EventResponse::unhandled();
   }
 
-  auto resizable_size = std::max(1.0f, frame().size[m_axis] - S.padding);
+  auto resizable_size =
+      std::max(1.0f, frame().size[m_axis] - m_splitter_thickness);
   auto delta = event.mouse[m_axis] - state.start_mouse[m_axis];
   auto fac = state.start_split + delta / resizable_size;
 

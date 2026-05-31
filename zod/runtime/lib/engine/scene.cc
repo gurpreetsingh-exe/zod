@@ -145,6 +145,15 @@ auto Scene::set_active_camera(Entity entity) -> void {
 
 auto Scene::active_camera() -> Entity { return Entity(m_camera, this); }
 
+auto Scene::entities() -> Vector<Entity> {
+  auto entities = Vector<Entity>();
+  m_registry.view<IdentifierComponent>().each(
+      [&](auto entity, const IdentifierComponent&) {
+        entities.emplace_back(entity, this);
+      });
+  return entities;
+}
+
 template <typename T>
 static auto write_field(YAML::Emitter& out, const String& key, const T& value)
     -> void {
