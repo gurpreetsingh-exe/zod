@@ -50,6 +50,26 @@ auto Box::arrange(const Rect& bounds) -> void {
   m_child_slot.child->arrange(aligned);
 }
 
+auto Box::paint(PaintCx& cx) const -> void {
+  if (m_visibility == Visibility::Hidden or
+      m_visibility == Visibility::Collapsed) {
+    return;
+  }
+
+  if (m_style.background[3] > 0.0f) {
+    auto t = std::max(0.0f, m_style.border_thickness);
+    auto inner = m_frame.padding(m_style.padding).padding(t);
+    auto draw = rect(inner, m_style.background);
+    draw.rounding = m_rounding;
+    draw.flags = m_rounding_flags;
+    draw.paint(cx);
+  }
+
+  if (m_child_slot.child) {
+    m_child_slot.child->paint(cx);
+  }
+}
+
 auto Box::constrained_desired_size(vec2 desired, vec2 padding) const -> vec2 {
   if (m_width_override) {
     desired.x = *m_width_override + padding.x;

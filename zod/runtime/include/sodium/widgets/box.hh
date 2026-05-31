@@ -28,9 +28,14 @@ public:
   }
   auto set_content_halign(Align align) -> void { m_content_halign = align; }
   auto set_content_valign(Align align) -> void { m_content_valign = align; }
+  auto set_rounding(f32 rounding) -> void { m_rounding = rounding; }
+  auto set_rounding_flags(RoundingFlags flags) -> void {
+    m_rounding_flags = flags;
+  }
 
   auto compute_desired_size(vec2) -> vec2 override;
   auto arrange(const Rect&) -> void override;
+  auto paint(PaintCx&) const -> void override;
 
 private:
   auto constrained_desired_size(vec2, vec2 padding = {}) const -> vec2;
@@ -45,6 +50,8 @@ private:
   Option<f32> m_max_desired_height;
   Option<Align> m_content_halign;
   Option<Align> m_content_valign;
+  f32 m_rounding = 0.0f;
+  RoundingFlags m_rounding_flags = RECT_ROUND_ALL;
 };
 
 } // namespace zod::sodium

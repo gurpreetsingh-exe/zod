@@ -107,14 +107,14 @@ Editor::Editor()
   auto window_buttons = slot().auto_width().fixed_height(
       30)[create<HorizontalBox>() + minimize + maximize + close];
 
-  auto titlebar =
-      create<HorizontalBox>().background(dark) +
-      slot().fixed_width(
-          Window::TitleBarHeight)[create<Image>(logo).background(light)] +
-      slot().auto_width()[menus] + spread + window_buttons;
+  auto titlebar = create<Box>().background(
+      dark)[create<HorizontalBox>() +
+            slot().fixed_width(
+                Window::TitleBarHeight)[create<Image>(logo).background(light)] +
+            slot().auto_width()[menus] + spread + window_buttons];
 
   auto status_bar =
-      create<HorizontalBox>().gap(S.padding).name("StatusBar") +
+      create<HorizontalBox>().gap(2).name("StatusBar") +
       slot()[create<Box>().background(light)] +
       slot().auto_width()[create<Box>().background(light).min_desired_width(
           120)[create<Text>()
@@ -123,15 +123,17 @@ Editor::Editor()
                    .justification(TextJustify::Center)]];
 
   auto panel = [](SharedPtr<Widget> widget) {
-    return *(create<VerticalBox>() +
-             slot().fixed_height(
-                 25)[create<HorizontalBox>() +
-                     slot().fixed_width(120)[create<Box>().background(
-                         light)[create<Text>()
-                                    .padding({ 12, 12, 0, 0 })
-                                    .text(widget->name())]] +
-                     slot()[create<CompoundWidget>()]] +
-             slot()[widget]);
+    return *(
+        create<VerticalBox>() +
+        slot().fixed_height(25)
+            [create<HorizontalBox>() +
+             slot().fixed_width(120)
+                 [create<Box>().background(light).rounding(5.0f).rounding_flags(
+                     RECT_ROUND_TOP)[create<Text>()
+                                         .padding({ 12, 12, 0, 0 })
+                                         .text(widget->name())]] +
+             slot()[create<Box>()]] +
+        slot()[widget]);
   };
 
   m_editor_viewport = *create<EditorViewport>(*m_renderer).name("Viewport");
@@ -153,8 +155,8 @@ Editor::Editor()
                     .padding({ S.padding, S.padding, 0, 0 })
                     .fixed_height(25)[status_bar];
 
-  m_widget = *create<CompoundWidget>().background(
-      light)[create<CompoundWidget>().padding(2).background(dark)[window]];
+  m_widget = *create<Box>().background(
+      light)[create<Box>().padding(2).background(dark)[window]];
 }
 
 Editor::~Editor() { delete m_renderer; }

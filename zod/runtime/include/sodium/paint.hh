@@ -6,20 +6,28 @@
 namespace zod::sodium {
 
 enum RoundingFlags {
-  RECT_BEVEL_NONE = 0,
+  RECT_ROUND_NONE = 0,
 
-  RECT_BEVEL_TOP_LEFT = 1 << 0,
-  RECT_BEVEL_TOP_RIGHT = 1 << 1,
-  RECT_BEVEL_BOTTOM_RIGHT = 1 << 2,
-  RECT_BEVEL_BOTTOM_LEFT = 1 << 3,
+  RECT_ROUND_TOP_LEFT = 1 << 0,
+  RECT_ROUND_TOP_RIGHT = 1 << 1,
+  RECT_ROUND_BOTTOM_RIGHT = 1 << 2,
+  RECT_ROUND_BOTTOM_LEFT = 1 << 3,
 
-  RECT_BEVEL_TOP = RECT_BEVEL_TOP_LEFT | RECT_BEVEL_TOP_RIGHT,
-  RECT_BEVEL_BOTTOM = RECT_BEVEL_BOTTOM_LEFT | RECT_BEVEL_BOTTOM_LEFT,
-  RECT_BEVEL_RIGHT = RECT_BEVEL_TOP_RIGHT | RECT_BEVEL_BOTTOM_RIGHT,
-  RECT_BEVEL_LEFT = RECT_BEVEL_TOP_LEFT | RECT_BEVEL_BOTTOM_LEFT,
+  RECT_ROUND_TOP = RECT_ROUND_TOP_LEFT | RECT_ROUND_TOP_RIGHT,
+  RECT_ROUND_BOTTOM = RECT_ROUND_BOTTOM_LEFT | RECT_ROUND_BOTTOM_RIGHT,
+  RECT_ROUND_RIGHT = RECT_ROUND_TOP_RIGHT | RECT_ROUND_BOTTOM_RIGHT,
+  RECT_ROUND_LEFT = RECT_ROUND_TOP_LEFT | RECT_ROUND_BOTTOM_LEFT,
 
-  RECT_BEVEL_ALL = 0xF,
+  RECT_ROUND_ALL = 0xF,
 };
+
+inline auto operator|(RoundingFlags a, RoundingFlags b) -> RoundingFlags {
+  return RoundingFlags(int(a) | int(b));
+}
+
+inline auto operator&(RoundingFlags a, RoundingFlags b) -> RoundingFlags {
+  return RoundingFlags(int(a) & int(b));
+}
 
 struct GPUDrawData {
   vec2 point;
@@ -42,7 +50,7 @@ struct rect {
   vec4 color = { 0.1f, 0.8f, 0.1f, 1 };
   f32 rounding = 0;
   f32 padding = 0;
-  RoundingFlags flags = RECT_BEVEL_ALL;
+  RoundingFlags flags = RECT_ROUND_ALL;
 
   auto intersect(vec2) const -> bool;
   auto paint(PaintCx&) const -> void;

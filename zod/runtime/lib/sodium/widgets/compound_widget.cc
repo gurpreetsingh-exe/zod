@@ -44,7 +44,6 @@ auto CompoundWidget::paint(PaintCx& cx) const -> void {
       m_visibility == Visibility::Collapsed) {
     return;
   }
-  push_self_draws(cx);
   if (m_child_slot.child) {
     m_child_slot.child->paint(cx);
   }

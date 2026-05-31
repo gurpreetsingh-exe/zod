@@ -134,6 +134,20 @@ public:
     return *this;
   }
 
+  auto rounding(f32 rounding) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_rounding(rounding);
+    return *this;
+  }
+
+  auto rounding_flags(RoundingFlags flags) -> WidgetBuilder&
+    requires std::is_base_of_v<Box, WidgetT>
+  {
+    m_widget->set_rounding_flags(flags);
+    return *this;
+  }
+
   auto image(vec4 color) -> WidgetBuilder&
     requires std::is_base_of_v<Image, WidgetT>
   {

@@ -65,7 +65,6 @@ auto Overlay::paint(PaintCx& cx) const -> void {
     return;
   }
 
-  push_self_draws(cx);
   auto slots = Vector<const OverlaySlot*> {};
   slots.reserve(m_overlay_children.size());
   for (const auto& slot : m_overlay_children) { slots.push_back(&slot); }

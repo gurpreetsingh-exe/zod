@@ -153,7 +153,6 @@ auto BoxContainer::paint(PaintCx& cx) const -> void {
       m_visibility == Visibility::Collapsed) {
     return;
   }
-  push_self_draws(cx);
   for (const auto& slot : m_children) {
     if (slot.child) {
       slot.child->paint(cx);
