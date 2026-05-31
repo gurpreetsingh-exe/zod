@@ -1,4 +1,5 @@
 #include "editor.hh"
+#include "application/platform.hh"
 #include "core/platform/macros.hh"
 
 #include "engine/project.hh"
@@ -81,24 +82,39 @@ Editor::Editor()
                                           .min_size({ 50, 0 })
                                           .background({ 0.1, 0.1, 0.1, 1.0 })];
 
-  auto file_menu = create<Menu>()
-                       .min_size({ 40, 0 })
-                       .padding({ 8, 8, 0, 0 })
-                       .name("File")
-                       .menu_entry("New")
-                       .menu_entry("Open")
-                       .menu_separator()
-                       .menu_entry("Save",
-                                   [] {
-                                     if (g_project) {
-                                       g_project->save();
-                                     }
-                                   })
-                       .menu_separator()
-                       .menu_entry("Quit", [] {
-                         auto event = Event { .kind = Event::WindowClose };
-                         Application::get().on_event(event);
-                       });
+  auto file_menu =
+      create<Menu>()
+          .min_size({ 40, 0 })
+          .padding({ 8, 8, 0, 0 })
+          .name("File")
+          .menu_entry("New", [] { TODO(); })
+          .menu_entry("Open",
+                      [] {
+                        auto config_path = open_dialog({ .filter = "*.zproj" });
+                        if (g_project) {
+                          delete g_project;
+                        }
+                        Project::load(config_path);
+                      })
+          .menu_separator()
+          .menu_entry("Save",
+                      [] {
+                        if (g_project) {
+                          g_project->save();
+                        }
+                      })
+          .menu_separator()
+          .menu_entry("Import GLTF",
+                      [] {
+                        auto gltf_path =
+                            open_dialog({ .filter = "*.gltf *.glb" });
+                        loadGLTF(g_project->assets_directory(), gltf_path);
+                      })
+          .menu_separator()
+          .menu_entry("Quit", [] {
+            auto event = Event { .kind = Event::WindowClose };
+            Application::get().on_event(event);
+          });
 
   auto edit_menu = create<Menu>()
                        .min_size({ 40, 0 })
@@ -230,11 +246,6 @@ auto Editor::setup() -> void {
     Project::load(path);
   }
 
-  // m_layout->add_area(shared<Viewport>());
-  // m_layout->add_area(shared<Properties>());
-  // m_layout->add_area(shared<Outliner>());
-  // m_layout->add_area(shared<ContentBrowser>());
-
   update_viewport_camera();
 
   // loadGLTF(
@@ -249,19 +260,12 @@ auto Editor::on_event(Event& event) -> void {
     m_widget->compute_desired_size(size);
     m_widget->arrange({ { 0, 0 }, size });
     m_widget->clear_layout_invalidated();
-    // editor_gui().layout({ { 0.0f, 0.0f }, event.size });
   }
 
   auto reply = m_widget->event(event);
   if (reply) {
     event.hanging = false;
   }
-
-  // editor_gui().on_event(event);
-
-  // if (auto* area = m_layout->active()) {
-  //   area->on_event(event);
-  // }
 }
 
 auto Editor::update_viewport_camera() -> void {
@@ -292,7 +296,6 @@ auto Editor::update() -> void {
 
     GPUState::get().set_blend(Blend::Alpha);
     m_widget->paint(cx);
-    // editor_gui().paint(cx);
     sodium::submit(cx);
     sodium::flush_icons();
     sodium::draw_images();
@@ -300,180 +303,6 @@ auto Editor::update() -> void {
     sodium::flush_foreground(cx);
     sodium::present();
     GPUState::get().set_blend(Blend::None);
-
-    // m_imgui_layer->begin_frame();
-    //
-    // auto& theme = Theme::get();
-    // ImGui::PushStyleColor(ImGuiCol_Border,
-    //                       *reinterpret_cast<ImVec4*>(&theme.highlight));
-    // ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
-    //                       *reinterpret_cast<ImVec4*>(&theme.primary));
-    //
-    // static auto open_save_modal = false;
-    // if (ImGui::BeginMainMenuBar()) {
-    //   if (ImGui::BeginMenu("File")) {
-    //     if (ImGui::MenuItem("New")) {
-    //       TODO();
-    //     }
-    //     if (ImGui::MenuItem("Open")) {
-    //       auto config_path = open_dialog({ .filter = "*.zproj" });
-    //       if (g_project) {
-    //         delete g_project;
-    //       }
-    //       Project::load(config_path);
-    //       update_viewport_camera();
-    //     }
-    //     ImGui::Separator();
-    //     if (ImGui::MenuItem("Save")) {
-    //       if (g_project) {
-    //         g_project->save();
-    //       } else {
-    //         open_save_modal = true;
-    //       }
-    //     }
-    //
-    //     ImGui::Separator();
-    //     if (ImGui::BeginMenu("Import")) {
-    //       if (ImGui::MenuItem("GLTF")) {
-    //         auto gltf_path = open_dialog({ .filter = "*.gltf *.glb" });
-    //         loadGLTF(g_project->assets_directory(), gltf_path);
-    //       }
-    //       ImGui::EndMenu();
-    //     }
-    //     if (ImGui::MenuItem("Quit")) {
-    //       Event event = { .kind = Event::WindowClose };
-    //       Application::get().on_event(event);
-    //     }
-    //     ImGui::EndMenu();
-    //   }
-    //
-    //   if (ImGui::BeginMenu("Edit")) {
-    //     if (ImGui::MenuItem("Preferences")) {
-    //       preferences = true;
-    //     }
-    //     ImGui::EndMenu();
-    //   }
-    //
-    //   ImGui::EndMainMenuBar();
-    //   // } else {
-    //   //   ImGui::End();
-    // }
-    // ImGui::PopStyleColor(2);
-    //
-    // if (open_save_modal) {
-    //   ImGui::OpenPopup("Save Project");
-    // }
-    //
-    // auto center = ImGui::GetMainViewport()->GetCenter();
-    // ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    //
-    // if (ImGui::BeginPopupModal("Save Project", NULL,
-    //                            ImGuiWindowFlags_AlwaysAutoResize)) {
-    //   const char* name_l = "Project Name";
-    //   const char* loc_l = "Project Location";
-    //   const auto padding = ImGui::CalcTextSize(loc_l, NULL, true).x + 20;
-    //
-    //   // Project Name
-    //   ImGui::BeginGroup();
-    //   ImGui::AlignTextToFramePadding();
-    //   ImGui::Text("%s", name_l);
-    //   ImGui::SameLine(padding);
-    //   static char nbuf[MAX_PATH] = {};
-    //   ImGui::InputText("##Name", nbuf, MAX_PATH);
-    //   ImGui::EndGroup();
-    //
-    //   // Project Location
-    //   ImGui::BeginGroup();
-    //   ImGui::AlignTextToFramePadding();
-    //   ImGui::Text("%s", loc_l);
-    //   ImGui::SameLine(padding);
-    //   static char buf[MAX_PATH] = {};
-    //   ImGui::InputText("##Location", buf, MAX_PATH);
-    //   ImGui::SameLine();
-    //   if (ImGui::Button("...")) {
-    //     auto path = open_dialog({ .selection_mode = SelectionMode::Directory
-    //     }); ZASSERT(path.size() < MAX_PATH); memcpy(buf, path.c_str(),
-    //     path.size());
-    //   }
-    //   ImGui::EndGroup();
-    //
-    //   auto align = [](float width, float alignment = 0.5f) {
-    //     auto avail = ImGui::GetContentRegionAvail().x;
-    //     auto off = (avail - width) * alignment;
-    //     if (off > 0.0f) {
-    //       ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
-    //     }
-    //   };
-    //
-    //   auto& style = ImGui::GetStyle();
-    //   const auto s = ImVec2(120, 0);
-    //   f32 width = 0.0f;
-    //   width += s.x * 2.0f;
-    //   width += style.ItemSpacing.x;
-    //   align(width);
-    //
-    //   if (ImGui::Button("Save", s)) {
-    //     g_project = new Project(nbuf, buf);
-    //     g_project->init();
-    //     g_project->save();
-    //
-    //     open_save_modal = false;
-    //     ImGui::CloseCurrentPopup();
-    //   }
-    //
-    //   ImGui::SameLine();
-    //   if (ImGui::Button("Cancel", s)) {
-    //     memset(buf, 0, MAX_PATH);
-    //     memset(nbuf, 0, MAX_PATH);
-    //     open_save_modal = false;
-    //     ImGui::CloseCurrentPopup();
-    //   }
-    //
-    //   ImGui::EndPopup();
-    // }
-    //
-    // if (preferences) {
-    //   ImGui::Begin("Preferences", &preferences,
-    //                ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoCollapse);
-    //   ImGui::SeparatorText("Theme");
-    //   bool update = false;
-    //   update |= ImGui::ColorEdit3("Background", &theme.background.x,
-    //                               ImGuiColorEditFlags_Float);
-    //   update |= ImGui::ColorEdit3("Highlights", &theme.highlight.x,
-    //                               ImGuiColorEditFlags_Float);
-    //   if (update) {
-    //     init_theme();
-    //   }
-    //   ImGui::End();
-    // }
-    //
-    // m_imgui_layer->update([&] {
-    //   ImGui::Begin("DebugEditor");
-    //   ImGuiIO& io = ImGui::GetIO();
-    //   ImGui::Text("Delta Time: %.3f ms", 1000.0f / io.Framerate);
-    //   static bool vsync = true;
-    //   if (ImGui::Checkbox("V-Sync", &vsync)) {
-    //     Application::get().active_window().set_vsync(vsync);
-    //   }
-    //   ImGui::Separator();
-    //
-    //   // auto viewport =
-    //   //     std::static_pointer_cast<Viewport>(m_layout->area("Viewport"));
-    //   // ImGui::Checkbox("G-Buffer", std::addressof(viewport->gbuffer()));
-    //   // ImGui::SliderInt("G-Buffer Slot",
-    //   //                  std::addressof(viewport->gbuffer_slot()), 0, 1);
-    //
-    //   ImGui::Separator();
-    //   for (const auto& [name, time] : GPUTimer::get().timings()) {
-    //     ImGui::Text("%s: %.3f ms", name.c_str(), time);
-    //   }
-    //
-    //   ImGui::End();
-    //
-    //   // static auto g = Geometry();
-    //   // m_layout->draw(g);
-    // });
-    // m_imgui_layer->end_frame();
   });
 }
 
