@@ -22,8 +22,7 @@ Outliner::Outliner() : m_list(shared<sodium::MultiColumnListView<Entity>>()) {
 
   m_list->set_header_background(Theme::get().foreground);
   m_list->set_splitter_thickness(2.0f);
-  m_list->set_splitter_widget(
-      *create<Box>().background(Theme::get().foreground));
+  m_list->set_splitter_style({ .background = Theme::get().foreground });
   m_list->set_row_background([](usize row) {
     auto& theme = Theme::get();
     return row % 2 == 0 ? theme.background - 0.01f : theme.background + 0.01f;

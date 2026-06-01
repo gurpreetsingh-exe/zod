@@ -61,8 +61,8 @@ public:
     request_refresh();
   }
 
-  auto set_splitter_widget(SharedPtr<Widget> widget) -> void {
-    m_splitter_widget = std::move(widget);
+  auto set_splitter_style(WidgetStyle style) -> void {
+    m_splitter_style = style;
     m_needs_rebuild = true;
     request_refresh();
   }
@@ -127,7 +127,7 @@ private:
 
     return shared<Split>(m_columns[index].widget, split_from_column(index + 1),
                          Axis::Horizontal, m_columns[index].weight,
-                         m_splitter_thickness, splitter_widget());
+                         m_splitter_thickness, m_splitter_style);
   }
 
   auto header_cell(const String& text) -> SharedPtr<Widget> {
@@ -145,13 +145,6 @@ private:
     return {};
   }
 
-  auto splitter_widget() const -> SharedPtr<Widget> {
-    if (m_splitter_widget) {
-      return m_splitter_widget;
-    }
-    return shared<CompoundWidget>();
-  }
-
 private:
   Vector<Column> m_columns;
   ItemsSource m_items_source;
@@ -161,7 +154,7 @@ private:
   f32 m_header_height = 24.0f;
   f32 m_row_height = 24.0f;
   f32 m_splitter_thickness = S.padding;
-  SharedPtr<Widget> m_splitter_widget = nullptr;
+  WidgetStyle m_splitter_style {};
   bool m_needs_rebuild = true;
   bool m_needs_refresh = true;
 };
