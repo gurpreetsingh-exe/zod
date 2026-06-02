@@ -15,14 +15,18 @@ public:
   auto empty() const -> bool { return m_widgets.empty(); }
   auto clear() -> void { m_widgets.clear(); }
   auto resize(usize size) -> void { m_widgets.resize(size); }
-  auto push(Widget* widget) -> void { m_widgets.push_back(widget); }
-  auto contains(const Widget* widget) const -> bool;
-  auto operator[](usize index) const -> Widget* { return m_widgets[index]; }
+  auto push(SharedPtr<Widget> widget) -> void {
+    ZASSERT(widget);
+    m_widgets.push_back(widget);
+  }
+  auto operator[](usize index) const -> SharedPtr<Widget> {
+    return m_widgets[index];
+  }
   auto begin() const { return m_widgets.begin(); }
   auto end() const { return m_widgets.end(); }
 
 private:
-  Vector<Widget*> m_widgets = {};
+  Vector<SharedPtr<Widget>> m_widgets = {};
 };
 
 struct WidgetStyle {
@@ -35,10 +39,12 @@ struct WidgetStyle {
 
 using WidgetChildren = Vector<SharedPtr<Widget>>;
 
-class Widget {
+class Widget : public std::enable_shared_from_this<Widget> {
 public:
+  Widget();
   virtual ~Widget() = default;
 
+  auto debug_id() const -> u64 { return m_debug_id; }
   auto name() const -> const String& { return m_name; }
   auto set_name(String name) -> void { m_name = std::move(name); }
 
@@ -150,6 +156,8 @@ public:
   auto invalidate_layout() -> void { m_layout_invalidated = true; }
   auto needs_layout() const -> bool;
   auto clear_layout_invalidated() -> void;
+  auto debug_hover_path() const -> Vector<String>;
+  auto debug_mouse_capture() const -> String;
 
 protected:
   auto cache_desired_size(vec2 desired) const -> vec2 {
@@ -165,6 +173,7 @@ protected:
   auto route_tree_event(const Event&) -> EventResponse;
   auto push_self_draws(PaintCx&) const -> void;
 
+  u64 m_debug_id = 0;
   String m_name;
   WidgetStyle m_style {};
   Rect m_frame {};
@@ -182,9 +191,6 @@ protected:
   MouseButton m_drag_button = MouseButton::None;
   vec2 m_drag_start = {};
   f32 m_drag_threshold = 2.0f;
-  WidgetPath m_hovered_path = {};
-  Widget* m_mouse_captor = nullptr;
-  MouseButton m_mouse_capture_button = MouseButton::None;
   bool m_layout_invalidated = false;
   Vector<SharedPtr<IWidgetMetaData>> m_metadata = {};
 };

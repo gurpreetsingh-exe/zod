@@ -10,7 +10,7 @@ auto measure_stack_children(const Vector<Container::Slot>& children,
   auto visible = usize(0);
 
   for (const auto& slot : children) {
-    if (not slot.child or slot.child->visibility() == Visibility::Collapsed) {
+    if (slot.child->visibility() == Visibility::Collapsed) {
       continue;
     }
 
@@ -55,7 +55,7 @@ auto BoxContainer::arrange(const Rect& bounds) -> void {
   auto visible = usize(0);
 
   for (const auto& slot : m_children) {
-    if (not slot.child or slot.child->visibility() == Visibility::Collapsed) {
+    if (slot.child->visibility() == Visibility::Collapsed) {
       continue;
     }
     ++visible;
@@ -90,7 +90,7 @@ auto BoxContainer::arrange(const Rect& bounds) -> void {
       std::max(0.0f, available_layout_size - fixed_layout_size - gaps);
 
   for (auto& slot : m_children) {
-    if (not slot.child or slot.child->visibility() == Visibility::Collapsed) {
+    if (slot.child->visibility() == Visibility::Collapsed) {
       continue;
     }
     auto child_desired = slot.child->desired_size();
@@ -153,11 +153,7 @@ auto BoxContainer::paint(PaintCx& cx) const -> void {
       m_visibility == Visibility::Collapsed) {
     return;
   }
-  for (const auto& slot : m_children) {
-    if (slot.child) {
-      slot.child->paint(cx);
-    }
-  }
+  for (const auto& slot : m_children) { slot.child->paint(cx); }
 }
 
 } // namespace zod::sodium

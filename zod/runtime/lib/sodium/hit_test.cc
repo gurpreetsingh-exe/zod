@@ -7,70 +7,74 @@ auto HitTestList::clear() -> void {
   m_next_order = 0;
 }
 
-auto HitTestList::build_from(Widget& root) -> void {
+auto HitTestList::build_from(SharedPtr<Widget> root) -> void {
+  ZASSERT(root);
   clear();
   collect(root, {}, 0);
 }
 
-auto HitTestList::collect(Widget& widget, WidgetPath path, i32 layer) -> void {
-  auto visibility = widget.visibility();
+auto HitTestList::collect(SharedPtr<Widget> widget, WidgetPath path, i32 layer)
+    -> void {
+  ZASSERT(widget);
+
+  auto visibility = widget->visibility();
   if (visibility == Visibility::Hidden or visibility == Visibility::Collapsed) {
     return;
   }
 
-  path.push(&widget);
-  auto entry_layer = layer + widget.hit_test_layer();
+  path.push(widget);
+  auto entry_layer = layer + widget->hit_test_layer();
   if (visibility != Visibility::SelfHitTestInvisible) {
-    m_entries.push_back({ path, widget.hit_test_bounds(), entry_layer,
-                          widget.hit_test_priority(), m_next_order++ });
+    m_entries.push_back({ path, widget->hit_test_bounds(), entry_layer,
+                          widget->hit_test_priority(), m_next_order++ });
   }
 
-  for (auto child : widget.get_children()) {
-    if (child) {
-      collect(*child, path, entry_layer);
-    }
+  for (auto child : widget->get_children()) {
+    collect(child, path, entry_layer);
   }
 }
 
 auto HitTestList::path_at(vec2 mouse) const -> WidgetPath {
-  const auto* best = static_cast<const HitTestEntry*>(nullptr);
+  auto has_best = false;
+  auto best = HitTestEntry {};
   for (const auto& entry : m_entries) {
     if (not entry.bounds.intersect(mouse)) {
       continue;
     }
 
-    if (not best) {
-      best = &entry;
+    if (not has_best) {
+      best = entry;
+      has_best = true;
       continue;
     }
 
-    if (entry.layer != best->layer) {
-      if (entry.layer > best->layer) {
-        best = &entry;
+    if (entry.layer != best.layer) {
+      if (entry.layer > best.layer) {
+        best = entry;
       }
       continue;
     }
 
-    if (entry.priority != best->priority) {
-      if (entry.priority > best->priority) {
-        best = &entry;
+    if (entry.priority != best.priority) {
+      if (entry.priority > best.priority) {
+        best = entry;
       }
       continue;
     }
 
-    if (entry.order != best->order) {
-      if (entry.order > best->order) {
-        best = &entry;
+    if (entry.order != best.order) {
+      if (entry.order > best.order) {
+        best = entry;
       }
       continue;
     }
 
-    if (entry.path.size() > best->path.size()) {
-      best = &entry;
+    if (entry.path.size() > best.path.size()) {
+      best = entry;
     }
   }
 
-  return best ? best->path : WidgetPath {};
+  return has_best ? best.path : WidgetPath {};
 }
 
 } // namespace zod::sodium

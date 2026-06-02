@@ -138,6 +138,7 @@ public:
   operator SlotStyle() const { return m_style; }
 
   auto operator[](SharedPtr<Widget> child) const -> SlotContent {
+    ZASSERT(child);
     return { child, m_style, m_layer };
   }
 

@@ -18,6 +18,7 @@ auto Splitter::add_slot(SharedPtr<Widget> child, f32 size_coefficient,
 auto Splitter::insert_slot(usize index, SharedPtr<Widget> child,
                            f32 size_coefficient, f32 min_size, bool resizable)
     -> usize {
+  ZASSERT(child);
   index = std::min(index, m_slots.size());
   auto slot = Slot { child, std::max(0.0f, size_coefficient),
                      std::max(0.0f, min_size), resizable };
@@ -174,8 +175,8 @@ auto Splitter::end_resize(const Event& event) -> EventResponse {
 }
 
 auto Splitter::can_resize_handle(usize handle_index) const -> bool {
-  return handle_index + 1 < m_slots.size() and m_slots[handle_index].child and
-         m_slots[handle_index + 1].child and m_slots[handle_index].resizable and
+  return handle_index + 1 < m_slots.size() and
+         m_slots[handle_index].resizable and
          m_slots[handle_index + 1].resizable;
 }
 

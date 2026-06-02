@@ -4,6 +4,7 @@ namespace zod::sodium {
 
 auto Overlay::add_overlay_child(SharedPtr<Widget> child, const SlotStyle& style,
                                 int layer) -> Overlay::OverlaySlot& {
+  ZASSERT(child);
   m_overlay_children.push_back({ child, style, layer });
   return m_overlay_children.back();
 }
@@ -19,7 +20,7 @@ auto Overlay::compute_desired_size(vec2 available) -> vec2 {
   auto inner = Rect { {}, available }.padding(m_style.padding);
 
   for (const auto& slot : m_overlay_children) {
-    if (not slot.child or slot.child->visibility() == Visibility::Collapsed) {
+    if (slot.child->visibility() == Visibility::Collapsed) {
       continue;
     }
 
@@ -42,7 +43,7 @@ auto Overlay::arrange(const Rect& bounds) -> void {
   auto inner = m_frame.padding(m_style.padding);
 
   for (auto& slot : m_overlay_children) {
-    if (not slot.child or slot.child->visibility() == Visibility::Collapsed) {
+    if (slot.child->visibility() == Visibility::Collapsed) {
       continue;
     }
 
@@ -73,11 +74,7 @@ auto Overlay::paint(PaintCx& cx) const -> void {
                      return a->layer < b->layer;
                    });
 
-  for (const auto* slot : slots) {
-    if (slot->child) {
-      slot->child->paint(cx);
-    }
-  }
+  for (const auto* slot : slots) { slot->child->paint(cx); }
 }
 
 auto Overlay::get_children() const -> WidgetChildren {

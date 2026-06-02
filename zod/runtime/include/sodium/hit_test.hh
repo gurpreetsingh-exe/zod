@@ -15,11 +15,11 @@ struct HitTestEntry {
 class HitTestList {
 public:
   auto clear() -> void;
-  auto build_from(Widget&) -> void;
+  auto build_from(SharedPtr<Widget>) -> void;
   auto path_at(vec2) const -> WidgetPath;
 
 private:
-  auto collect(Widget&, WidgetPath, i32 layer) -> void;
+  auto collect(SharedPtr<Widget>, WidgetPath, i32 layer) -> void;
 
 private:
   Vector<HitTestEntry> m_entries = {};

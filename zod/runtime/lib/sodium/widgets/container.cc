@@ -4,6 +4,7 @@ namespace zod::sodium {
 
 auto Container::add_child(SharedPtr<Widget> child, const SlotStyle& style)
     -> Container::Slot& {
+  ZASSERT(child);
   m_children.push_back({ child, style });
   return m_children.back();
 }
