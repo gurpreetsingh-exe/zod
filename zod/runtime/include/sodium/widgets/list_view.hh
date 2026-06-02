@@ -38,6 +38,7 @@ public:
 
 private:
   auto refresh() -> void {
+    // FIXME: refersh happens every frame so this is a bit sus
     if (not m_needs_refresh) {
       return;
     }

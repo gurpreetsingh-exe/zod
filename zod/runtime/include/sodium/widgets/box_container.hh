@@ -28,15 +28,11 @@ public:
 class HorizontalBox : public BoxContainer {
 public:
   HorizontalBox() : BoxContainer(Axis::Horizontal) {}
-
-  static auto slot() -> SlotBuilder;
 };
 
 class VerticalBox : public BoxContainer {
 public:
   VerticalBox() : BoxContainer(Axis::Vertical) {}
-
-  static auto slot() -> SlotBuilder;
 };
 
 } // namespace zod::sodium

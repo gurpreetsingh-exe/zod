@@ -2,6 +2,7 @@
 #include "application/platform.hh"
 #include "core/platform/macros.hh"
 
+#include "debug.hh"
 #include "engine/project.hh"
 #include "gpu/timer.hh"
 #include "sodium/theme.hh"
@@ -21,6 +22,7 @@
 #include "sodium/widgets/text.hh"
 
 #include "outliner.hh"
+#include "panel.hh"
 
 namespace zod {
 
@@ -50,7 +52,6 @@ Editor::Editor()
     : ILayer(), m_renderer(new ForwardRenderer()),
       m_node_tree(shared<NodeTree>()) {
   g_editor = this;
-  // m_widget = sodium::create<sodium::container>().background();
 
   using namespace sodium;
 
@@ -163,24 +164,12 @@ Editor::Editor()
                                          }))
                                          .justification(TextJustify::Center)]];
 
-  auto panel = [&](SharedPtr<Widget> widget) {
-    return *(
-        create<VerticalBox>() +
-        slot().fixed_height(
-            25)[create<HorizontalBox>() +
-                slot().fixed_width(
-                    120)[create<Box>()
-                             .background(theme.foreground)
-                             .rounding(5.0f)
-                             .rounding_flags(
-                                 RECT_ROUND_TOP)[create<Text>()
-                                                     .padding({ 12, 12, 0, 0 })
-                                                     .text(widget->name())]] +
-                slot()[create<Box>()]] +
-        slot()[widget]);
+  auto panel = [](Vector<SharedPtr<Widget>> widgets) {
+    return *create<Panel>(widgets);
   };
 
   m_editor_viewport = *create<EditorViewport>(*m_renderer).name("Viewport");
+  m_debug = *create<Debug>();
 
   auto outliner = *create<Box>()
                        .background(theme.foreground)
@@ -189,13 +178,18 @@ Editor::Editor()
 
   auto content_browser =
       *create<Box>().background(theme.foreground).name("Content Browser");
+
   auto properties =
       *create<Box>().background(theme.foreground).name("Properties");
 
+  auto debug =
+      *create<Box>().background(theme.foreground).name("Debug")[m_debug];
+
   auto tabs = create<Split>(
-      *create<Split>(*create<Split>(panel(outliner), m_editor_viewport, 0.25f),
-                     panel(content_browser), Axis::Vertical, 0.75f),
-      panel(properties), 0.75f);
+      *create<Split>(
+          *create<Split>(panel({ outliner }), m_editor_viewport, 0.25f),
+          panel({ content_browser }), Axis::Vertical, 0.75f),
+      panel({ properties, debug }), 0.75f);
 
   auto window = create<VerticalBox>() +
                 slot().fixed_height(Window::TitleBarHeight)[titlebar] +
@@ -286,6 +280,7 @@ auto Editor::update() -> void {
   GPU_TIME("main-loop", {
     auto& app = Application::get();
     auto size = app.active_window().get_size();
+    m_debug->request_refresh();
     if (m_widget->needs_layout()) {
       m_widget->compute_desired_size(size);
       m_widget->arrange({ { 0, 0 }, size });
