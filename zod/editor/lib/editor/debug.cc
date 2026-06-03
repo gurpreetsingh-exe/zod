@@ -13,6 +13,8 @@ Debug::Debug()
     : CompoundWidget(),
       m_debug_timings(shared<ListView<std::pair<String, f32>>>()),
       m_hover_paths(shared<ListView<String>>()) {
+  set_hover_path_visible(false);
+
   auto theme = Theme::get();
   set_child(*(create<VerticalBox>() +
               slot().auto_height()[create<Box>().padding(4).background(

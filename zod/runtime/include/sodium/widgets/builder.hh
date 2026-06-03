@@ -74,6 +74,11 @@ public:
     return *this;
   }
 
+  auto hover_path_visible(bool visible) -> WidgetBuilder& {
+    m_widget->set_hover_path_visible(visible);
+    return *this;
+  }
+
   auto cursor(cursor_shape_t cursor) -> WidgetBuilder& {
     m_widget->set_cursor(cursor);
     return *this;

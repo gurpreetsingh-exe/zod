@@ -65,6 +65,10 @@ public:
   auto set_hit_test_priority(i32 priority) -> void {
     m_hit_test_priority = priority;
   }
+  auto set_hover_path_visible(bool visible) -> void {
+    m_hover_path_visible = visible;
+  }
+  auto hover_path_visible() const -> bool { return m_hover_path_visible; }
   auto set_cursor(cursor_shape_t cursor) -> void {
     m_has_cursor = true;
     m_cursor = cursor;
@@ -180,6 +184,7 @@ protected:
   Padding m_hit_test_margin = {};
   i32 m_hit_test_layer = 0;
   i32 m_hit_test_priority = 0;
+  bool m_hover_path_visible = true;
   bool m_has_cursor = false;
   cursor_shape_t m_cursor = cursor_shape_t::Arrow;
   mutable vec2 m_desired_size {};

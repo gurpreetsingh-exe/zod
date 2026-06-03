@@ -58,6 +58,17 @@ static auto debug_path_labels(const WidgetPath& path) -> Vector<String> {
   return labels;
 }
 
+static auto hover_visible_path(const WidgetPath& path) -> WidgetPath {
+  auto visible = WidgetPath();
+  for (const auto& widget : path) {
+    if (not widget->hover_path_visible()) {
+      break;
+    }
+    visible.push(widget);
+  }
+  return visible;
+}
+
 static auto make_weak_path(const WidgetPath& path) -> WeakWidgetPath {
   auto weak = WeakWidgetPath();
   for (const auto& widget : path) { weak.widgets.push_back(widget); }
@@ -144,9 +155,10 @@ auto Widget::update_hover_path(const WidgetPath& path, const Event& event)
     -> void {
   auto root = shared_from_this();
   auto previous = resolve_weak_path(root, s_pointer_state.hovered_path, true);
-  s_pointer_state.debug_hover_path = debug_path_labels(path);
+  auto hover_path = hover_visible_path(path);
+  s_pointer_state.debug_hover_path = debug_path_labels(hover_path);
 
-  auto common = common_path_length(previous, path);
+  auto common = common_path_length(previous, hover_path);
 
   for (auto i = previous.size(); i > common; --i) {
     auto widget = previous[i - 1];
@@ -154,14 +166,14 @@ auto Widget::update_hover_path(const WidgetPath& path, const Event& event)
     widget->on_mouse_leave(event);
   }
 
-  for (auto i = common; i < path.size(); ++i) {
-    auto widget = path[i];
+  for (auto i = common; i < hover_path.size(); ++i) {
+    auto widget = hover_path[i];
     widget->m_hovered = true;
     widget->on_mouse_enter(event);
   }
 
-  for (const auto& widget : path) { widget->m_hovered = true; }
-  s_pointer_state.hovered_path = make_weak_path(path);
+  for (const auto& widget : hover_path) { widget->m_hovered = true; }
+  s_pointer_state.hovered_path = make_weak_path(hover_path);
 }
 
 auto Widget::route_pointer_event(const Event& event, const WidgetPath& path)
