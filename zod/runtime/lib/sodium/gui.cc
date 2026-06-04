@@ -223,7 +223,9 @@ auto submit(PaintCx& cx, SharedPtr<GPUTexture> texture) -> void {
   dcx->shader->uniform_int("u_texture", ADDR(0));
   dcx->shader->uniform_float("u_projection", value_ptr(dcx->projection), 16);
   dcx->framebuffer->bind();
+  GPUState::get().set_blend(Blend::Alpha);
   dcx->batch->draw(dcx->shader, cx.draw_list.indices.size());
+  GPUState::get().set_blend(Blend::None);
   dcx->framebuffer->unbind();
 
   cx.draw_list.draw_data.clear();

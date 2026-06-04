@@ -14,18 +14,33 @@ class MultiColumnListView : public CompoundWidget {
 public:
   using ItemsSource = std::function<Vector<ItemT>()>;
   using GenerateCell = std::function<SharedPtr<Widget>(const ItemT&, usize)>;
+  using UpdateCell =
+      std::function<void(const SharedPtr<Widget>&, const ItemT&, usize)>;
   using RowBackground = std::function<vec4(usize)>;
 
   struct Column {
     String name;
     f32 weight = 1.0f;
     GenerateCell on_generate_cell;
+    UpdateCell on_update_cell;
     SharedPtr<VerticalBox> widget = nullptr;
   };
 
   auto add_column(String name, GenerateCell generator, f32 weight = 1.0f)
       -> void {
-    m_columns.push_back({ std::move(name), weight, std::move(generator) });
+    m_columns.push_back({ .name = std::move(name),
+                          .weight = weight,
+                          .on_generate_cell = std::move(generator) });
+    m_needs_rebuild = true;
+    request_refresh();
+  }
+
+  auto add_column(String name, GenerateCell generator, UpdateCell updater,
+                  f32 weight = 1.0f) -> void {
+    m_columns.push_back({ .name = std::move(name),
+                          .weight = weight,
+                          .on_generate_cell = std::move(generator),
+                          .on_update_cell = std::move(updater) });
     m_needs_rebuild = true;
     request_refresh();
   }
@@ -42,6 +57,7 @@ public:
 
   auto set_header_background(vec4 color) -> void {
     m_header_background = color;
+    m_needs_rebuild = true;
     request_refresh();
   }
 
@@ -87,20 +103,33 @@ private:
     }
 
     for (auto& column : m_columns) {
-      column.widget->clear_children();
-      column.widget->add_child(header_cell(column.name),
-                               slot().fixed_height(m_header_height));
+      column.widget->get_slot(0).style = slot().fixed_height(m_header_height);
     }
 
     auto items = m_items_source ? m_items_source() : Vector<ItemT>();
-    for (auto row = usize(0); row < items.size(); ++row) {
+    if (items.size() < m_rows.size()) {
       for (auto& column : m_columns) {
-        auto cell = column.on_generate_cell
-                        ? column.on_generate_cell(items[row], row)
-                        : SharedPtr<Widget>(shared<Box>());
-        auto row_box = create<Box>().background(row_background(row));
-        row_box[cell];
-        column.widget->add_child(*row_box, slot().fixed_height(m_row_height));
+        column.widget->remove_children_from(items.size() + 1);
+      }
+      m_rows.resize(items.size());
+    }
+
+    for (auto row = usize(0); row < items.size(); ++row) {
+      if (row >= m_rows.size()) {
+        add_row(items[row], row);
+      }
+
+      for (auto column_index = usize(0); column_index < m_columns.size();
+           ++column_index) {
+        auto& column = m_columns[column_index];
+        column.widget->get_slot(row + 1).style =
+            slot().fixed_height(m_row_height);
+        m_rows[row].cell_boxes[column_index]->style().background =
+            row_background(row);
+        if (column.on_update_cell) {
+          column.on_update_cell(m_rows[row].cells[column_index], items[row],
+                                row);
+        }
       }
     }
 
@@ -109,7 +138,12 @@ private:
   }
 
   auto rebuild_columns() -> void {
-    for (auto& column : m_columns) { column.widget = shared<VerticalBox>(); }
+    m_rows.clear();
+    for (auto& column : m_columns) {
+      column.widget = shared<VerticalBox>();
+      column.widget->add_child(header_cell(column.name),
+                               slot().fixed_height(m_header_height));
+    }
 
     if (m_columns.empty()) {
       set_child(shared<VerticalBox>());
@@ -118,6 +152,25 @@ private:
     }
 
     m_needs_rebuild = false;
+  }
+
+  auto add_row(const ItemT& item, usize row) -> void {
+    auto row_data = Row();
+    row_data.cells.reserve(m_columns.size());
+    row_data.cell_boxes.reserve(m_columns.size());
+
+    for (auto& column : m_columns) {
+      auto cell = column.on_generate_cell ? column.on_generate_cell(item, row)
+                                          : SharedPtr<Widget>(shared<Box>());
+      auto row_box = create<Box>().background(row_background(row));
+      row_box[cell];
+
+      row_data.cells.push_back(cell);
+      row_data.cell_boxes.push_back(*row_box);
+      column.widget->add_child(*row_box, slot().fixed_height(m_row_height));
+    }
+
+    m_rows.push_back(std::move(row_data));
   }
 
   auto split_from_column(usize index) -> SharedPtr<Widget> {
@@ -146,7 +199,14 @@ private:
   }
 
 private:
+  struct Row {
+    Vector<SharedPtr<Widget>> cells;
+    Vector<SharedPtr<Box>> cell_boxes;
+  };
+
+private:
   Vector<Column> m_columns;
+  Vector<Row> m_rows;
   ItemsSource m_items_source;
   RowBackground m_row_background;
   Padding m_cell_padding { 12.0f, 12.0f, 0.0f, 0.0f };

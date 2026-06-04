@@ -10,6 +10,17 @@ namespace zod {
 
 static constexpr auto TextPadding = 12.0f;
 
+static auto update_text_cell(const SharedPtr<sodium::Widget>& cell, String text)
+    -> void {
+  auto children = cell->get_children();
+  if (children.empty()) {
+    return;
+  }
+  if (auto text_widget = std::dynamic_pointer_cast<sodium::Text>(children[0])) {
+    text_widget->set_text(std::move(text));
+  }
+}
+
 Outliner::Outliner() : m_list(shared<sodium::MultiColumnListView<Entity>>()) {
   using namespace sodium;
 
@@ -33,9 +44,16 @@ Outliner::Outliner() : m_list(shared<sodium::MultiColumnListView<Entity>>()) {
         const auto& identifier = entity.get_component<IdentifierComponent>();
         return text_cell(identifier.identifier);
       },
+      [](const SharedPtr<Widget>& cell, Entity entity, usize) {
+        const auto& identifier = entity.get_component<IdentifierComponent>();
+        update_text_cell(cell, identifier.identifier);
+      },
       0.6f);
   m_list->add_column(
       "Type", [](Entity entity, usize) { return text_cell(type_name(entity)); },
+      [](const SharedPtr<Widget>& cell, Entity entity, usize) {
+        update_text_cell(cell, type_name(entity));
+      },
       0.4f);
 
   set_child(m_list);

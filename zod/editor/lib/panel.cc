@@ -37,7 +37,7 @@ struct PanelInner : CompoundWidget {
     tab_headers[active]->style().background = Theme::get().background;
     tab_headers[idx]->style().background = Theme::get().foreground;
     active = idx;
-    // invalidate_layout();
+    invalidate_layout();
   }
 
   auto compute_desired_size(vec2 desired) -> vec2 override {

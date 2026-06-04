@@ -12,6 +12,7 @@
 #include "sodium/font.hh"
 #include "sodium/gui.hh"
 #include "sodium/icon.hh"
+#include "sodium/paint.hh"
 #include "sodium/style.hh"
 
 #include "sodium/widgets/box_container.hh"
@@ -289,15 +290,17 @@ auto Editor::update() -> void {
 
     m_editor_viewport->render();
 
-    GPUState::get().set_blend(Blend::Alpha);
-    m_widget->paint(cx);
-    sodium::submit(cx);
-    sodium::flush_icons();
-    sodium::draw_images();
-    sodium::Font::get().submit(cx);
-    sodium::flush_foreground(cx);
-    sodium::present();
-    GPUState::get().set_blend(Blend::None);
+    GPU_TIME("ui-draw", {
+      GPUState::get().set_blend(Blend::Alpha);
+      m_widget->paint(cx);
+      sodium::submit(cx);
+      sodium::flush_icons();
+      sodium::draw_images();
+      sodium::Font::get().submit(cx);
+      sodium::flush_foreground(cx);
+      sodium::present();
+      GPUState::get().set_blend(Blend::None);
+    });
   });
 }
 

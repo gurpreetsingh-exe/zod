@@ -38,8 +38,8 @@ public:
     invalidate_layout();
   }
   template <class ObjectT>
-  auto set_text(const ObjectT* object,
-                String (ObjectT::*method)() const) -> void {
+  auto set_text(const ObjectT* object, String (ObjectT::*method)() const)
+      -> void {
     m_text.bind(object, method);
     invalidate_layout();
   }

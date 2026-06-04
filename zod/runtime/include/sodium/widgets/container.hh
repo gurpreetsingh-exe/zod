@@ -16,6 +16,7 @@ public:
 
   auto add_child(SharedPtr<Widget> child, const SlotStyle& style = {}) -> Slot&;
   auto clear_children() -> void;
+  auto remove_children_from(usize index) -> void;
   auto child_count() const -> usize { return m_children.size(); }
   auto get_children() const -> WidgetChildren override;
 

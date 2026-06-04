@@ -14,6 +14,14 @@ auto Container::clear_children() -> void {
   invalidate_layout();
 }
 
+auto Container::remove_children_from(usize index) -> void {
+  if (index >= m_children.size()) {
+    return;
+  }
+  m_children.erase(m_children.begin() + index, m_children.end());
+  invalidate_layout();
+}
+
 auto Container::get_children() const -> WidgetChildren {
   auto children = WidgetChildren {};
   children.reserve(m_children.size());
