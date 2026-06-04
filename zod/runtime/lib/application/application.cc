@@ -1,6 +1,5 @@
 #include "application/application.hh"
-#include "sodium/font.hh"
-#include "sodium/gui.hh"
+#include "sodium_v2/font.hh"
 
 namespace zod {
 
@@ -22,7 +21,6 @@ Application::Application(const ApplicationCreateInfo& info)
   }
 
   m_window->set_event_callback(std::bind(&Application::on_event, this, ph::_1));
-  sodium::init_gui();
   sodium::init_font("../third-party/imgui/misc/fonts/DroidSans.ttf");
 }
 

@@ -1,87 +1,93 @@
-#include "outliner.hh"
+#include <imgui.h>
+
+#include "editor.hh"
 #include "engine/components.hh"
 #include "engine/project.hh"
-#include "sodium/theme.hh"
-#include "sodium/widgets/box.hh"
-#include "sodium/widgets/builder.hh"
-#include "sodium/widgets/text.hh"
+#include "outliner.hh"
 
 namespace zod {
 
-static constexpr auto TextPadding = 12.0f;
-
-static auto update_text_cell(const SharedPtr<sodium::Widget>& cell, String text)
-    -> void {
-  auto children = cell->get_children();
-  if (children.empty()) {
-    return;
+template <bool First = false>
+auto draw_column(const char* text, usize index, bool highlight) -> bool {
+  ImGui::TableNextColumn();
+  ImGui::TableSetColumnIndex(index);
+  if constexpr (First) {
+    ImGui::Selectable(text, highlight, ImGuiSelectableFlags_SpanAllColumns);
+  } else {
+    ImGui::Text(text);
   }
-  if (auto text_widget = std::dynamic_pointer_cast<sodium::Text>(children[0])) {
-    text_widget->set_text(std::move(text));
-  }
+  return ImGui::IsItemClicked();
 }
 
-Outliner::Outliner() : m_list(shared<sodium::MultiColumnListView<Entity>>()) {
-  using namespace sodium;
+static auto draw_row(const char* name, const char* type, bool selected)
+    -> bool {
+  auto clicked = false;
+  ImGui::TableNextRow();
+  if (not selected) {
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
+                          ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+  }
+  clicked |= draw_column<true>(name, 0, selected);
+  clicked |= draw_column(type, 1, selected);
+  if (not selected) {
+    ImGui::PopStyleColor();
+  }
+  return clicked;
+}
 
-  m_list->set_items_source([] {
-    if (not g_project) {
-      return Vector<Entity>();
+auto Outliner::draw_imp(Geometry&) -> void {
+  auto& C = Editor::get();
+  auto scene = g_project->active_scene();
+  ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 4.0f));
+  if (ImGui::BeginPopupContextWindow("Add Menu",
+                                     ImGuiPopupFlags_MouseButtonRight)) {
+    if (ImGui::MenuItem("Empty")) {
+      C.set_active_object(scene->create());
     }
-    return g_project->active_scene()->entities();
-  });
+    if (ImGui::MenuItem("Cube")) {
+      auto cube = scene->create();
+      cube.add_component<StaticMeshComponent>(Mesh::cube());
+      C.set_active_object(cube);
+    }
+    if (ImGui::MenuItem("Light")) {
+      auto light = scene->create();
+      light.add_component<LightComponent>();
+      C.set_active_object(light);
+    }
 
-  m_list->set_header_background(Theme::get().foreground);
-  m_list->set_splitter_thickness(2.0f);
-  m_list->set_splitter_style({ .background = Theme::get().foreground });
-  m_list->set_row_background([](usize row) {
-    auto& theme = Theme::get();
-    return row % 2 == 0 ? theme.background - 0.01f : theme.background + 0.01f;
-  });
-  m_list->add_column(
-      "Name",
-      [](Entity entity, usize) {
-        const auto& identifier = entity.get_component<IdentifierComponent>();
-        return text_cell(identifier.identifier);
-      },
-      [](const SharedPtr<Widget>& cell, Entity entity, usize) {
-        const auto& identifier = entity.get_component<IdentifierComponent>();
-        update_text_cell(cell, identifier.identifier);
-      },
-      0.6f);
-  m_list->add_column(
-      "Type", [](Entity entity, usize) { return text_cell(type_name(entity)); },
-      [](const SharedPtr<Widget>& cell, Entity entity, usize) {
-        update_text_cell(cell, type_name(entity));
-      },
-      0.4f);
+    ImGui::EndPopup();
+  }
+  ImGui::PopStyleVar();
 
-  set_child(m_list);
+  if (ImGui::BeginTable("OutlinerTable", 2,
+                        ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersV)) {
+    ImGui::TableSetupColumn("Name");
+    ImGui::TableSetupColumn("Type");
+    ImGui::TableHeadersRow();
+    usize i = 1;
+    for (auto& entity_id : (*scene)->view<IdentifierComponent>()) {
+      ImGui::TableNextRow();
+      auto entity = Entity(entity_id, scene.get());
+      auto& component = entity.get_component<IdentifierComponent>();
+      auto* object_type = "Object";
+      if (entity.has_component<StaticMeshComponent>()) {
+        object_type = "Mesh";
+      } else if (entity.has_component<LightComponent>()) {
+        object_type = "Light";
+      } else if (entity.has_component<CameraComponent>()) {
+        object_type = "Camera";
+      } else if (entity.has_component<SkyboxComponent>()) {
+        object_type = "Skybox";
+      }
+      if (draw_row(component.identifier, object_type,
+                   C.active_object() == entity)) {
+        C.set_active_object(entity);
+      }
+    }
+    ImGui::EndTable();
+  }
 }
 
-auto Outliner::request_refresh() -> void { m_list->request_refresh(); }
-
-auto Outliner::type_name(Entity entity) -> const char* {
-  if (entity.has_component<StaticMeshComponent>()) {
-    return "Mesh";
-  }
-  if (entity.has_component<LightComponent>()) {
-    return "Light";
-  }
-  if (entity.has_component<CameraComponent>()) {
-    return "Camera";
-  }
-  if (entity.has_component<SkyboxComponent>()) {
-    return "Skybox";
-  }
-  return "Object";
-}
-
-auto Outliner::text_cell(String text) -> SharedPtr<sodium::Widget> {
-  using namespace sodium;
-  return *create<Box>().content_valign(
-      Align::Center)[create<Text>(std::move(text))
-                         .padding({ TextPadding, TextPadding, 0, 0 })];
-}
+auto Outliner::on_event(Event& event) -> void {}
 
 } // namespace zod

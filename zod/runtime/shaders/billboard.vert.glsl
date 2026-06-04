@@ -3,7 +3,7 @@
 const vec3 positions[4] =
     vec3[](vec3(-1, -1, 0), vec3(-1, 1, 0), vec3(1, -1, 0), vec3(1, 1, 0));
 
-out vec2 V_tex_coords;
+out vec2 uv;
 
 void translate(inout mat4 m, vec3 v) {
   m[3] = m[0] * v[0] + m[1] * v[1] + m[2] * v[2] + m[3];
@@ -19,5 +19,5 @@ void main() {
   translate(model, offset);
   model = model * rotation;
   gl_Position = projection * view * model * vec4(position * 0.4f, 1.f);
-  V_tex_coords = position.xy * 0.5f + 0.5f;
+  uv = position.xy * 0.5f + 0.5f;
 };

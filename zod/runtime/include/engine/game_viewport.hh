@@ -1,7 +1,7 @@
 #pragma once
 
 #include "engine/renderer.hh"
-#include "sodium/widgets/image.hh"
+#include "sodium_v2/widgets/image.hh"
 
 namespace zod {
 

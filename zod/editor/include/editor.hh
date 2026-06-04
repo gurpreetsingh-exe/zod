@@ -3,16 +3,16 @@
 #include "application/application.hh"
 #include "application/event.hh"
 #include "asset_manager.hh"
-#include "debug.hh"
-#include "editor_viewport.hh"
 #include "engine/entity.hh"
 #include "engine/environment.hh"
 #include "engine/node_types.hh"
 #include "engine/renderer.hh"
-
-#include "sodium/widgets/widget.hh"
+#include "imgui_layer.hh"
+#include "widgets/layout.hh"
 
 namespace zod {
+
+class Layout;
 
 class Editor : public ILayer {
 public:
@@ -25,7 +25,6 @@ public:
   auto active_object() const -> Entity { return m_active_object; }
   auto set_active_object(Entity e) -> void { m_active_object = e; }
   auto get_renderer() -> Renderer& { return *m_renderer; }
-  auto get_root_widget() -> SharedPtr<sodium::Widget> { return m_widget; }
 
 private:
   auto setup() -> void override;
@@ -35,10 +34,8 @@ private:
 
 private:
   Renderer* m_renderer;
-  SharedPtr<EditorViewport> m_editor_viewport;
-  SharedPtr<sodium::Widget> m_widget;
-  SharedPtr<Debug> m_debug;
-  // UniquePtr<ImGuiLayer> m_imgui_layer;
+  UniquePtr<ImGuiLayer> m_imgui_layer;
+  UniquePtr<Layout> m_layout;
   SharedPtr<NodeTree> m_node_tree;
   AssetManager m_asset_manager;
   Entity m_active_object;
