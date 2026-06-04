@@ -2,16 +2,22 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include "config.hh"
 #include "imgui_layer.hh"
 #include "theme.hh"
 
 namespace zod {
+
+static String g_imgui_ini_path;
 
 ImGuiLayer::ImGuiLayer(void* win) {
   auto* window = (GLFWwindow*)win;
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   auto& io = ImGui::GetIO();
+  g_imgui_ini_path = (find_config_dir() / "imgui.ini").string();
+  io.IniFilename = g_imgui_ini_path.c_str();
+  ImGui::LoadIniSettingsFromDisk(io.IniFilename);
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
   io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
   io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
