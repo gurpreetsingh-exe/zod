@@ -96,9 +96,9 @@ Scene::Scene()
     : m_mesh_batch(shared<GPUMeshBatch>()),
       m_camera_buffer(GPUBackend::get().create_buffer(
           { "scene.camera", GPUBufferUsage::Storage, sizeof(SceneData) })) {
-  auto entity = create("SceneCamera");
-  entity.add_component<CameraComponent>();
-  m_camera = entity.m_inner;
+  // auto entity = create("SceneCamera");
+  // entity.add_component<CameraComponent>();
+  // m_camera = entity.m_inner;
 }
 
 auto Scene::create() -> Entity {
@@ -270,6 +270,10 @@ auto Scene::deserialize(const fs::path& path) -> void {
     auto entity = Entity(m_registry.create(), this);
     auto id = UUID(node["Entity"].as<String>());
     if (id == camera_id) {
+      auto camera_entity = Entity(m_camera, this);
+      if (camera_entity) {
+        remove(camera_entity);
+      }
       m_camera = entity.m_inner;
     }
     entity.add_component<UUIDComponent>(id);

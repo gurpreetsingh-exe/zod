@@ -4,13 +4,27 @@
 #include "content_browser.hh"
 #include "engine/components.hh"
 #include "engine/project.hh"
+#include "gpu/backend.hh"
 #include "gpu/timer.hh"
 #include "loaders.hh"
 #include "outliner.hh"
 #include "properties.hh"
+#include "sodium_v2/font.hh"
+#include "sodium_v2/gui.hh"
+#include "sodium_v2/icon.hh"
+#include "sodium_v2/paint.hh"
+#include "sodium_v2/widgets/box.hh"
+#include "sodium_v2/widgets/box_container.hh"
+#include "sodium_v2/widgets/builder.hh"
+#include "sodium_v2/widgets/button.hh"
+#include "sodium_v2/widgets/image.hh"
+#include "sodium_v2/widgets/menu.hh"
+#include "sodium_v2/widgets/text.hh"
 #include "theme.hh"
 #include "viewport.hh"
 #include "widgets/layout.hh"
+
+#include "core/platform/macros.hh"
 
 #include "core/option.hh"
 
@@ -29,6 +43,100 @@ Editor::Editor()
           Application::get().active_window().get_native_handle())),
       m_layout(unique<Layout>()), m_node_tree(shared<NodeTree>()) {
   g_editor = this;
+
+  using namespace sodium;
+
+  sodium::init_gui();
+  auto theme = Theme::get();
+
+  auto close =
+      slot().auto_width()[create<Button>(IconId::Close)
+                              .min_size({ 50, 0 })
+                              .button_style({ { 0.9, 0.2, 0.2, 1.0 } })
+                              .background({ 0.1, 0.1, 0.1, 1.0 })
+                              .on_clicked([](auto&) {
+                                auto event =
+                                    Event { .kind = Event::WindowClose };
+                                Application::get().on_event(event);
+                                return EventResponse::handled();
+                              })];
+  auto minimize = slot().auto_width()[create<Button>(IconId::Minimize)
+                                          .min_size({ 50, 0 })
+                                          .background({ 0.1, 0.1, 0.1, 1.0 })];
+  auto maximize = slot().auto_width()[create<Button>(IconId::Maximize)
+                                          .min_size({ 50, 0 })
+                                          .background({ 0.1, 0.1, 0.1, 1.0 })];
+
+  auto file_menu =
+      create<Menu>()
+          .min_size({ 40, 0 })
+          .padding({ 8, 8, 0, 0 })
+          .name("File")
+          .menu_entry("New", [] { TODO(); })
+          .menu_entry("Open",
+                      [] {
+                        auto config_path = open_dialog({ .filter = "*.zproj" });
+                        if (g_project) {
+                          delete g_project;
+                        }
+                        Project::load(config_path);
+                      })
+          .menu_separator()
+          .menu_entry("Save",
+                      [] {
+                        if (g_project) {
+                          g_project->save();
+                        }
+                      })
+          .menu_separator()
+          .menu_entry("Import GLTF",
+                      [] {
+                        auto gltf_path =
+                            open_dialog({ .filter = "*.gltf *.glb" });
+                        loadGLTF(g_project->assets_directory(), gltf_path);
+                      })
+          .menu_separator()
+          .menu_entry("Quit", [] {
+            auto event = Event { .kind = Event::WindowClose };
+            Application::get().on_event(event);
+          });
+
+  auto edit_menu = create<Menu>()
+                       .min_size({ 40, 0 })
+                       .padding({ 8, 8, 0, 0 })
+                       .name("Edit")
+                       .menu_entry("Preferences", [] { preferences = true; });
+
+  auto menus =
+      create<HorizontalBox>() +
+      slot().fixed_height(25).auto_width()[create<HorizontalBox>() +
+                                           slot().auto_width()[file_menu] +
+                                           slot().auto_width()[edit_menu]];
+
+  auto spread = slot()[create<Box>()
+#if defined(PLATFORM_LINUX)
+                           .on_mouse_down([](const Event& event) {
+                             if (event.button == MouseButton::Left) {
+                               Application::get().active_window().drag_start();
+                             }
+                             return EventResponse::handled();
+                           })
+#endif
+  ];
+
+  auto logo = GPUBackend::get().create_texture(
+      { .name = "zod-logo", .path = "./logo.png" });
+
+  auto window_buttons = slot().auto_width().fixed_height(
+      30)[create<HorizontalBox>() + minimize + maximize + close];
+
+  auto titlebar = create<Box>().background(
+      theme.background)[create<HorizontalBox>() +
+                        slot().fixed_width(Window::TitleBarHeight)
+                            [create<Image>(logo).background(theme.foreground)] +
+                        slot().auto_width()[menus] + spread + window_buttons];
+
+  m_titlebar_widget = *titlebar;
 }
 
 Editor::~Editor() { delete m_renderer; }
@@ -73,12 +181,52 @@ auto Editor::setup() -> void {
   m_layout->add_area(shared<ContentBrowser>());
 
   update_viewport_camera();
+  arrange_titlebar(Application::get().active_window().get_size());
 }
 
 auto Editor::on_event(Event& event) -> void {
+  if (event.kind == Event::WindowResize) {
+    arrange_titlebar(event.size);
+  }
+
+  if (m_titlebar_widget) {
+    auto reply = m_titlebar_widget->event(event);
+    if (reply) {
+      event.hanging = false;
+      return;
+    }
+  }
+
   if (auto* area = m_layout->active()) {
     area->on_event(event);
   }
+}
+
+auto Editor::arrange_titlebar(vec2 size) -> void {
+  if (not m_titlebar_widget) {
+    return;
+  }
+
+  sodium::resize(size);
+  m_titlebar_widget->compute_desired_size(size);
+  m_titlebar_widget->arrange(
+      { { 0.0f, 0.0f }, { size.x, Window::TitleBarHeight } });
+  m_titlebar_widget->clear_layout_invalidated();
+}
+
+auto Editor::paint_titlebar() -> void {
+  if (not m_titlebar_widget) {
+    return;
+  }
+
+  auto size = Application::get().active_window().get_size();
+  if (m_titlebar_widget->needs_layout()) {
+    arrange_titlebar(size);
+  }
+
+  sodium::frame([this](sodium::PaintCx& cx) {
+    m_titlebar_widget->paint(cx);
+  });
 }
 
 auto Editor::update_viewport_camera() -> void {
@@ -104,52 +252,6 @@ auto Editor::update() -> void {
     ImGui::PushStyleColor(ImGuiCol_HeaderHovered,
                           *reinterpret_cast<ImVec4*>(&theme.primary));
     static auto open_save_modal = false;
-    if (ImGui::BeginMainMenuBar()) {
-      if (ImGui::BeginMenu("File")) {
-        if (ImGui::MenuItem("New")) {
-          TODO();
-        }
-        if (ImGui::MenuItem("Open")) {
-          auto config_path = open_dialog({ .filter = "*.zproj" });
-          if (g_project) {
-            delete g_project;
-          }
-          Project::load(config_path);
-          update_viewport_camera();
-        }
-        ImGui::Separator();
-        if (ImGui::MenuItem("Save")) {
-          if (g_project) {
-            g_project->save();
-          } else {
-            open_save_modal = true;
-          }
-        }
-
-        ImGui::Separator();
-        if (ImGui::BeginMenu("Import")) {
-          if (ImGui::MenuItem("GLTF")) {
-            auto gltf_path = open_dialog({ .filter = "*.gltf *.glb" });
-            loadGLTF(g_project->assets_directory(), gltf_path);
-          }
-          ImGui::EndMenu();
-        }
-        if (ImGui::MenuItem("Quit")) {
-          Event event = { .kind = Event::WindowClose };
-          Application::get().on_event(event);
-        }
-        ImGui::EndMenu();
-      }
-
-      if (ImGui::BeginMenu("Edit")) {
-        if (ImGui::MenuItem("Preferences")) {
-          preferences = true;
-        }
-        ImGui::EndMenu();
-      }
-
-      ImGui::EndMainMenuBar();
-    }
     ImGui::PopStyleColor(2);
 
     if (open_save_modal) {
@@ -266,6 +368,7 @@ auto Editor::update() -> void {
       m_layout->draw(g);
     });
     m_imgui_layer->end_frame();
+    paint_titlebar();
   });
 }
 

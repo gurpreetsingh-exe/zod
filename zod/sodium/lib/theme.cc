@@ -20,6 +20,7 @@ Theme g_theme;
 
 static auto from_json(const json& j, Theme& theme) -> void {
   ARRAY_TO_VEC4("background", theme.background);
+  ARRAY_TO_VEC4("foreground", theme.foreground);
   ARRAY_TO_VEC4("highlight", theme.highlight);
   ARRAY_TO_VEC4("primary", theme.primary);
 }

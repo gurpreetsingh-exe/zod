@@ -205,6 +205,13 @@ static auto append_draw_list(DrawList& target, const DrawList& source) -> void {
   }
 }
 
+auto begin_frame() -> void {
+  dcx->framebuffer->bind();
+  dcx->framebuffer->clear_color({ 0, 0, 0, 0 });
+  dcx->framebuffer->clear();
+  dcx->framebuffer->unbind();
+}
+
 auto submit(PaintCx& cx, SharedPtr<GPUTexture> texture) -> void {
   append_draw_list(cx.draw_list, cx.foreground_draw_list);
 
@@ -223,6 +230,7 @@ auto submit(PaintCx& cx, SharedPtr<GPUTexture> texture) -> void {
   dcx->shader->uniform_int("u_texture", ADDR(0));
   dcx->shader->uniform_float("u_projection", value_ptr(dcx->projection), 16);
   dcx->framebuffer->bind();
+  GPUState::get().set_depth_test(Depth::None);
   GPUState::get().set_blend(Blend::Alpha);
   dcx->batch->draw(dcx->shader, cx.draw_list.indices.size());
   GPUState::get().set_blend(Blend::None);
@@ -241,10 +249,22 @@ auto present() -> void {
   dcx->present->bind();
   dcx->framebuffer->get_slot(0)->bind();
   dcx->present->uniform_int("u_texture", ADDR(0));
+  GPUState::get().set_depth_test(Depth::None);
+  GPUState::get().set_blend(Blend::Alpha);
   GPUState::get().draw_immediate(3);
+  GPUState::get().set_blend(Blend::None);
 }
 
 auto submit(PaintCx& cx) -> void { submit(cx, dcx->white_texture); }
+
+auto end_frame(PaintCx& cx) -> void {
+  submit(cx);
+  flush_icons();
+  draw_images();
+  Font::get().submit(cx);
+  flush_foreground(cx);
+  present();
+}
 
 auto flush_foreground(PaintCx& cx) -> void {
   if (cx.deferred_foreground_paints.empty() and

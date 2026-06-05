@@ -12,6 +12,10 @@
 
 namespace zod {
 
+namespace sodium {
+class Widget;
+} // namespace sodium
+
 class Layout;
 
 class Editor : public ILayer {
@@ -31,11 +35,14 @@ private:
   auto on_event(Event&) -> void override;
   auto update() -> void override;
   auto update_viewport_camera() -> void;
+  auto arrange_titlebar(vec2) -> void;
+  auto paint_titlebar() -> void;
 
 private:
   Renderer* m_renderer;
   UniquePtr<ImGuiLayer> m_imgui_layer;
   UniquePtr<Layout> m_layout;
+  SharedPtr<sodium::Widget> m_titlebar_widget;
   SharedPtr<NodeTree> m_node_tree;
   AssetManager m_asset_manager;
   Entity m_active_object;

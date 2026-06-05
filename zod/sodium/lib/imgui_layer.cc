@@ -2,6 +2,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
+#include "application/window.hh"
 #include "config.hh"
 #include "imgui_layer.hh"
 #include "theme.hh"
@@ -35,22 +36,27 @@ void ImGuiLayer::begin_frame() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
+  ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
   if (m_opt_fullscreen) {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(viewport->WorkSize);
+    const auto title_bar_height = Window::TitleBarHeight;
+    ImGui::SetNextWindowPos(
+        ImVec2(viewport->WorkPos.x, viewport->WorkPos.y + title_bar_height));
+    ImGui::SetNextWindowSize(ImVec2(
+        viewport->WorkSize.x,
+        std::max(0.0f, viewport->WorkSize.y - title_bar_height)));
     ImGui::SetNextWindowViewport(viewport->ID);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    m_window_flags |= ImGuiWindowFlags_NoTitleBar |
-                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
-                      ImGuiWindowFlags_NoMove;
-    m_window_flags |=
+    window_flags |= ImGuiWindowFlags_NoTitleBar |
+                    ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
+                    ImGuiWindowFlags_NoMove;
+    window_flags |=
         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
   }
 
   if (m_dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) {
-    m_window_flags |= ImGuiWindowFlags_NoBackground;
+    window_flags |= ImGuiWindowFlags_NoBackground;
   }
 
   if (not m_opt_padding) {
@@ -60,7 +66,7 @@ void ImGuiLayer::begin_frame() {
   m_open = true;
 
   auto& io = ImGui::GetIO();
-  ImGui::Begin("DockSpace", &m_open, m_window_flags);
+  ImGui::Begin("DockSpace", &m_open, window_flags);
 
   if (not m_opt_padding) {
     ImGui::PopStyleVar();
