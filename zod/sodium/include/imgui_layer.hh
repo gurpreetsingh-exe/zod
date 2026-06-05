@@ -23,7 +23,7 @@ public:
 private:
   bool m_open;
   bool m_opt_fullscreen = true;
-  bool m_opt_padding = false;
+  bool m_opt_padding = true;
   ImGuiDockNodeFlags m_dockspace_flags = ImGuiDockNodeFlags_None;
   vec2 m_dim = { 600, 600 };
 };

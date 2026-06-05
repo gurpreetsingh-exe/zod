@@ -166,7 +166,9 @@ auto GPUMeshBatch::load_env(Environment& env) -> SharedPtr<GPUTexture> {
   const auto path = fs::path(env.hdr.s);
   return fs::exists(path)
              ? GPUBackend::get().create_texture(
-                   { .type = GPUTextureType::TextureCube, .path = path })
+                   { .name = path.filename().c_str() /* memory bug incoming */,
+                     .type = GPUTextureType::TextureCube,
+                     .path = path })
              : nullptr;
 }
 

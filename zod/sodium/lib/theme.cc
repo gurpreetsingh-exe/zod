@@ -43,10 +43,12 @@ auto init_theme() -> void {
   style.WindowMenuButtonPosition = ImGuiDir_None;
   style.TabBarOverlineSize = 0;
 
+  style.WindowPadding = ImVec2(8.0f, 8.0f);
+  style.ItemSpacing = ImVec2(8.0f, 6.0f);
   style.WindowBorderSize = 0.0f;
   style.FrameRounding = 3.f;
   style.ChildRounding = 3.f;
-  style.CellPadding = ImVec2(6.0f, 2.0f);
+  style.CellPadding = ImVec2(8.0f, 4.0f);
 
   auto& colors = style.Colors;
   auto& theme = Theme::get();
