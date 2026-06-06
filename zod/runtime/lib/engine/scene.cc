@@ -281,6 +281,7 @@ auto Scene::deserialize(const fs::path& path) -> void {
     auto name = node["IdentifierComponent"]["Identifier"].as<String>();
     entity.add_component<IdentifierComponent>(name);
 
+    // TODO: update_internal<T> for all components
     if (node["TransformComponent"]) {
       auto tnode = node["TransformComponent"];
       auto& transform = entity.add_component<TransformComponent>();
@@ -323,6 +324,7 @@ auto Scene::deserialize(const fs::path& path) -> void {
       } else {
         ZASSERT(false, "invalid field in SkyboxComponent");
       }
+      entity.update_internal<SkyboxComponent>();
     }
 
     if (node["LightComponent"]) {

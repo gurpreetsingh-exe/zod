@@ -207,6 +207,7 @@ auto GLTexture::create_cubemap() -> void {
   i32 channels = 0;
   i32 w = 0;
   i32 h = 0;
+  stbi_set_flip_vertically_on_load(false);
   auto data = stbi_loadf(m_info.path.c_str(), &w, &h, &channels, 0);
   auto fmt = GL_NONE;
   m_info.format = GPUTextureFormat::RGBA32F;
@@ -292,7 +293,7 @@ auto GLTexture::create_cubemap() -> void {
 
         glBindTexture(GL_TEXTURE_2D, hdri);
         shader->bind();
-        shader->uniform_uint("u_panorama", ADDR(0U));
+        shader->uniform_int("u_panorama", ADDR(0));
         shader->uniform_int("u_current_face", (i32*)&i);
 
         glDrawArrays(GL_TRIANGLES, 0, 3);
