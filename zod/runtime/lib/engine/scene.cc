@@ -3,8 +3,8 @@
 #include "core/platform/platform.hh"
 #include "engine/components.hh"
 #include "engine/entity.hh"
-#include "engine/registry.hh"
 #include "engine/project.hh"
+#include "engine/registry.hh"
 
 #include <yaml-cpp/yaml.h>
 
@@ -97,9 +97,9 @@ Scene::Scene()
     : m_mesh_batch(shared<GPUMeshBatch>()),
       m_camera_buffer(GPUBackend::get().create_buffer(
           { "scene.camera", GPUBufferUsage::Storage, sizeof(SceneData) })) {
-  // auto entity = create("SceneCamera");
-  // entity.add_component<CameraComponent>();
-  // m_camera = entity.m_inner;
+  auto entity = create("SceneCamera");
+  entity.add_component<CameraComponent>();
+  m_camera = entity.m_inner;
 }
 
 auto Scene::create() -> Entity {
@@ -337,7 +337,7 @@ auto Scene::deserialize(const fs::path& path) -> void {
     }
   }
 
-  const auto textures = g_project->asset_database().assets(AssetKind::Texture);
+  const auto textures = g_project->asset_database().mega_texture_assets();
   auto offset = vec2();
   auto max_height = 0.0f;
   auto mega_texture = m_mesh_batch->mega_texture();

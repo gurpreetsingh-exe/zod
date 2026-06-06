@@ -1,6 +1,7 @@
 #ifdef PLATFORM_WINDOWS
 #  include <windows.h>
 #else
+#  include <csignal>
 #  include <fcntl.h>
 #  include <limits.h>
 #  include <sys/mman.h>
@@ -9,6 +10,7 @@
 #  include <unistd.h>
 #endif
 
+#include "core/backtrace.hh"
 #include "core/platform/platform.hh"
 
 namespace zod {
@@ -69,5 +71,38 @@ auto memory_unmap(Mapping mapping) -> void {
   }
 #endif
 }
+
+#ifdef PLATFORM_LINUX
+static auto signal_name(int signal) -> const char* {
+  switch (signal) {
+    case SIGABRT:
+      return "SIGABRT";
+    case SIGSEGV:
+      return "SIGSEGV";
+    default:
+      return "UNKNOWN";
+  }
+}
+
+static auto signal_handler(int signal) -> void {
+  std::signal(signal, SIG_DFL);
+
+  fmt::println(stderr, "crashed with {} ({})", signal_name(signal), signal);
+  fmt::println(stderr, "BACKTRACE:");
+  print_backtrace();
+
+  std::exit(1);
+}
+
+auto install_signal_handlers() -> void {
+  std::signal(SIGABRT, signal_handler);
+  std::signal(SIGSEGV, signal_handler);
+}
+#else
+auto install_signal_handlers() -> void {
+  // TODO: implement with SetUnhandledExceptionFilter and DbgHelp.
+  TODO();
+}
+#endif
 
 } // namespace zod

@@ -20,7 +20,7 @@ auto open_dialog(DialogOptions options) -> String {
   const auto smode_s = smode == SelectionMode::File ? "" : "--directory";
   auto mode_s = mode == DialogMode::Open ? "" : "--save";
   auto cmd = fmt::format("zenity --file-selection --title=\"Select File\" {} "
-                         "{} --file-filter={} --filename=\"{}\"",
+                         "{} --file-filter=\"{}\" --filename=\"{}\"",
                          smode_s, mode_s, filter, default_path.string());
   auto* f = popen(cmd.c_str(), "r");
   fgets(buf, 128, f);

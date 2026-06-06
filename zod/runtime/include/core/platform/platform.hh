@@ -23,5 +23,6 @@ constexpr auto get_platform() -> Platform;
 auto get_exe_path() -> fs::path;
 auto memory_map(const fs::path&) -> Mapping;
 auto memory_unmap(Mapping) -> void;
+auto install_signal_handlers() -> void;
 
 } // namespace zod

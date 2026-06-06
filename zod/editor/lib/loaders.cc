@@ -66,119 +66,124 @@ auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
 }
 
 struct ParseCtxt {
-  std::unordered_map<String, std::tuple<UUID, usize>> img_map;
-  std::unordered_map<String, Material> materials;
+  Vector<std::tuple<UUID, usize>> images;
+  Vector<Material> materials;
 };
 
 auto process_nodes(const fs::path& save_dir, const tinygltf::Model& model,
                    const tinygltf::Node& node, ParseCtxt& pcx) -> void {
-  const auto& me = model.meshes[node.mesh];
-  auto points = Vector<Point>();
-  auto normals = Vector<vec3>();
-  auto uvs = Vector<vec2>();
-  auto prims = Vector<u32>();
-  auto submeshes = Vector<SubMesh>();
+  if (node.mesh >= 0 and node.mesh < model.meshes.size()) {
+    const auto& me = model.meshes[node.mesh];
+    auto points = Vector<Point>();
+    auto normals = Vector<vec3>();
+    auto uvs = Vector<vec2>();
+    auto prims = Vector<u32>();
+    auto submeshes = Vector<SubMesh>();
 
-  for (auto primitive : me.primitives) {
-    auto& submesh = submeshes.emplace_back();
-    // index buffer
-    {
-      auto idx_accessor = model.accessors[primitive.indices];
-      const auto& bufferView = model.bufferViews[idx_accessor.bufferView];
-      const auto& buffer = model.buffers[bufferView.buffer];
-      const auto* bytes =
-          &buffer.data[bufferView.byteOffset + idx_accessor.byteOffset];
-      u32 size = points.size();
-      switch (idx_accessor.componentType) {
-        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
-          submesh.offset = prims.size();
-          submesh.size = idx_accessor.count;
-          auto indices = Span((u8*)bytes, idx_accessor.count);
-          for (int i = 0; i < indices.size(); i++) {
-            prims.push_back(indices[i] + size);
-          }
-        } break;
-        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
-          submesh.offset = prims.size();
-          submesh.size = idx_accessor.count;
-          auto indices = Span((u16*)bytes, idx_accessor.count);
-          for (int i = 0; i < indices.size(); i++) {
-            prims.push_back(indices[i] + size);
-          }
-        } break;
-        case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
-          submesh.offset = prims.size();
-          submesh.size = idx_accessor.count;
-          auto indices = Span((u32*)bytes, idx_accessor.count);
-          for (int i = 0; i < indices.size(); i++) {
-            prims.push_back(indices[i] + size);
-          }
-        } break;
+    for (auto primitive : me.primitives) {
+      auto& submesh = submeshes.emplace_back();
+      // index buffer
+      {
+        auto idx_accessor = model.accessors[primitive.indices];
+        const auto& bufferView = model.bufferViews[idx_accessor.bufferView];
+        const auto& buffer = model.buffers[bufferView.buffer];
+        const auto* bytes =
+            &buffer.data[bufferView.byteOffset + idx_accessor.byteOffset];
+        u32 size = points.size();
+        switch (idx_accessor.componentType) {
+          case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE: {
+            submesh.offset = prims.size();
+            submesh.size = idx_accessor.count;
+            auto indices = Span((u8*)bytes, idx_accessor.count);
+            for (int i = 0; i < indices.size(); i++) {
+              prims.push_back(indices[i] + size);
+            }
+          } break;
+          case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT: {
+            submesh.offset = prims.size();
+            submesh.size = idx_accessor.count;
+            auto indices = Span((u16*)bytes, idx_accessor.count);
+            for (int i = 0; i < indices.size(); i++) {
+              prims.push_back(indices[i] + size);
+            }
+          } break;
+          case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT: {
+            submesh.offset = prims.size();
+            submesh.size = idx_accessor.count;
+            auto indices = Span((u32*)bytes, idx_accessor.count);
+            for (int i = 0; i < indices.size(); i++) {
+              prims.push_back(indices[i] + size);
+            }
+          } break;
+        }
+      }
+
+      for (const auto& attrib : primitive.attributes) {
+        auto accessor = model.accessors[attrib.second];
+        const auto& bufferView = model.bufferViews[accessor.bufferView];
+        const auto& buffer = model.buffers[bufferView.buffer];
+        const auto* bytes =
+            &buffer.data[bufferView.byteOffset + accessor.byteOffset];
+        if (attrib.first == "POSITION") {
+          auto* buf = (Point*)bytes;
+          points.insert(points.end(), buf, buf + accessor.count);
+        } else if (attrib.first == "NORMAL") {
+          auto* buf = (vec3*)bytes;
+          normals.insert(normals.end(), buf, buf + accessor.count);
+        } else if (attrib.first == "TEXCOORD_0") {
+          auto* buf = (vec2*)bytes;
+          uvs.insert(uvs.end(), buf, buf + accessor.count);
+        }
+      }
+
+      if (primitive.material < 0) {
+        continue;
+      }
+
+      if (primitive.material < pcx.materials.size()) {
+        submesh.mat = pcx.materials[primitive.material];
       }
     }
 
-    for (const auto& attrib : primitive.attributes) {
-      auto accessor = model.accessors[attrib.second];
-      const auto& bufferView = model.bufferViews[accessor.bufferView];
-      const auto& buffer = model.buffers[bufferView.buffer];
-      const auto* bytes =
-          &buffer.data[bufferView.byteOffset + accessor.byteOffset];
-      if (attrib.first == "POSITION") {
-        auto* buf = (Point*)bytes;
-        points.insert(points.end(), buf, buf + accessor.count);
-      } else if (attrib.first == "NORMAL") {
-        auto* buf = (vec3*)bytes;
-        normals.insert(normals.end(), buf, buf + accessor.count);
-      } else if (attrib.first == "TEXCOORD_0") {
-        auto* buf = (vec2*)bytes;
-        uvs.insert(uvs.end(), buf, buf + accessor.count);
-      }
-    }
+    // remove duplicate points
+    // auto pts = Vector<Point>();
+    // auto nrm = Vector<vec3>();
+    // auto buf = (Prim*)prims.data();
+    // auto unique_vertices = std::unordered_map<Point, u32>();
+    // auto points_i = usize(0);
+    // for (int i = 0; i < prims.size() / 3; ++i) {
+    //   auto& prim = buf[i];
+    //   auto& pti = prim.points;
+    //   for (int j = 0; j < 3; ++j) {
+    //     auto idx = pti[j];
+    //     auto P = points[idx];
+    //     auto N = normals[idx];
+    //     if (not unique_vertices.contains(P)) {
+    //       unique_vertices[P] = u32(pts.size());
+    //       pts.push_back(P);
+    //       nrm.push_back(N);
+    //     }
+    //     pti[j] = unique_vertices[P];
+    //   }
+    // }
 
-    if (primitive.material < 0) {
-      continue;
-    }
-
-    auto& mat = model.materials[primitive.material];
-    submesh.mat = pcx.materials[mat.name];
+    auto mesh = Mesh();
+    mesh.points = Span(points.data(), points.size());
+    mesh.normals = Span(normals.data(), normals.size());
+    mesh.uvs = Span(uvs.data(), uvs.size());
+    mesh.prims = Span((Prim*)prims.data(), prims.size() / 3);
+    mesh.submeshes = Span(submeshes.data(), submeshes.size());
+    auto ar = Archive();
+    mesh.write(ar);
+    auto name = me.name.empty() ? "0" : me.name;
+    std::replace(name.begin(), name.end(), '.', '_');
+    ar.save(save_dir / "Meshes" / name, ".zmesh");
   }
 
-  // remove duplicate points
-  // auto pts = Vector<Point>();
-  // auto nrm = Vector<vec3>();
-  // auto buf = (Prim*)prims.data();
-  // auto unique_vertices = std::unordered_map<Point, u32>();
-  // auto points_i = usize(0);
-  // for (int i = 0; i < prims.size() / 3; ++i) {
-  //   auto& prim = buf[i];
-  //   auto& pti = prim.points;
-  //   for (int j = 0; j < 3; ++j) {
-  //     auto idx = pti[j];
-  //     auto P = points[idx];
-  //     auto N = normals[idx];
-  //     if (not unique_vertices.contains(P)) {
-  //       unique_vertices[P] = u32(pts.size());
-  //       pts.push_back(P);
-  //       nrm.push_back(N);
-  //     }
-  //     pti[j] = unique_vertices[P];
-  //   }
-  // }
-
-  auto mesh = Mesh();
-  mesh.points = Span(points.data(), points.size());
-  mesh.normals = Span(normals.data(), normals.size());
-  mesh.uvs = Span(uvs.data(), uvs.size());
-  mesh.prims = Span((Prim*)prims.data(), prims.size() / 3);
-  mesh.submeshes = Span(submeshes.data(), submeshes.size());
-  auto ar = Archive();
-  mesh.write(ar);
-  auto name = me.name.empty() ? "0" : me.name;
-  std::replace(name.begin(), name.end(), '.', '_');
-  ar.save(save_dir / "Meshes" / name, ".zmesh");
-
   for (const auto& idx : node.children) {
-    process_nodes(save_dir, model, model.nodes[idx], pcx);
+    if (idx >= 0 and idx < model.nodes.size()) {
+      process_nodes(save_dir, model, model.nodes[idx], pcx);
+    }
   }
 }
 
@@ -207,16 +212,20 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
     eprintln("Failed to parse glTF");
   }
 
-  const auto& scene = model.scenes[model.defaultScene];
+  const auto scene_index = model.defaultScene >= 0 ? model.defaultScene : 0;
+  ZASSERT(scene_index < model.scenes.size(), "glTF has no scenes");
+  const auto& scene = model.scenes[scene_index];
   auto transform = mat4(1.0f);
   auto pcx = ParseCtxt();
 
   /// TEXTURES
   {
     auto texture_idx = 0ZU;
-    auto out = YAML::Emitter();
-    out << YAML::BeginMap;
-    out << YAML::Key << "Textures" << YAML::Value << YAML::BeginSeq;
+    auto mega_texture_assets = Vector<UUID>();
+    auto mega_texture = YAML::Emitter();
+    mega_texture << YAML::BeginMap;
+    mega_texture << YAML::Key << "Textures" << YAML::Value << YAML::BeginSeq;
+    pcx.images.reserve(model.images.size());
     for (const auto& img : model.images) {
       const auto& buf = img.image;
       auto ar = Archive();
@@ -231,25 +240,49 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
       ZASSERT(not name.empty());
       ar.save(save_dir / "Textures" / name, ".ztex");
 
-      out << YAML::BeginMap;
-      auto p = save_dir / "Textures" / name;
-      p.replace_extension(".ztex");
-      out << YAML::Key << "Path" << YAML::Value << p.string();
+      auto artifact = fs::path("Textures") / name;
+      artifact.replace_extension(".ztex");
+      auto meta_path = fs::path("Textures") / name;
+      meta_path.replace_extension(".meta");
+      auto source = img.uri.empty() ? path.string() : img.uri;
       auto id = UUID();
-      out << YAML::Key << "UUID" << YAML::Value << id.to_string();
+      mega_texture_assets.push_back(id);
+
+      auto texture_meta = YAML::Emitter();
+      texture_meta << YAML::BeginMap;
+      texture_meta << YAML::Key << "UUID" << YAML::Value << id.to_string();
+      texture_meta << YAML::Key << "Kind" << YAML::Value << "Texture";
+      texture_meta << YAML::Key << "Source" << YAML::Value << source;
+      texture_meta << YAML::Key << "Artifact" << YAML::Value
+                   << artifact.string();
+      texture_meta << YAML::EndMap;
+
+      auto texture_meta_ar = Archive();
+      texture_meta_ar.copy((u8*)texture_meta.c_str(), texture_meta.size());
+      texture_meta_ar.save(save_dir / meta_path);
+
+      mega_texture << YAML::BeginMap;
+      mega_texture << YAML::Key << "UUID" << YAML::Value << id.to_string();
+      mega_texture << YAML::Key << "Meta" << YAML::Value << meta_path.string();
+      mega_texture << YAML::EndMap;
+
       if (g_project) {
-        g_project->asset_database().register_asset(id, AssetKind::Texture, p);
+        g_project->asset_database().register_asset(id, AssetKind::Texture,
+                                                   artifact, source, meta_path);
       }
-      pcx.img_map[name] = { id, texture_idx };
-      out << YAML::EndMap;
+      pcx.images.push_back({ id, texture_idx });
       texture_idx += 1;
     }
-    out << YAML::EndSeq;
-    out << YAML::EndMap;
+    mega_texture << YAML::EndSeq;
+    mega_texture << YAML::EndMap;
 
-    auto ar = Archive();
-    ar.copy((u8*)out.c_str(), out.size());
-    ar.save(save_dir / "Textures", ".meta");
+    auto mega_texture_ar = Archive();
+    mega_texture_ar.copy((u8*)mega_texture.c_str(), mega_texture.size());
+    mega_texture_ar.save(save_dir / "MegaTexture", ".meta");
+    if (g_project) {
+      g_project->asset_database().set_mega_texture_assets(
+          std::move(mega_texture_assets));
+    }
   }
 
   /// MATERIALS
@@ -261,26 +294,25 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
       }
 
       const auto& pbr = mat.pbrMetallicRoughness;
-      if (pbr.baseColorTexture.index >= 0) {
-        auto find_texture_index = [&](int gltf_index) {
-          if (gltf_index < 0) {
-            return -1ZU;
-          }
-          auto& texture = model.textures[gltf_index];
-          auto& img = model.images[texture.source];
-          auto name =
-              img.name.empty() ? img.uri.empty() ? "" : img.uri : img.name;
-          ZASSERT(not name.empty());
-          return std::get<1>(pcx.img_map[name]);
-        };
+      auto find_texture_index = [&](int gltf_index) {
+        if (gltf_index < 0 or gltf_index >= model.textures.size()) {
+          return -1ZU;
+        }
 
-        pcx.materials[mat.name] = Material {
+        auto& texture = model.textures[gltf_index];
+        if (texture.source < 0 or texture.source >= pcx.images.size()) {
+          return -1ZU;
+        }
+
+        return std::get<1>(pcx.images[texture.source]);
+      };
+
+      pcx.materials.push_back({
           .color_texture = find_texture_index(pbr.baseColorTexture.index),
           .normal_texture = find_texture_index(mat.normalTexture.index),
           .roughness_texture =
               find_texture_index(pbr.metallicRoughnessTexture.index),
-        };
-      }
+      });
       mat_idx += 1;
     }
   }
