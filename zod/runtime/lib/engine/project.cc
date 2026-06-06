@@ -29,6 +29,7 @@ auto Project::init() -> void {
   fs::create_directories(assets_dir / "Meshes", code);
   fs::create_directories(assets_dir / "Textures", code);
   fs::create_directories(assets_dir / "Materials", code);
+  m_asset_database.open(assets_dir);
   m_scene_manager.create_scene();
   save();
 }
@@ -60,6 +61,7 @@ auto Project::load(const fs::path& path) -> void {
   const auto assets = config["AssetsDirectory"].as<String>();
   const auto start_scene = config["StartScene"].as<String>();
   g_project = new Project(name, directory, assets);
+  g_project->m_asset_database.open(g_project->assets_directory());
   g_project->m_scene_manager.load_from_file(g_project->assets_directory() /
                                             start_scene);
 }

@@ -3,7 +3,9 @@
 #include <yaml-cpp/yaml.h>
 
 #include "core/uuid.hh"
+#include "engine/asset_database.hh"
 #include "engine/mesh.hh"
+#include "engine/project.hh"
 #include "loaders.hh"
 
 #include "gpu/backend.hh"
@@ -235,6 +237,9 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
       out << YAML::Key << "Path" << YAML::Value << p.string();
       auto id = UUID();
       out << YAML::Key << "UUID" << YAML::Value << id.to_string();
+      if (g_project) {
+        g_project->asset_database().register_asset(id, AssetKind::Texture, p);
+      }
       pcx.img_map[name] = { id, texture_idx };
       out << YAML::EndMap;
       texture_idx += 1;

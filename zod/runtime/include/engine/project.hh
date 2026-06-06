@@ -1,5 +1,7 @@
 #pragma once
 
+#include "engine/asset_database.hh"
+
 namespace zod {
 
 class Scene;
@@ -34,12 +36,14 @@ public:
   static auto load(const fs::path&) -> void;
   auto assets_directory() const -> fs::path;
   auto scene_manager() -> SceneManager& { return m_scene_manager; }
+  auto asset_database() -> AssetDatabase& { return m_asset_database; }
   auto active_scene() -> SharedPtr<Scene> {
     return m_scene_manager.active_scene();
   }
 
 private:
   SceneManager m_scene_manager;
+  AssetDatabase m_asset_database;
 };
 
 extern Project* g_project;

@@ -4,6 +4,7 @@
 #include "engine/components.hh"
 #include "engine/entity.hh"
 #include "engine/registry.hh"
+#include "engine/project.hh"
 
 #include <yaml-cpp/yaml.h>
 
@@ -336,18 +337,14 @@ auto Scene::deserialize(const fs::path& path) -> void {
     }
   }
 
-  const auto texconf =
-      YAML::LoadFile(path.parent_path().parent_path() / "Textures.meta");
-  const auto& textures = texconf["Textures"];
+  const auto textures = g_project->asset_database().assets(AssetKind::Texture);
   auto offset = vec2();
   auto max_height = 0.0f;
   auto mega_texture = m_mesh_batch->mega_texture();
   mega_texture->bind();
   auto texture_info = Vector<TextureInfo>();
-  for (const auto& node : textures) {
-    const auto id = UUID(node["UUID"].as<String>());
-    const auto texture_path = node["Path"].as<String>();
-    auto mapping = memory_map(texture_path);
+  for (const auto& texture : textures) {
+    auto mapping = memory_map(texture.path);
     auto size = vec2(*(usize*)mapping[0], *(usize*)mapping[sizeof(usize)]);
     auto span =
         Span(mapping[sizeof(usize) * 3], *(usize*)mapping[sizeof(usize) * 2]);
@@ -359,7 +356,7 @@ auto Scene::deserialize(const fs::path& path) -> void {
     mega_texture->blit(offset.x, offset.y, size.x, size.y, span.data());
     auto info = TextureInfo { offset, size };
     texture_info.push_back(info);
-    AssetRegistry::reg(id, info);
+    AssetRegistry::reg(texture.id, info);
     offset.x += size.x;
     max_height = fmaxf(max_height, size.y);
     memory_unmap(mapping);
