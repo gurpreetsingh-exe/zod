@@ -33,7 +33,7 @@ void main(void) {
   vec3 base_color =
       fetch_color(mesh_info.base_color_texture_index, vec3(1, 1, 1));
   // vec3 normal = fetch_color(mesh_info.normal_texture_index, n);
-  vec3 r = fetch_color(mesh_info.roughness_texture_index, vec3(0, 0, 1));
+  vec3 r = fetch_color(mesh_info.roughness_texture_index, vec3(0, 0.5, 0));
 
   float metallic = r.b;
   float roughness = r.g;

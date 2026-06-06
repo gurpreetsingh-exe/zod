@@ -47,7 +47,7 @@ vec3 get_color(vec3 P, vec3 v, vec3 base_color, vec3 n, float metallic,
     float quadratic = linfo.b;
     float attenuation =
         1.0f / (1.0f + linear * distance + quadratic * distance * distance);
-    vec3 radiance = vec3(10.0f) * attenuation;
+    vec3 radiance = vec3(linfo.intensity) * attenuation;
 
     float NoV = max(dot(n, v), 0.000001f);
     float NoL = max(dot(n, L), 0.000001f);

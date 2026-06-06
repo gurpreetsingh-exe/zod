@@ -26,6 +26,7 @@ struct LightInfo {
   u32 index;
   f32 a;
   f32 b;
+  f32 intensity;
 };
 
 GPUMeshBatch::GPUMeshBatch()
@@ -100,7 +101,8 @@ auto GPUMeshBatch::recompute_batch() -> void {
     auto entity = Entity(entity_id, scene.get());
     if (entity.has_component<LightComponent>()) {
       auto light = entity.get_component<LightComponent>();
-      lights.push_back({ u32(matrix_index), light.a, light.b });
+      lights.push_back(
+          { u32(matrix_index), light.a, light.b, light.intensity });
       m_light_offset_map[entity] = { lights.size() * sizeof(LightInfo),
                                      u32(matrix_index) };
       ++matrix_index;
@@ -139,7 +141,7 @@ auto GPUMeshBatch::recompute_batch() -> void {
   }
 
   m_mesh_info->write(mesh_info.data(), mesh_info.size() * sizeof(GPUMeshInfo));
-  LightInfo number_of_lights = { u32(lights.size()), 0.0f, 0.0f };
+  LightInfo number_of_lights = { u32(lights.size()), 0.0f, 0.0f, 0.0f };
   m_light_info->write(&number_of_lights, sizeof(LightInfo));
   m_light_info->write(lights.data(), lights.size() * sizeof(LightInfo),
                       sizeof(LightInfo));
@@ -158,7 +160,7 @@ auto GPUMeshBatch::update_matrix(Entity entity, const mat4& mat) -> void {
 auto GPUMeshBatch::update_light(Entity entity, const LightComponent& light)
     -> void {
   auto [offset, index] = m_light_offset_map[entity];
-  auto light_info = LightInfo { index, light.a, light.b };
+  auto light_info = LightInfo { index, light.a, light.b, light.intensity };
   m_light_info->write(&light_info, sizeof(LightInfo), offset);
 }
 

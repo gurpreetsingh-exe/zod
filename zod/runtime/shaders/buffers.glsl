@@ -21,6 +21,7 @@ struct LightInfo {
   uint index;
   float a;
   float b;
+  float intensity;
 };
 
 struct MeshInfo {

@@ -281,8 +281,9 @@ auto Properties::update() -> void {
   draw_component<LightComponent>("Light", entity, [&](auto& component) {
     auto changed =
         draw_combo_row("Type", (int*)&component.kind, "Point\0Sun\0\0");
-    changed |= draw_float_row("A", &component.a);
-    changed |= draw_float_row("B", &component.b);
+    changed |= draw_float_row("Radius (Inner)", &component.a);
+    changed |= draw_float_row("Radius (Outer)", &component.b);
+    changed |= draw_float_row("Intensity", &component.intensity);
     return changed;
   });
 
