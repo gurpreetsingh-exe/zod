@@ -95,6 +95,7 @@ auto GPUMeshBatch::recompute_batch() -> void {
   auto indirect = Vector<DrawElementsIndirectCommand>();
   auto mesh_info = Vector<GPUMeshInfo>();
   auto lights = Vector<LightInfo>();
+  auto& assets = g_project->asset_database();
   i = usize(0);
   auto matrix_index = usize(0);
   for (auto entity_id : view) {
@@ -130,10 +131,12 @@ auto GPUMeshBatch::recompute_batch() -> void {
     for (auto submesh : mesh->submeshes) {
       auto count = submesh.size;
       auto offset = begin + submesh.offset;
+      auto material = assets.material(submesh.mat);
       indirect.emplace_back(count, 1, offset, 0, i);
-      mesh_info.emplace_back(matrix_index, submesh.mat.color_texture,
-                             submesh.mat.normal_texture,
-                             submesh.mat.roughness_texture);
+      mesh_info.emplace_back(
+          matrix_index, u32(assets.texture_index(material.color_texture)),
+          u32(assets.texture_index(material.normal_texture)),
+          u32(assets.texture_index(material.roughness_texture)));
       ++i;
     }
     offset += mesh->points.size();

@@ -24,17 +24,13 @@ static Prim g_prims[] = {
   { .points = { 7, 0, 4 } }, { .points = { 0, 2, 4 } },
   { .points = { 6, 1, 7 } }, { .points = { 1, 0, 7 } },
 };
-static SubMesh g_submeshes[] = {
-  { .mat = {}, .offset = 0, .size = 36 },
-};
-
 auto Mesh::cube() -> SharedPtr<Mesh> {
   auto mesh = shared<Mesh>();
   *mesh = {
     .points = Span<Point>(g_points, 8),
     .normals = Span<vec3>(g_normals, 12),
     .prims = Span<Prim>(g_prims, 12),
-    .submeshes = Span<SubMesh>(g_submeshes, 1),
+    .submeshes = { { .offset = 0, .size = 36 } },
   };
   return mesh;
 }
@@ -59,7 +55,14 @@ auto Mesh::write(Archive& ar) -> void {
 
   size = submeshes.size();
   ar.copy((u8*)&size, sizeof(usize));
-  ar.copy((u8*)submeshes.data(), submeshes.size_bytes());
+  for (const auto& submesh : submeshes) {
+    auto material = submesh.mat.to_string();
+    auto material_size = material.size();
+    ar.copy((u8*)&material_size, sizeof(usize));
+    ar.copy((u8*)material.data(), material_size);
+    ar.copy((u8*)&submesh.offset, sizeof(usize));
+    ar.copy((u8*)&submesh.size, sizeof(usize));
+  }
 }
 
 auto Mesh::read(const fs::path& path) -> void {
@@ -85,8 +88,20 @@ auto Mesh::read(const fs::path& path) -> void {
       Span((Prim*)&mapping[offset + sizeof(usize)], *(usize*)&mapping[offset]);
   offset += prims.size_bytes() + sizeof(usize);
 
-  submeshes = Span((SubMesh*)&mapping[offset + sizeof(usize)],
-                   *(usize*)&mapping[offset]);
+  auto number_submeshes = *(usize*)&mapping[offset];
+  offset += sizeof(usize);
+  submeshes.resize(number_submeshes);
+  for (auto i = 0ZU; i < number_submeshes; ++i) {
+    auto material_size = *(usize*)&mapping[offset];
+    offset += sizeof(usize);
+    auto material = String((char*)&mapping[offset], material_size);
+    offset += material_size;
+    submeshes[i].mat = UUID(material);
+    submeshes[i].offset = *(usize*)&mapping[offset];
+    offset += sizeof(usize);
+    submeshes[i].size = *(usize*)&mapping[offset];
+    offset += sizeof(usize);
+  }
 
   fmt::println("Points: {}", points.size());
   fmt::println("Normals: {}", normals.size());

@@ -4,6 +4,7 @@
 
 #include "core/uuid.hh"
 #include "engine/asset_database.hh"
+#include "engine/material.hh"
 #include "engine/mesh.hh"
 #include "engine/project.hh"
 #include "loaders.hh"
@@ -67,7 +68,7 @@ auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
 
 struct ParseCtxt {
   Vector<std::tuple<UUID, usize>> images;
-  Vector<Material> materials;
+  Vector<UUID> materials;
 };
 
 auto process_nodes(const fs::path& save_dir, const tinygltf::Model& model,
@@ -172,7 +173,7 @@ auto process_nodes(const fs::path& save_dir, const tinygltf::Model& model,
     mesh.normals = Span(normals.data(), normals.size());
     mesh.uvs = Span(uvs.data(), uvs.size());
     mesh.prims = Span((Prim*)prims.data(), prims.size() / 3);
-    mesh.submeshes = Span(submeshes.data(), submeshes.size());
+    mesh.submeshes = submeshes;
     auto ar = Archive();
     mesh.write(ar);
     auto name = me.name.empty() ? "0" : me.name;
@@ -266,10 +267,8 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
       mega_texture << YAML::Key << "Meta" << YAML::Value << meta_path.string();
       mega_texture << YAML::EndMap;
 
-      if (g_project) {
-        g_project->asset_database().register_asset(id, AssetKind::Texture,
-                                                   artifact, source, meta_path);
-      }
+      g_project->asset_database().register_asset(id, AssetKind::Texture,
+                                                 artifact, source, meta_path);
       pcx.images.push_back({ id, texture_idx });
       texture_idx += 1;
     }
@@ -279,10 +278,8 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
     auto mega_texture_ar = Archive();
     mega_texture_ar.copy((u8*)mega_texture.c_str(), mega_texture.size());
     mega_texture_ar.save(save_dir / "MegaTexture", ".meta");
-    if (g_project) {
-      g_project->asset_database().set_mega_texture_assets(
-          std::move(mega_texture_assets));
-    }
+    g_project->asset_database().set_mega_texture_assets(
+        std::move(mega_texture_assets));
   }
 
   /// MATERIALS
@@ -294,25 +291,54 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
       }
 
       const auto& pbr = mat.pbrMetallicRoughness;
-      auto find_texture_index = [&](int gltf_index) {
+      auto find_texture = [&](int gltf_index) {
         if (gltf_index < 0 or gltf_index >= model.textures.size()) {
-          return -1ZU;
+          return UUID::null();
         }
 
         auto& texture = model.textures[gltf_index];
         if (texture.source < 0 or texture.source >= pcx.images.size()) {
-          return -1ZU;
+          return UUID::null();
         }
 
-        return std::get<1>(pcx.images[texture.source]);
+        return std::get<0>(pcx.images[texture.source]);
       };
 
-      pcx.materials.push_back({
-          .color_texture = find_texture_index(pbr.baseColorTexture.index),
-          .normal_texture = find_texture_index(mat.normalTexture.index),
-          .roughness_texture =
-              find_texture_index(pbr.metallicRoughnessTexture.index),
-      });
+      auto id = UUID();
+      auto material = Material {
+        .color_texture = find_texture(pbr.baseColorTexture.index),
+        .normal_texture = find_texture(mat.normalTexture.index),
+        .roughness_texture = find_texture(pbr.metallicRoughnessTexture.index),
+      };
+      auto material_file = fmt::format("{}_{}", mat_idx, mat.name);
+      std::replace(material_file.begin(), material_file.end(), '.', '_');
+      std::replace(material_file.begin(), material_file.end(), '/', '_');
+      std::replace(material_file.begin(), material_file.end(), '\\', '_');
+      auto meta_path = fs::path("Materials") / material_file;
+      meta_path.replace_extension(".meta");
+
+      auto material_meta = YAML::Emitter();
+      material_meta << YAML::BeginMap;
+      material_meta << YAML::Key << "UUID" << YAML::Value << id.to_string();
+      material_meta << YAML::Key << "Kind" << YAML::Value << "Material";
+      material_meta << YAML::Key << "Source" << YAML::Value << path.string();
+      material_meta << YAML::Key << "BaseColorTexture" << YAML::Value
+                    << material.color_texture.to_string();
+      material_meta << YAML::Key << "NormalTexture" << YAML::Value
+                    << material.normal_texture.to_string();
+      material_meta << YAML::Key << "RoughnessTexture" << YAML::Value
+                    << material.roughness_texture.to_string();
+      material_meta << YAML::EndMap;
+
+      auto material_meta_ar = Archive();
+      material_meta_ar.copy((u8*)material_meta.c_str(), material_meta.size());
+      material_meta_ar.save(save_dir / meta_path);
+
+      g_project->asset_database().register_asset(
+          id, AssetKind::Material, meta_path, path.string(), meta_path);
+      g_project->asset_database().register_material(id, material);
+
+      pcx.materials.push_back(id);
       mat_idx += 1;
     }
   }
