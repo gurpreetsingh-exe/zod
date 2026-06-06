@@ -1,12 +1,14 @@
 #include <tiny_gltf.h>
 #include <tiny_obj_loader.h>
 #include <yaml-cpp/yaml.h>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include "core/uuid.hh"
 #include "engine/asset_database.hh"
 #include "engine/material.hh"
 #include "engine/mesh.hh"
 #include "engine/project.hh"
+#include "engine/scene.hh"
 #include "loaders.hh"
 
 #include "gpu/backend.hh"
@@ -69,12 +71,45 @@ auto load_obj(const fs::path& filepath) -> SharedPtr<Mesh> {
 struct ParseCtxt {
   Vector<std::tuple<UUID, usize>> images;
   Vector<UUID> materials;
+  Vector<fs::path> meshes;
 };
 
-auto process_nodes(const fs::path& save_dir, const tinygltf::Model& model,
-                   const tinygltf::Node& node, ParseCtxt& pcx) -> void {
-  if (node.mesh >= 0 and node.mesh < model.meshes.size()) {
-    const auto& me = model.meshes[node.mesh];
+static auto sanitize_filename(String name) -> String {
+  std::replace(name.begin(), name.end(), '.', '_');
+  std::replace(name.begin(), name.end(), '/', '_');
+  std::replace(name.begin(), name.end(), '\\', '_');
+  return name;
+}
+
+static auto mesh_path(const tinygltf::Model& model, int mesh_index)
+    -> fs::path {
+  const auto& me = model.meshes[mesh_index];
+  auto name = me.name.empty() ? fmt::format("Mesh{}", mesh_index) : me.name;
+  name = sanitize_filename(fmt::format("{}_{}", mesh_index, name));
+  auto path = fs::path("Meshes") / name;
+  path.replace_extension(".zmesh");
+  return path;
+}
+
+static auto import_mesh(const fs::path& save_dir, const tinygltf::Model& model,
+                        int mesh_index, ParseCtxt& pcx) -> fs::path {
+  if (mesh_index < 0 or mesh_index >= model.meshes.size()) {
+    return {};
+  }
+
+  if (pcx.meshes.empty()) {
+    pcx.meshes.resize(model.meshes.size());
+  }
+
+  if (not pcx.meshes[mesh_index].empty()) {
+    return pcx.meshes[mesh_index];
+  }
+
+  const auto& me = model.meshes[mesh_index];
+  auto path = mesh_path(model, mesh_index);
+  pcx.meshes[mesh_index] = path;
+
+  {
     auto points = Vector<Point>();
     auto normals = Vector<vec3>();
     auto uvs = Vector<vec2>();
@@ -176,16 +211,155 @@ auto process_nodes(const fs::path& save_dir, const tinygltf::Model& model,
     mesh.submeshes = submeshes;
     auto ar = Archive();
     mesh.write(ar);
-    auto name = me.name.empty() ? "0" : me.name;
-    std::replace(name.begin(), name.end(), '.', '_');
-    ar.save(save_dir / "Meshes" / name, ".zmesh");
+    ar.save(save_dir / path);
   }
 
-  for (const auto& idx : node.children) {
-    if (idx >= 0 and idx < model.nodes.size()) {
-      process_nodes(save_dir, model, model.nodes[idx], pcx);
+  return path;
+}
+
+static auto write_vec3(YAML::Emitter& out, const char* key, vec3 value)
+    -> void {
+  out << YAML::Key << key << YAML::Value << YAML::Flow << YAML::BeginSeq
+      << value.x << value.y << value.z << YAML::EndSeq;
+}
+
+static auto write_transform(YAML::Emitter& out, vec3 position, vec3 rotation,
+                            vec3 scale) -> void {
+  out << YAML::Key << "TransformComponent";
+  out << YAML::BeginMap;
+  write_vec3(out, "Position", position);
+  write_vec3(out, "Rotation", rotation);
+  write_vec3(out, "Scale", scale);
+  out << YAML::EndMap;
+}
+
+static auto write_scene_entity(YAML::Emitter& out, UUID id, const String& name)
+    -> void {
+  out << YAML::BeginMap;
+  out << YAML::Key << "Entity" << YAML::Value << id.to_string();
+  out << YAML::Key << "IdentifierComponent";
+  out << YAML::BeginMap;
+  out << YAML::Key << "Identifier" << YAML::Value << name;
+  out << YAML::EndMap;
+}
+
+static auto node_local_matrix(const tinygltf::Node& node) -> mat4 {
+  if (node.matrix.size() == 16) {
+    auto matrix = mat4(1.0f);
+    for (auto column = 0; column < 4; ++column) {
+      for (auto row = 0; row < 4; ++row) {
+        matrix[column][row] = f32(node.matrix[column * 4 + row]);
+      }
     }
+    return matrix;
   }
+
+  auto t = vec3(0.0f);
+  if (node.translation.size() == 3) {
+    t = vec3(f32(node.translation[0]), f32(node.translation[1]),
+             f32(node.translation[2]));
+  }
+
+  auto r = quat(1.0f, 0.0f, 0.0f, 0.0f);
+  if (node.rotation.size() == 4) {
+    r = quat(f32(node.rotation[3]), f32(node.rotation[0]),
+             f32(node.rotation[1]), f32(node.rotation[2]));
+  }
+
+  auto s = vec3(1.0f);
+  if (node.scale.size() == 3) {
+    s = vec3(f32(node.scale[0]), f32(node.scale[1]), f32(node.scale[2]));
+  }
+
+  return translate(mat4(1.0f), t) * toMat4(r) * glm::scale(mat4(1.0f), s);
+}
+
+static auto decompose_transform(mat4 matrix, vec3& position, vec3& rotation,
+                                vec3& scale) -> void {
+  auto orientation = quat();
+  auto skew = vec3();
+  auto perspective = vec4();
+  glm::decompose(matrix, scale, orientation, position, skew, perspective);
+  rotation = glm::degrees(glm::eulerAngles(orientation));
+}
+
+static auto write_gltf_node_scene(const fs::path& save_dir,
+                                  const tinygltf::Model& model, int node_index,
+                                  mat4 parent, ParseCtxt& pcx,
+                                  YAML::Emitter& out) -> void {
+  if (node_index < 0 or node_index >= model.nodes.size()) {
+    return;
+  }
+
+  const auto& node = model.nodes[node_index];
+  auto world = parent * node_local_matrix(node);
+  if (node.mesh >= 0 and node.mesh < model.meshes.size()) {
+    auto mesh = import_mesh(save_dir, model, node.mesh, pcx);
+    auto name = node.name.empty() ? model.meshes[node.mesh].name : node.name;
+    if (name.empty()) {
+      name = fmt::format("Node{}", node_index);
+    }
+
+    auto position = vec3();
+    auto rotation = vec3();
+    auto scale = vec3(1.0f);
+    decompose_transform(world, position, rotation, scale);
+
+    write_scene_entity(out, UUID(), name);
+    write_transform(out, position, rotation, scale);
+    out << YAML::Key << "StaticMeshComponent";
+    out << YAML::BeginMap;
+    out << YAML::Key << "Mesh" << YAML::Value << mesh.string();
+    out << YAML::EndMap;
+    out << YAML::EndMap;
+  }
+
+  for (auto child : node.children) {
+    write_gltf_node_scene(save_dir, model, child, world, pcx, out);
+  }
+}
+
+static auto write_gltf_scene(const fs::path& save_dir, const fs::path& source,
+                             const tinygltf::Model& model,
+                             const tinygltf::Scene& scene, ParseCtxt& pcx)
+    -> fs::path {
+  auto scene_name = sanitize_filename(source.stem().string());
+  if (scene_name.empty()) {
+    scene_name = "ImportedGLTF";
+  }
+
+  auto camera_id = UUID();
+  auto out = YAML::Emitter();
+  out << YAML::BeginMap;
+  out << YAML::Key << "Name" << YAML::Value << scene_name;
+  out << YAML::Key << "CameraEntity" << YAML::Value << camera_id.to_string();
+  out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
+
+  write_scene_entity(out, camera_id, "SceneCamera");
+  write_transform(out, vec3(0.0f), vec3(0.0f), vec3(1.0f));
+  out << YAML::Key << "CameraComponent";
+  out << YAML::BeginMap;
+  out << YAML::Key << "PerspectiveCamera" << YAML::Value << YAML::BeginMap;
+  out << YAML::Key << "Fov" << YAML::Value << 90.0f;
+  out << YAML::Key << "ClipNear" << YAML::Value << 0.01f;
+  out << YAML::Key << "ClipFar" << YAML::Value << 100.0f;
+  out << YAML::EndMap;
+  out << YAML::EndMap;
+  out << YAML::EndMap;
+
+  for (auto node : scene.nodes) {
+    write_gltf_node_scene(save_dir, model, node, mat4(1.0f), pcx, out);
+  }
+
+  out << YAML::EndSeq;
+  out << YAML::EndMap;
+
+  auto scene_path = fs::path("Scenes") / scene_name;
+  scene_path.replace_extension(".zscene");
+  auto ar = Archive();
+  ar.copy((u8*)out.c_str(), out.size());
+  ar.save(save_dir / scene_path);
+  return save_dir / scene_path;
 }
 
 auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
@@ -216,7 +390,6 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
   const auto scene_index = model.defaultScene >= 0 ? model.defaultScene : 0;
   ZASSERT(scene_index < model.scenes.size(), "glTF has no scenes");
   const auto& scene = model.scenes[scene_index];
-  auto transform = mat4(1.0f);
   auto pcx = ParseCtxt();
 
   /// TEXTURES
@@ -343,8 +516,9 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
     }
   }
 
-  for (auto idx : scene.nodes) {
-    process_nodes(save_dir, model, model.nodes[idx], pcx);
+  auto scene_path = write_gltf_scene(save_dir, path, model, scene, pcx);
+  if (g_project) {
+    g_project->scene_manager().load_from_file(scene_path);
   }
 }
 

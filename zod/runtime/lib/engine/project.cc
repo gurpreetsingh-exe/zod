@@ -5,9 +5,11 @@
 
 namespace zod {
 
-auto SceneManager::load_from_file(const fs::path& path) -> void {
+auto SceneManager::load_from_file(const fs::path& path) -> SharedPtr<Scene> {
   auto scene = create_scene();
   scene->deserialize(path);
+  set_active_scene(scene);
+  return scene;
 }
 
 auto SceneManager::active_scene() -> SharedPtr<Scene> {
@@ -18,6 +20,12 @@ auto SceneManager::create_scene() -> SharedPtr<Scene> {
   auto scene = shared<Scene>();
   m_scenes.push_back(scene);
   return scene;
+}
+
+auto SceneManager::set_active_scene(SharedPtr<Scene> scene) -> void {
+  auto it = std::find(m_scenes.begin(), m_scenes.end(), scene);
+  ZASSERT(it != m_scenes.end(), "scene is not owned by this SceneManager");
+  m_active_scene = usize(std::distance(m_scenes.begin(), it));
 }
 
 Project* g_project = nullptr;

@@ -8,9 +8,10 @@ class Scene;
 
 class SceneManager {
 public:
-  auto load_from_file(const fs::path&) -> void;
+  auto load_from_file(const fs::path&) -> SharedPtr<Scene>;
   auto active_scene() -> SharedPtr<Scene>;
   auto create_scene() -> SharedPtr<Scene>;
+  auto set_active_scene(SharedPtr<Scene>) -> void;
 
 private:
   Vector<SharedPtr<Scene>> m_scenes = {};

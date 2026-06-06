@@ -80,6 +80,8 @@ Editor::Editor()
                           delete g_project;
                         }
                         Project::load(config_path);
+                        Editor::get().set_active_object(Entity());
+                        Editor::get().update_viewport_camera();
                       })
           .menu_separator()
           .menu_entry("Save",
@@ -94,6 +96,8 @@ Editor::Editor()
                         auto gltf_path =
                             open_dialog({ .filter = "*.gltf *.glb" });
                         loadGLTF(g_project->assets_directory(), gltf_path);
+                        Editor::get().set_active_object(Entity());
+                        Editor::get().update_viewport_camera();
                       })
           .menu_separator()
           .menu_entry("Quit", [] {

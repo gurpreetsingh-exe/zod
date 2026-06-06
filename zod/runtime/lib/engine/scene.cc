@@ -365,6 +365,7 @@ auto Scene::deserialize(const fs::path& path) -> void {
 
   m_mesh_batch->texture_info()->write(
       texture_info.data(), texture_info.size() * sizeof(TextureInfo));
+  m_mesh_batch->recompute_batch();
 }
 
 template <class T>
