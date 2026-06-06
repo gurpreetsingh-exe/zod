@@ -91,6 +91,22 @@ static auto mesh_path(const tinygltf::Model& model, int mesh_index)
   return path;
 }
 
+static auto write_ztex(Archive& ar, usize width, usize height,
+                       const Vector<u8>& pixels) -> void {
+  auto size = pixels.size();
+  auto row_size = size / height;
+  auto flipped = Vector<u8>(size);
+  for (auto y = 0ZU; y < height; ++y) {
+    std::memcpy(&flipped[y * row_size], &pixels[(height - y - 1) * row_size],
+                row_size);
+  }
+
+  ar.copy((u8*)&width, sizeof(usize));
+  ar.copy((u8*)&height, sizeof(usize));
+  ar.copy((u8*)&size, sizeof(usize));
+  ar.copy(flipped.data(), size);
+}
+
 static auto import_mesh(const fs::path& save_dir, const tinygltf::Model& model,
                         int mesh_index, ParseCtxt& pcx) -> fs::path {
   if (mesh_index < 0 or mesh_index >= model.meshes.size()) {
@@ -403,13 +419,7 @@ auto loadGLTF(const fs::path& save_dir, const fs::path& path) -> void {
     for (const auto& img : model.images) {
       const auto& buf = img.image;
       auto ar = Archive();
-      auto size = buf.size();
-      usize w = img.width;
-      usize h = img.height;
-      ar.copy((u8*)&w, sizeof(usize));
-      ar.copy((u8*)&h, sizeof(usize));
-      ar.copy((u8*)&size, sizeof(usize));
-      ar.copy((u8*)buf.data(), size);
+      write_ztex(ar, img.width, img.height, buf);
       auto name = img.name.empty() ? img.uri.empty() ? "" : img.uri : img.name;
       ZASSERT(not name.empty());
       ar.save(save_dir / "Textures" / name, ".ztex");
