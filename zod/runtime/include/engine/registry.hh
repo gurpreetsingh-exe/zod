@@ -25,6 +25,13 @@ public:
     return std::get<UUIDMap<T>>(s_registry)[id];
   }
 
+  template <class T>
+  static constexpr auto find(UUID id) -> const T* {
+    auto& map = std::get<UUIDMap<T>>(s_registry);
+    auto it = map.find(id);
+    return it == map.end() ? nullptr : &it->second;
+  }
+
 private:
   static inline Tuple<UUIDMap<SharedPtr<Mesh>>, UUIDMap<SharedPtr<Scene>>,
                       UUIDMap<TextureInfo>>

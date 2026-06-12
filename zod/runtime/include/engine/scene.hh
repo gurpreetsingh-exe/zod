@@ -49,6 +49,7 @@ public:
   auto on_component_added(Entity, auto&) -> void;
   auto name() const -> const String& { return m_name; }
   auto stats() const -> SceneStatistics { return m_stats; }
+  auto mega_texture() const -> SharedPtr<GPUTexture>;
 
 private:
   auto next_id() -> usize { return m_disambiguator++; }

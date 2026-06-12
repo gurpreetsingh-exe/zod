@@ -44,6 +44,15 @@ public:
     return m_scene->m_registry.get<T>(m_inner);
   }
 
+  template <typename T, typename ThenFn>
+  auto has_component_then(ThenFn then) -> void {
+    if (not has_component<T>()) {
+      return;
+    }
+
+    then(m_scene->m_registry.get<T>(m_inner));
+  }
+
   template <typename T>
   auto update_internal() -> void;
 

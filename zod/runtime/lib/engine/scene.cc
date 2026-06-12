@@ -8,90 +8,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-namespace YAML {
-
-template <>
-struct convert<zod::vec3> {
-  static Node encode(const zod::vec3& v) {
-    Node node;
-    node.push_back(v.x);
-    node.push_back(v.y);
-    node.push_back(v.z);
-    node.SetStyle(EmitterStyle::Flow);
-    return node;
-  }
-
-  static bool decode(const Node& node, zod::vec3& v) {
-    if (not node.IsSequence() or node.size() != 3) {
-      return false;
-    }
-
-    v.x = node[0].as<zod::f32>();
-    v.y = node[1].as<zod::f32>();
-    v.z = node[2].as<zod::f32>();
-    return true;
-  }
-};
-
-template <>
-struct convert<zod::vec4> {
-  static Node encode(const zod::vec4& v) {
-    Node node;
-    node.push_back(v.x);
-    node.push_back(v.y);
-    node.push_back(v.z);
-    node.push_back(v.w);
-    node.SetStyle(EmitterStyle::Flow);
-    return node;
-  }
-
-  static bool decode(const Node& node, zod::vec4& v) {
-    if (not node.IsSequence() or node.size() != 4) {
-      return false;
-    }
-
-    v.x = node[0].as<zod::f32>();
-    v.y = node[1].as<zod::f32>();
-    v.z = node[2].as<zod::f32>();
-    v.w = node[3].as<zod::f32>();
-    return true;
-  }
-};
-
-template <>
-struct convert<zod::mat4> {
-  static Node encode(const zod::mat4& mat) {
-    Node node;
-    node.push_back(mat[0]);
-    node.push_back(mat[1]);
-    node.push_back(mat[2]);
-    node.push_back(mat[3]);
-    node.SetStyle(EmitterStyle::Flow);
-    return node;
-  }
-
-  static bool decode(const Node& node, zod::mat4& mat) {
-    if (not node.IsSequence() or node.size() != 4) {
-      return false;
-    }
-
-    mat[0] = node[0].as<zod::vec4>();
-    mat[1] = node[1].as<zod::vec4>();
-    mat[2] = node[2].as<zod::vec4>();
-    mat[3] = node[3].as<zod::vec4>();
-    return true;
-  }
-};
-
-} // namespace YAML
-
 namespace zod {
-
-auto operator<<(YAML::Emitter& out, const vec3& v) -> YAML::Emitter& {
-  out << YAML::Flow;
-  out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-  return out;
-}
 
 Scene::Scene()
     : m_mesh_batch(shared<GPUMeshBatch>()),
@@ -155,6 +72,10 @@ auto Scene::entities() -> Vector<Entity> {
   return entities;
 }
 
+auto Scene::mega_texture() const -> SharedPtr<GPUTexture> {
+  return m_mesh_batch->mega_texture();
+}
+
 template <typename T>
 static auto write_field(YAML::Emitter& out, const String& key, const T& value)
     -> void {
@@ -176,25 +97,21 @@ auto Scene::serialize(const fs::path& path) -> void {
     }
 
     out << YAML::BeginMap;
-    write_field(out, "Entity",
-                entity.get_component<UUIDComponent>().id.to_string());
+#define SERIALIZE_COMPONENT(Component)                                         \
+  entity.has_component_then<Component>([&out](auto& component) {               \
+    out << YAML::Key << #Component;                                            \
+    component.serialize(out);                                                  \
+  })
+
+    auto name = String(entity.get_component<IdentifierComponent>().identifier);
+
+    out << YAML::Key << "UUIDComponent";
+    entity.get_component<UUIDComponent>().serialize(out);
 
     out << YAML::Key << "IdentifierComponent";
-    out << YAML::BeginMap;
-    const auto name =
-        String(entity.get_component<IdentifierComponent>().identifier);
-    write_field(out, "Identifier", name);
-    out << YAML::EndMap;
+    entity.get_component<IdentifierComponent>().serialize(out);
 
-    if (entity.has_component<TransformComponent>()) {
-      out << YAML::Key << "TransformComponent";
-      out << YAML::BeginMap;
-      const auto& transform = entity.get_component<TransformComponent>();
-      write_field(out, "Position", transform.position);
-      write_field(out, "Rotation", transform.rotation);
-      write_field(out, "Scale", transform.scale);
-      out << YAML::EndMap;
-    }
+    SERIALIZE_COMPONENT(TransformComponent);
 
     if (entity.has_component<StaticMeshComponent>()) {
       out << YAML::Key << "StaticMeshComponent";
@@ -208,47 +125,11 @@ auto Scene::serialize(const fs::path& path) -> void {
       out << YAML::EndMap;
     }
 
-    if (entity.has_component<SkyboxComponent>()) {
-      out << YAML::Key << "SkyboxComponent";
-      out << YAML::BeginMap;
-      const auto& env = entity.get_component<SkyboxComponent>().env;
-      if (env.mode == LightingMode::SolidColor) {
-        out << YAML::Key << "SolidColor" << YAML::Value << YAML::BeginMap;
-        write_field(out, "Color", env.color.v3);
-      } else if (env.mode == LightingMode::Texture) {
-        out << YAML::Key << "Texture" << YAML::Value << YAML::BeginMap;
-        write_field(out, "HDRI", env.hdr.s);
-      } else {
-        UNREACHABLE();
-      }
-      out << YAML::EndMap;
-      out << YAML::EndMap;
-    }
+    SERIALIZE_COMPONENT(SkyboxComponent);
+    SERIALIZE_COMPONENT(CameraComponent);
+    SERIALIZE_COMPONENT(LightComponent);
 
-    if (entity.has_component<CameraComponent>()) {
-      out << YAML::Key << "CameraComponent";
-      out << YAML::BeginMap;
-      out << YAML::Key << "PerspectiveCamera" << YAML::Value << YAML::BeginMap;
-      const auto camera = entity.get_component<CameraComponent>().camera;
-      write_field(out, "Fov", camera->get_fov());
-      auto [near, far] = camera->get_clipping();
-      write_field(out, "ClipNear", near);
-      write_field(out, "ClipFar", far);
-      out << YAML::EndMap;
-      out << YAML::EndMap;
-    }
-
-    if (entity.has_component<LightComponent>()) {
-      out << YAML::Key << "LightComponent";
-      out << YAML::BeginMap;
-      const auto light_kind = entity.get_component<LightComponent>().kind;
-      ZASSERT(light_kind == LightKind::Point);
-      out << YAML::Key << "Point" << YAML::Value << YAML::BeginMap;
-      write_field(out, "A", 0.1f);
-      write_field(out, "B", 0.1f);
-      out << YAML::EndMap;
-      out << YAML::EndMap;
-    }
+#undef SERIALIZE_COMPONENT
 
     out << YAML::EndMap;
   });
@@ -267,9 +148,11 @@ auto Scene::deserialize(const fs::path& path) -> void {
   const auto& entities = config["Entities"];
   ZASSERT(entities.IsSequence());
   for (const auto& node : entities) {
-    ZASSERT(node["Entity"] and node["IdentifierComponent"]);
+    ZASSERT(node["UUIDComponent"] and node["IdentifierComponent"]);
     auto entity = Entity(m_registry.create(), this);
-    auto id = UUID(node["Entity"].as<String>());
+    entity.add_component<IdentifierComponent>().deserialize(
+        node["IdentifierComponent"]);
+    auto id = entity.add_component<UUIDComponent>(node["UUIDComponent"]).id;
     if (id == camera_id) {
       auto camera_entity = Entity(m_camera, this);
       if (camera_entity) {
@@ -277,28 +160,14 @@ auto Scene::deserialize(const fs::path& path) -> void {
       }
       m_camera = entity.m_inner;
     }
-    entity.add_component<UUIDComponent>(id);
-    auto name = node["IdentifierComponent"]["Identifier"].as<String>();
-    entity.add_component<IdentifierComponent>(name);
 
-    // TODO: update_internal<T> for all components
-    if (node["TransformComponent"]) {
-      auto tnode = node["TransformComponent"];
-      auto& transform = entity.add_component<TransformComponent>();
-      transform.position = tnode["Position"].as<vec3>();
-      transform.rotation = tnode["Rotation"].as<vec3>();
-      transform.scale = tnode["Scale"].as<vec3>();
-    }
+#define DESERIALIZE_COMPONENT(Component)                                       \
+  if (node[#Component]) {                                                      \
+    entity.add_component<Component>().deserialize(node[#Component]);           \
+    entity.update_internal<Component>();                                       \
+  }
 
-    if (node["CameraComponent"]) {
-      const auto& cnode = node["CameraComponent"]["PerspectiveCamera"];
-      auto& component = entity.add_component<CameraComponent>();
-      auto& camera = component.camera;
-      camera->set_fov(cnode["Fov"].as<f32>());
-      camera->set_clipping(cnode["ClipNear"].as<f32>(),
-                           cnode["ClipFar"].as<f32>());
-      camera->update_matrix();
-    }
+    DESERIALIZE_COMPONENT(TransformComponent);
 
     if (node["StaticMeshComponent"]) {
       auto mesh_path = node["StaticMeshComponent"]["Mesh"].as<String>();
@@ -308,35 +177,11 @@ auto Scene::deserialize(const fs::path& path) -> void {
       entity.add_component<StaticMeshComponent>(mesh);
     }
 
-    if (node["SkyboxComponent"]) {
-      const auto& snode = node["SkyboxComponent"];
-      auto& component = entity.add_component<SkyboxComponent>();
-      auto& env = component.env;
-      if (snode["SolidColor"]) {
-        env.mode = LightingMode::SolidColor;
-        const auto& solid_color = snode["SolidColor"];
-        env.color.v3 = solid_color["Color"].as<vec3>();
-      } else if (snode["Texture"]) {
-        env.mode = LightingMode::Texture;
-        const auto& hdri = snode["Texture"];
-        std::memcpy(env.hdr.s, hdri["HDRI"].as<String>().c_str(),
-                    STRING_PROP_MAX_SIZE);
-      } else {
-        ZASSERT(false, "invalid field in SkyboxComponent");
-      }
-      entity.update_internal<SkyboxComponent>();
-    }
+    DESERIALIZE_COMPONENT(CameraComponent);
+    DESERIALIZE_COMPONENT(SkyboxComponent);
+    DESERIALIZE_COMPONENT(LightComponent);
 
-    if (node["LightComponent"]) {
-      const auto& lnode = node["LightComponent"];
-      auto& component = entity.add_component<LightComponent>();
-      if (lnode["Point"]) {
-        component.kind = LightKind::Point;
-        const auto& point_light = lnode["Point"];
-        component.a = point_light["A"].as<f32>();
-        component.b = point_light["B"].as<f32>();
-      }
-    }
+#undef DESERIALIZE_COMPONENT
   }
 
   const auto textures = g_project->asset_database().mega_texture_assets();
