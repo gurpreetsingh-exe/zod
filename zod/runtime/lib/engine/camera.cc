@@ -87,4 +87,79 @@ auto PerspectiveCamera::update(const Event& event) -> bool {
   return is_dirty;
 }
 
+SceneCamera::SceneCamera(f32 width, f32 height, f32 fov, f32 clip_near,
+                         f32 clip_far)
+    : PerspectiveCamera(width, height, fov, clip_near, clip_far) {
+  auto offset = m_position - m_orbit_pivot;
+  m_orbit_distance = glm::length(offset);
+  m_yaw = glm::atan(offset.y, offset.x);
+  m_pitch = glm::asin(offset.z / m_orbit_distance);
+  rebuild();
+  update_matrix();
+}
+
+auto SceneCamera::set_orbit_pivot(vec3 pivot) -> void {
+  m_orbit_pivot = pivot;
+  rebuild();
+  update_matrix();
+  is_dirty = true;
+}
+
+auto SceneCamera::zoom(f32 delta) -> void {
+  m_orbit_distance = std::max(0.01f, m_orbit_distance - delta * 0.06f);
+}
+
+auto SceneCamera::pan(vec2 delta) -> void {
+  auto scale = m_orbit_distance * 0.004f;
+  m_view_pan -= vec2(delta.x, -delta.y) * scale;
+}
+
+auto SceneCamera::rotate(vec2 delta) -> void {
+  m_yaw += radians(-delta.x);
+  m_pitch += radians(delta.y);
+  m_pitch = std::clamp(m_pitch, radians(-89.0f), radians(89.0f));
+}
+
+auto SceneCamera::rebuild() -> void {
+  auto cp = glm::cos(m_pitch);
+  auto offset =
+      vec3(glm::cos(m_yaw) * cp, glm::sin(m_yaw) * cp, glm::sin(m_pitch));
+  offset *= m_orbit_distance;
+
+  auto orbit_position = m_orbit_pivot + offset;
+  auto forward = normalize(m_orbit_pivot - orbit_position);
+  auto right = normalize(cross(forward, up));
+  auto camera_up = normalize(cross(right, forward));
+  auto pan = right * m_view_pan.x + camera_up * m_view_pan.y;
+
+  m_position = orbit_position + pan;
+  m_target = m_orbit_pivot + pan;
+  m_direction = normalize(m_target - m_position);
+}
+
+auto SceneCamera::update(const Event& event) -> bool {
+  vec2 delta = (event.mouse - event.last_mouse) * 0.28f;
+  switch (m_mode) {
+    case Navigation::Zoom: {
+      zoom(delta.x);
+      is_dirty = true;
+    } break;
+    case Navigation::Pan: {
+      pan(delta);
+      is_dirty = true;
+    } break;
+    case Navigation::Rotate: {
+      rotate(delta);
+      is_dirty = true;
+    } break;
+    case Navigation::None:
+    default:
+      break;
+  }
+
+  rebuild();
+  update_matrix();
+  return is_dirty;
+}
+
 }; // namespace zod

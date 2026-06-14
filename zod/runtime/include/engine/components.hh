@@ -48,10 +48,10 @@ struct TransformComponent {
 };
 
 struct CameraComponent {
-  SharedPtr<PerspectiveCamera> camera =
-      shared<PerspectiveCamera>(600.0f, 400.0f, 90.0f, 0.01f, 100.0f);
+  SharedPtr<SceneCamera> camera =
+      shared<SceneCamera>(600.0f, 400.0f, 90.0f, 0.01f, 100.0f);
   CameraComponent() = default;
-  CameraComponent(SharedPtr<PerspectiveCamera> _camera) : camera(_camera) {}
+  CameraComponent(SharedPtr<SceneCamera> _camera) : camera(_camera) {}
 
   IMPL_SERDE()
 };

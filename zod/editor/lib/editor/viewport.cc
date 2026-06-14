@@ -43,7 +43,7 @@ static auto Button(const char* name, bool& enabled) -> void {
 
 Viewport::Viewport()
     : SPanel("Viewport",
-             shared<PerspectiveCamera>(64, 64, 90.0f, 0.01f, 100.0f), false),
+             shared<SceneCamera>(64, 64, 90.0f, 0.01f, 100.0f), false),
       m_width(64), m_height(64) {
   m_framebuffer = Editor::get().get_renderer().get_render_target();
 

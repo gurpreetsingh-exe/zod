@@ -171,6 +171,29 @@ private:
   vec3 m_right = vec3(1.0f, 0.0f, 0.0f);
 };
 
+class SceneCamera : public PerspectiveCamera {
+public:
+  SceneCamera(f32 width, f32 height, f32 fov, f32 clip_near, f32 clip_far);
+  ~SceneCamera() = default;
+
+public:
+  auto update(const Event&) -> bool override;
+  auto set_orbit_pivot(vec3 pivot) -> void;
+
+private:
+  auto zoom(f32) -> void;
+  auto rotate(vec2) -> void;
+  auto pan(vec2) -> void;
+  auto rebuild() -> void;
+
+private:
+  vec3 m_orbit_pivot = vec3(0.0f);
+  f32 m_orbit_distance = 1.0f;
+  f32 m_yaw = 0.0f;
+  f32 m_pitch = 0.0f;
+  vec2 m_view_pan = vec2(0.0f);
+};
+
 } // namespace zod
 
 FMT(zod::Navigation, "{}", [&] {
