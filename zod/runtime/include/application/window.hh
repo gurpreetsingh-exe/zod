@@ -12,12 +12,19 @@ enum class cursor_shape_t {
   ResizeVertical,
 };
 
+struct WindowSpec {
+  String name;
+  vec<2, i32> size = { 1280, 720 };
+  bool custom_title_bar = false;
+  vec<2, i32> min_size = { 400, 300 };
+};
+
 class Window {
 public:
   using EventCallbackFn = std::function<void(Event&)>;
   static constexpr auto TitleBarHeight = 40.f;
 
-  Window(const String& /* name */);
+  Window(WindowSpec);
   ~Window();
 
 public:
@@ -37,13 +44,13 @@ public:
   auto drag_start() -> void;
 
 private:
+  WindowSpec m_info;
   GLFWwindow* m_window;
   GLFWcursor* m_arrow_cursor = nullptr;
   GLFWcursor* m_hresize_cursor = nullptr;
   GLFWcursor* m_vresize_cursor = nullptr;
   SharedPtr<GPUContext> m_gcx;
   EventCallbackFn m_event_callback;
-  vec<2, i32> m_size;
 };
 
 } // namespace zod

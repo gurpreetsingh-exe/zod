@@ -3,16 +3,17 @@
 
 namespace zod {
 
-ApplicationCreateInfo::ApplicationCreateInfo(String name_, int argc,
+ApplicationCreateInfo::ApplicationCreateInfo(WindowSpec info, int argc,
                                              char** argv)
-    : name(name_) {
+    : window_info(info) {
   for (int i = 0; i < argc; ++i) { cmd_args.push_back(String(argv[i])); }
 }
 
 static Application* g_instance = nullptr;
 
 Application::Application(const ApplicationCreateInfo& info)
-    : m_info(info), m_window(unique<Window>(info.name)), m_running(true) {
+    : m_info(info), m_window(unique<Window>(info.window_info)),
+      m_running(true) {
   ZASSERT(not g_instance);
   g_instance = this;
 

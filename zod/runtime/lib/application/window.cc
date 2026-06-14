@@ -9,20 +9,23 @@ static auto error_callback(int error, const char* description) -> void {
   fmt::println("{}: {}", error, description);
 }
 
-Window::Window(const String& name) {
+Window::Window(WindowSpec info) : m_info(info) {
   if (not glfwInit()) {
     eprintln("GLFW initialization failed");
   }
 
   glfwSetErrorCallback(error_callback);
-  glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+  if (m_info.custom_title_bar) {
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+  }
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 #ifdef VULKAN_BACKEND
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 #endif
 
-  m_window = glfwCreateWindow(1280, 720, name.c_str(), nullptr, nullptr);
+  m_window = glfwCreateWindow(m_info.size.x, m_info.size.y, m_info.name.c_str(),
+                              nullptr, nullptr);
   if (not m_window) {
     eprintln("GLFW window creation failed");
   }
@@ -30,7 +33,8 @@ Window::Window(const String& name) {
   m_hresize_cursor = glfwCreateStandardCursor(GLFW_HRESIZE_CURSOR);
   m_vresize_cursor = glfwCreateStandardCursor(GLFW_VRESIZE_CURSOR);
 
-  glfwSetWindowSizeLimits(m_window, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
+  glfwSetWindowSizeLimits(m_window, m_info.min_size.x, m_info.min_size.y,
+                          GLFW_DONT_CARE, GLFW_DONT_CARE);
 #ifdef OPENGL_BACKEND
   glfwMakeContextCurrent(m_window);
 #endif
@@ -38,7 +42,9 @@ Window::Window(const String& name) {
   m_gcx = gpu_context_create(m_window);
 
 #if defined(PLATFORM_LINUX)
-  x11::init_x11();
+  if (m_info.custom_title_bar) {
+    x11::init_x11();
+  }
 #endif
 
   glfwSetCursorPosCallback(m_window, [](GLFWwindow* win, double x, double y) {
@@ -100,7 +106,7 @@ Window::Window(const String& name) {
         auto window = reinterpret_cast<Window*>(glfwGetWindowUserPointer(win));
         Event event = { .kind = Event::WindowResize,
                         .size = { f32(width), f32(height) } };
-        window->m_size = { width, height };
+        window->m_info.size = { width, height };
         window->m_event_callback(event);
       });
   glfwSetWindowCloseCallback(m_window, [](GLFWwindow* win) {
@@ -157,6 +163,9 @@ auto Window::set_cursor(cursor_shape_t shape) -> void {
 }
 
 auto Window::drag_start() -> void {
+  if (not m_info.custom_title_bar) {
+    return;
+  }
   auto size = get_size();
   f64 x, y;
   glfwGetCursorPos(m_window, &x, &y);

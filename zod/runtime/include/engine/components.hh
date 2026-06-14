@@ -72,7 +72,7 @@ struct SkyboxComponent {
   IMPL_SERDE()
 };
 
-enum LightKind {
+enum class LightKind {
   Point,
   Sun,
 };

@@ -10,7 +10,8 @@ public:
 };
 
 auto Application::create(int argc, char** argv) -> Application* {
-  return new ZodEditor(ApplicationCreateInfo("Zod", argc, argv));
+  return new ZodEditor(ApplicationCreateInfo(
+      { .name = "Zod", .custom_title_bar = true }, argc, argv));
 }
 
 } // namespace zod

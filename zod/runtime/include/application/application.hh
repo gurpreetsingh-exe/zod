@@ -9,11 +9,12 @@ namespace zod {
 class ILayer;
 
 struct ApplicationCreateInfo {
-  String name;
+  WindowSpec window_info;
   Vector<String> cmd_args = {};
   fs::path working_directory = {};
 
-  ApplicationCreateInfo(String /* name */, int /* argc */, char** /* argv */);
+  ApplicationCreateInfo(WindowSpec /* info */, int /* argc */,
+                        char** /* argv */);
 };
 
 class Application {
@@ -30,6 +31,7 @@ public:
   auto working_directory() const -> const fs::path&;
   auto args() const -> const Vector<String>&;
   auto push_layer(ILayer*) -> void;
+  auto info() const -> const ApplicationCreateInfo& { return m_info; }
 
 private:
   auto run() -> void;
